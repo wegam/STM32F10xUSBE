@@ -1,0 +1,42 @@
+应用接口模块是作为一个模版提供给用户的，开发人员可以根据实际的应用对模版进行裁剪，
+应用接口模块：
+usb_istr (.c,.h)-----USB 中断处理函数
+usb_conf.h-----------USB 配置文件
+usb_prop (.c, .h)----USB 应用相关属性，用于上层协议处理，比如 HID协议，大容量存储设备协议
+usb_endp.c-----------CTR 中断处理程序（非控制端点）
+usb_pwr (.h, .c)-----USB 电源管理模块
+usb_desc (.c, .h)----USB 描述符
+
+
+usb_istr(.c)：
+USB_istr 提供了一个名为USB_Istr() 的函数，该函数用于处理所有的USB 宏单元中断。
+每一个USB 中断源有一个名为XXX_Callback（如RESET_Callback）的回调函数，这些回调函数用
+于实现用户中断处理器。为了启用回调程序，必须在USB 配置文件USB_conf.h 中
+定义名为XXX_Callback 的与处理程序开关。
+
+
+usb_conf(.h)：
+usb_conf.h 用于：
+1）定义 BTABLE 和PMA 中的所有端点地址
+2）定义相应事件中的中断掩码
+
+
+usb_endp (.c):
+USB_endp 模块处理除端点0（EP0）外所有的CTR 的正确传输程序。
+为了启用回调处理器进程，必须在USB_conf.h 中定义一个名为EPx_IN_Callback (IN 传输) 和
+EPx_OUT_Callback (OUT 传输)的预处理器
+
+
+usb_prop (.c , .h):
+USB_prop 模块实现了USB 内核使用的 Device_Property, Device_Table 和
+USER_STANDARD_REQUEST 结构。
+设备属性的实现
+
+
+usb_pwr (.c , .h):
+本模块管理USB 设备的电源
+
+
+
+
+

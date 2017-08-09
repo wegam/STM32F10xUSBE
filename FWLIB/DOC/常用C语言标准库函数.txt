@@ -1,0 +1,803 @@
+常用C语言标准库函数 
+ 
+C语言编译系统提供了众多的预定义库函数和宏。用户在编写程序时，可以直接调用这些库函数和宏。这里选择了初学者常用的一些库函数，简单介绍了各函数的用法和所在的头文件。
+
+1.测试函数
+
+Isalnum 
+	原型：int isalnum（int c）
+	功能：测试参数c是否为字母或数字：是则返回非零；否则返回零
+	头文件：ctype.h
+
+Isapha
+	原型：int isapha（int c）
+	功能：测试参数c是否为字母：是则返回非零；否则返回零
+	头文件：ctype.h
+
+Isascii
+	原型：int isascii（int c）
+	功能：测试参数c是否为ASCII码（0x00~0x7F）：是则返回非零；否则返回零
+	头文件：ctype.h
+
+Iscntrl
+	原型：int iscntrl（int c）
+	功能：测试参数c是否为控制字符（0x00~0x1F、0x7F）：是则返回非零；否则返回零
+	头文件：ctype.h
+	
+Isdigit
+	原型：int isdigit（int c）
+	功能：测试参数c是否为数字：是则返回非零；否则返回零。
+	头文件：ctype.h
+
+Isgraph
+	原型：int isgraph（int c）
+	功能：测试参数c是否为可打印字符（0x21~0x7E）：是则返回非零；否则返回零
+	头文件：ctype.h
+
+Islower
+	原型：int islower（int c）
+	功能：测试参数c是否为小写字母：是则返回非零；否则返回零
+	头文件：ctype.h
+	
+Isprint
+	原型：int isprint（int c）
+	功能：测试参数c是否为可打印字符（含空格符0x20~0x7E）：是则返回非零；否则返回零
+	头文件：ctype.h
+
+Ispunct
+	原型：int ispunct（int c）
+	 功能：测试参数c是否为标点符号：是则返回非零；否则返回零
+	头文件：ctype.h
+
+Isupper
+	原型：int isupper（inr c）
+	功能：测试参数c是否为大写字母：是则返回非零；否则返回零 
+
+Isxdigit 
+	原型：int isxdigit（int c）
+	功能：测试参数c是否为十六进制数：是则返回非零；否则返回零
+
+2.数学函数
+
+abs
+	原型：int abs（int i）
+	功能：返回整数型参数i的绝对值 
+	头文件：stdlib.h，math.h
+
+acos 
+	原型：double acos（double x）
+	功能：返回双精度参数x的反余弦三角函数值
+	头文件：math.h
+
+asin
+	原型：double asin（double x）
+	功能：返回双精度参数x的反正弦三角函数值
+	头文件：math.h
+
+atan
+	原型：double atan（double x）
+	功能：返回双精度参数的反正切三角函数值
+	头文件：math.h
+
+atan2
+	原型：double atan2（double y，double x）
+	功能：返回双精度参数y和x由式y/x所计算的反正切三角函数值
+	头文件：math.h
+
+cabs
+	原型：double cabs（struct complex znum）
+	功能：返回一个双精度数，为计算出复数znum的绝对值。
+	Complex的结构模式在math.h中给出定义，其定义如下：
+	struct complex
+	{
+		double a，y
+	}；
+	头文件：stdlib.h，math.h
+	
+ceil
+	原型：double ceil（double x）
+	功能：返回不小于参数x的最小整数
+	头文件：math.h
+
+_clear87
+	原型：unsigned int _clear87（void）
+	功能：清除浮点运算器状态字
+	头文件：float.h
+
+_control87
+	原型：unsigned int _control87（unsigned int newvals，unsigned int mask）
+	功能：取得或改变浮点运算器控制字
+	头文件：float.h 
+
+cos
+	原型：double cos（double x）
+	
+功能：返回参数x的余弦函数值
+	头文件：math.h
+	
+cosh 
+	原型：double cosh（double x）
+	功能：返回参数的双曲线余弦函数值
+	头文件：math.h 
+	
+ecvt
+	原型：char*ecvt（double value，int ndigit，int*decpt，int*sign）
+	功能：把双精度数value转换为ndigit位数字的以空格字符结束的字符串，decpt指向小数点位置，sign为符号标志。函数返回值为指向转换后的字符串的指针
+	头文件：stdlib.h 
+
+exp
+	原型：double exp（double x）
+	功能：返回参数x的指数函数值
+	头文件：math.h 
+
+fabs
+	原型：double fabs（double x）
+	功能：返回参数x的绝对值
+	头文件：math.h
+
+floor
+	原型：double floor（double x）
+	
+功能：返回不大于参数x的最大整数
+	头文件：math.h
+
+fmod
+	原型：double fmod（double x，double y）
+	功能：计算x/y的余数。返回值为所求的余数值
+	头文件：math.h
+
+_fprest
+	原型：void _fprest（void）
+	功能：重新初始化浮点型数数学包
+	头文件：float.h
+
+frexp
+	原型：double frexp（double value，int*eptr）
+	功能：把双精度函数value分解成尾数和指数。函数返回尾数值，指数值存放在eptr所指的单元中
+	头文件：math.h 
+
+hypot
+	原型：double frexp（double x，double y）	
+	功能：返回由参数x和y所计算的直角三角形的斜边长
+	头文件：math.h
+
+labs
+	原型：long labs（long n）
+	功能：返回长整数型参数n的绝对值
+	头文件：stdlib.h
+
+ldexp
+	原型：double ldexp（double value，int exp）功能：返回value*2exp
+的值
+	头文件：math.h 
+
+log
+	原型：double log（double x）
+	功能：返回参数x的自然对数（ln x）的值
+	头文件：math.h 
+	
+log10
+	原型：double log10（double x）
+	功能：返回参数x以10为底的自然对数（lg x）的值
+	头文件：math.h 
+
+modf
+	原型：double modf（double value，double*iptr）
+	功能：把双精度数value分为整数部分和小数部分。整数部分保存在iptr中，小数部分作为函数的返回值
+	头文件：math.h
+
+poly
+	原型 ：double poly（double x，int n，double c[ ]）
+	功能：根据参数产生x的一个n次多项式，其系数为 c[0]，c[1]，…c[n]。函数返回值为给定x的多项式的值
+	头文件：math.h
+
+pow
+	原型：double pow（double x，double y）
+	功能：返回计算xy的值
+	头文件：math.h
+	
+pow10
+	原型：double pow10（int p）
+	功能：返回计算10p
+的值
+	头文件：math.h
+
+rand
+	原型：int rand（void）
+	功能：随机函数，返回一个范围在0～215-1的随机整数
+	头文件：stdlib.h
+
+sin
+	原型：double sin（double x）
+	功能：返回参数x的正弦函数值
+	头文件：math.h
+
+sinh
+	原型double sinh（double x）
+	功能：返回参数x的双曲正弦函数值
+	头文件：math.h
+
+sqrt
+	原型：double sqrt
+	功能：返回参数x的平方根值
+	头文件：math.h
+
+srand
+	原型：void srand（unsigned seed）
+	功能：初始化随机函数发生器
+	头文件：stdlib.h
+
+_status87
+	原型：unsigned int_status87（）
+	功能：取浮点状态
+	头文件：float.h
+	
+tan
+	原型：dounle tan（double x）
+	功能：返回参数x的正切函数值
+	头文件：math.h
+
+tanh
+	原型：double tan（double x）
+	功能：返回参数x的双曲正切函数值
+	头文件：math.h
+
+
+
+
+3.转换函数
+
+atof
+	原型：double atof（char*nptr）
+	功能：返回一双精度型数，由其nptr所指字符串转换而成
+	头文件：math.h，stdlib.h
+
+atoi
+	原型：int atoi（char*nptr）
+	功能：返回一整数，其由nptr所指字符串转换而成
+	头文件：stdlib.h
+	
+atol
+	原型：long atol（char*nptr）
+	功能：返回一长整型数，其由nptr所指字符串转换而成
+	头文件：stdlib.h
+
+fcvt
+	原型：char*fcvt（double value，int ndigit，int*decpt，int*sign）
+	功能：fcvt与ecvt相似，将浮点型数转换成FORTRAN F 格式的字符串）
+	头文件：stdlib.h
+
+gcvt
+	原型：char*gvct（double value，int ndigit，char*buf）
+	功能：把value转换为以空字符结尾、长度为ndigit的串，结果放在buf中，返回所得串的指针
+	头文件：stdlib.h
+
+itoa 
+	原型：char*gcvt（double value，char*string，int radix）
+	功能：把一个整形数value转换为字符串。即将value转换为以‘＼ｏ’结尾的串。结果存在string中，radix为转换中数的基数，函数返回值为指向字符串string的指针
+	头文件：stdlib.h
+
+strtod
+	原型：double strtod（char*str，char**endptr）
+	功能：把字符串str转化为双精度数。endptr不为空，则其为指向终止扫描的字符的指针。函数返回值为双精度数
+	头文件：string.h
+
+strtol
+	原型：long strtol（char*str，char*endptr，int base）
+	功能：把字符串xtr转换为长整形数。endptr不为空，则其为指向终止扫描的字符指针。函数返回值为长整形数。参数base为要转换整数的基数
+	头文件：string.h
+	
+ultoa
+	原型：char*ultoa（unsigned long value，char*string，int radix）
+	功能：转换一个无符号长整型数value为字符串。即value转换为以‘\o’结尾的字符串，结果保存在string中1，radix为转换中数的基数，返回值为指向串string的指针
+	头文件：stdlib.h
+
+
+
+
+4.串和内存操作函数
+
+malloc
+	原型：extern void *malloc(unsigned int num_bytes);
+	功能：malloc 向系统申请分配指定size个字节的内存空间。返回类型是 void* 类型。void* 表示未确定类型的指针。C,C++规定，void* 类型可以通过类型转换强制转换为任何其它类型的指针。
+	备注：void* 表示未确定类型的指针，void *可以指向任何类型的数据，更明确的说是指申请内存空间时还不知道用户是用这段空间来存储什么类型的数据（比如是char还是int或者其他数据类型）。
+	头文件：stdlib.h 
+
+memset
+	原型：void *memset(void *s, int ch, size_t n);
+	功能：将s所指向的某一块内存中的前n个 字节的内容全部设置为ch指定的ASCII值， 第一个值为指定的内存地址，块的大小由第三个参数指定，这个函数通常为新申请的内存做初始化工作， 其返回值为指向s的指针。
+	头文件：string.h，mem.h
+	
+memcmp
+	原型：int memcmp(const void *buf1, const void *buf2, unsigned int count);
+	功能：memcmp是比较内存区域buf1和buf2的前count个字节。该函数是按字节比较的。如果s1<s2，返回负值；如果s1=s2，返回零；否则s1>s2，返回正值
+	头文件：string.h，mem.h
+
+memcpy
+	原型：void *memcpy(void *dest, const void *src, size_t n);
+	功能：从源source中复制n个字节到目标destin中。
+	头文件：string.h，men.h
+	
+memccpy
+	原型：void*memccpy（void*destin，void*soure，unsigned char ch，unsignde n）
+	功能：从源source中复制n个字节到目标destin中。复制直至第一次遇到ch中的字符为止（ch被复制）。函数返回值为指向destin中紧跟ch后面字符的地址或为NULL
+	头文件：string.h，mem.h
+
+memchr
+	原型：void*memchr（void*s，char ch，unsigned n）
+	功能：在数组x的前n个字节中搜索字符ch。返回值为指向s中首次出现ch的指针位置。如果ch没有在s数组中出现。返回NULL
+	头文件：string.h，mem.h
+
+memicmp
+	原型：int*memicmp（void*s1，void*s2，unsigned n）
+	功能：比较两个串s1和s2的前n个字节，大小写字母同等看待。如果s1<s2，返回负值；如果s1=s2，返回零；如果s1>s2，返回正值
+	头文件：string.h，mem.h
+
+memmove
+	原型：void*memmove（void*destin，void*source，unsigned n）
+	功能：从源source中复制n个字节到目标destin中。返回一个指向destin的指针
+	头文件：string.h，mem.h
+
+
+setmem 
+
+	原型：void setmem（void*addr，int len，char value）
+	功能：将len个字节的value值保存到存储区addr中
+	头文件：mem.h
+
+strcat
+	原型：char *strcat（char*destin，const char*source）
+	功能：把串source复制连接到串destin后面（串合并）。返回值为指向destin的指针
+	头文件：string.h
+	
+strchr
+	原型：char*strchr（char*str，char c）
+	功能：查找串str中某给定字符（c中的值）第一次出现的位置：返回值为NULL时表示没有找到
+	头文件：string.h
+
+strcmp
+	原型：int strcmp（char*str1，char*str2）
+	功能：把串str1与另一个串str2进行比较。当两字符串相等时，函数返回0；
+str1<str2返回负值；str1>str2返回正值
+	头文件：string.h
+	
+strcpy
+	原型：int*strcpy（char*str1，char*str2）
+	功能：把str2串复制到str1串变量中。函数返回指向str1的指针
+	头文件：string.h
+
+strcspn
+	原型：int strcspn（char*str1，*str2）
+	功能：查找str1串中第一个出现在串str2中的字符的位置。函数返回该指针位置
+	头文件：string.h
+
+strdup
+	原型：char*strdup（char*str）
+	功能：分配存储空间，并将串str复制到该空间。返回值为指向该复制串的指针
+	头文件：string.h
+
+stricmp
+	原型：int stricmp（chat*str1，char*str2）
+	功能：将串str1与另一个串str2进行比较，不分字母大小写。返回值同strcmp
+	头文件：string.h
+
+strlen
+	原型：unsigned strlen（char*str）
+	功能：计算str串的长度。函数返回串长度值
+	头文件：string.h
+
+strlwr
+	原型：char*strlwr（char*str）
+	功能：转换str串中的大写字母为小写字母
+	头文件：string.h
+
+strncat
+	原型：char*strncat（char*destin，char*source，int maxlen）
+	功能：把串source中的最多maxlen个字节加到串destin之后（合并）。函数返回指向已连接的串destin的指针
+	头文件：string.h
+
+strncmp
+	原型：int strncmp（char*str1，char*str2，int maxlen）
+	功能：把串str1与串str2的头maxlen个字节进行比较。返回值同strcmp函数
+	头文件：string.h
+
+strnset
+	原型：char*strnset（char*str，char ch，unsigned n）
+	功能：将串str中的前n个字节设置为一给定字符（中的值）
+	头文件：string.h
+
+strpbrk
+	原型：char*strpbrk（char*str1，char*str2）
+	功能：查找给定字符串str1中的字符在字符串str2中第一次出出现的位置，返回位置指针。若未查到，则返回NULL
+	头文件：string.h
+
+strrchr
+	原型：char*strrcgr（char*str，char c）
+	功能：吵着给定字符（c的值）在串str中的最后一次出现的位置。返回指向该位置的指针，若为查到，则返回NULL
+	头文件：string.h
+	
+strrev
+	原型：char*strrev（char*str）
+	功能：颠倒串str的顺序。函数返回颠倒顺序的串的指针
+	头文件：string.h 
+
+strset
+	原型：char*strset（char*str，char c）
+	功能：把串中所有字节设置为给定字符(c的值)。函数返回串的指针
+	头文件：string.h
+
+strspn
+	原型：int strspn（char*str1，char*str2）
+	功能：在串str1中找出第一次出现str2的位置。函数返回str2在str1中的位置数
+	头文件：string.h
+
+strstr
+	原型：char*strstr（char*str1，char*str2）
+	功能：查找串str2在串str1中首次出现的位置。返回指向该位置的指针。找不到匹配则返回空指针
+	头文件：string.h
+
+strtok
+	原型：char*strtok（char*str1，char*str2）
+	功能：把串str1中的单词用str2所给出的一个或多个字符所组成的分隔符分开
+	头文件：string.h
+
+strupr
+	原型：char*strupr（char*str）
+	功能：把串str中所有小写字母环卫大写。返回转换后的串指针
+	头文件：string.h
+
+
+
+5.输入/输出函数
+
+
+access
+	原型：int access（char*filename，int mode）
+	功能：确定filename所指定的文件是否存在及文件的存取权限。如果filename指向一目录，则返回该目录是否存在。mode权限值（00，0204，06）；如果所要确定的存取权限是允许的，返回0；否则返回-1，并将全局变量errno置为：ENOENT路径名或文件名没有找到；EACCES权限不对
+	头文件：io.h
+
+cgets
+	原型：char*cgets（char*string）
+	功能：从控制台读字符串给string。返回串指针
+	头文件：conio.h
+
+chmod
+	原型：int chmod（char*filename，int permiss）
+	功能：改变文件的存取方式、读写权限。filenane为文件名，permiss为文件权限值；函数返回值为-1时，表示出错。
+	头文件：io.h
+
+clearer
+	原型：void clearerr（FILE*stream）
+	功能：复位stream所指流式文件的错误标志
+	头文件：stdio.h 
+
+close
+	原型：int close（int handle）
+	功能：关闭文件。handle为已打开的文件号；返回值为-1时表示出错
+	头文件：io.h
+
+cprintf
+	原型：int cprintf（char*format[，argument，…]）
+	功能：格式化输出至屏幕。*format为格式串；argument为输出参数；返回所输出的字符数
+	头文件：conio.h
+
+cputs
+	原型：void cputs（char*string）
+	功能：写一字符串到屏幕。string为要输出的串
+	头文件：conio.h
+
+creat
+	原型：int creat（char*filename，int permiss）
+	功能：创建一个新文件或重写一个已存在的文件。filename为文件名，permiss为权限。函数返回值为-1时，表示出错
+	头文件：io.h
+
+cscanf
+	原型：int cscanf（char*format[，argumen，…]）
+	功能：从控制台格式化输入。format为格式串，argument为输入参数；返回被正确转换和赋值的数据项数
+	头文件：conio.h
+
+dup
+	原型：int dup（int handle）
+	功能：复制文件句柄（文件号）。handle为已打开的文件号
+	头文件：io.h
+	
+dup2
+	原型：int dup2（int oldhandle，int newhandle）
+	功能：复制文件句柄（文件号），即使newhandle文件号与oldhandle文件号指向同一文件
+	头文件：io.h
+
+eof
+	原型int eof（int*handle）
+	功能（检测文件结束。handle为已打开的文件号。返回值为1时，表示文件结束；否则为0；-1表示出错
+	头文件：io.h
+
+fclose
+	原型：int fclose（FILE*stream）
+	功能：关闭一个流。stream为流指针。返回EOF时，表示出错
+	头文件：stdio.h
+
+fcloseall
+	原型：int fcloseall（void）
+	功能：关闭所有打开的流。返回EOF时，表示出错
+	头文件：stdio.h
+
+feof
+	原型：int feof（FILE*stream）
+	功能：检测流上文件的结束标志。返回非0值时，表示文件结束
+	头文件：stdio.h
+	
+ferror
+	原型：int ferror（FILE*stream）
+	功能：检测流上的错误。返回0时，表示无错
+	头文件：stdio.h
+
+fflush
+	原型：int fflush（FILE*stream）
+	功能：清除一个流。返回0时，表示成功
+	头文件：stdio.h
+
+fgetc
+	原型：int fgect（FILE*stream）
+	功能：从流中读一个字符。返回EOF时，表示出错或文件结束。
+	头文件：stdio.h
+	
+fgetchar 
+	原型：int fgechar（void）
+	功能：从stdin中读取字符。返回EOF时，表示出错或文件结束 
+	头文件;stdio.h
+
+fgets
+	原型：char*fgets（char*string，int n，FILE*stream）
+	功能：从流中读取一字符串。string为存串变量；n为读取字节个数；stream为流指针，返回EOF时，表示出错或文件结束。
+	头文件：stdio.h
+
+filelength
+	原型：long filelength（int handle）
+	功能：取文件的度。handle为已打开的文件号；返回-1时，表示出错
+	头文件：io.h
+
+fopen
+	原型：FILE*fopen（char*filename，char*type）
+	功能：打开一个流。filename为文件名；type为允许访问方式。返回指向打开文件夹的指针。
+	头文件：stdio.h
+
+fprintf
+	原型：int fprintf（FILE*stream，char*format[，argument，…]
+	功能：传送格式化输出到一个流。strem为流指针；format为格式串；argument为输出参数
+	头文件：stdio.h
+
+fputc
+	原型：int fpuct（int ch，FILE*stream）
+	功能：送一个字符到一个流中，ch为被写字符。stream为流指针；返回被写字符。返回EOF时，表示可能出错
+	头文件：stdio.h
+
+fputchar
+	原型：int fputchar（char ch）
+	功能：送一个字符到标准的输出流（stdout）中，ch为被写字符。返回被写字符。返回EOF时，表示可能出错
+	头文件：stdio.h
+
+fputs
+	原型：int fputs（char*string，FILE*stream）
+	功能：送一个字符串到流中，string为被写字符串。stream为流指针；返回值为0时，表示成功
+	头文件：stdio.h
+
+fread
+	原型：int fread（void*ptr，int size，int nitems，FILE*stream）
+	功能：从一个流中读数据，ptr为数据存储缓冲区，size为数据项大小（单位是字节），nitems为读入数据项的个数；stream为流指针；返回实际读入的数据项个数
+	头文件：stdio.h
+
+freopen
+	原型：FILE*freopen（char*filename，char*type，FILE*stream）
+	功能：关闭当前所指流式文件，使指针指向新的流。filename为新文件名。type为访问方式；stream为流指针；返回新打开的文件指针
+	头文件：stdio.h
+
+fscanf
+	原型：int fscanf（FILE*stream，char*format[，argument，…]
+	功能：从一个流中执行格式化输入。stream为流指针，format为格式串，argument为输入参数
+	头文件：stdio.h
+
+fseek
+	原型：int fseek（FILE*stream，long offset，int fromwhere）
+	功能：重新定位流上读/写指针。stream为流指针，offset为偏移量（字节数），fromwhere为起始位置。返回0时，表示成功。
+	头文件：stdio.h
+	
+fstat
+	原型：int fstat（char*handle，struct stat*buff）
+	功能：获取打开文件的信息。handle为已打开的文件号，buff为指向stat结构的指针，用语存放文件的有关信息。返回-1时，表示出错
+	头文件：sys\stst.h
+
+ftell
+	原型：long ftell（FILE*stream）
+	功能：返回当前文件操作指针。返回流式文件当前位置
+	头文件：stdio.h
+
+fwrite
+	原型：int fwrite（void*ptr，int size，int nitems，FILE*stream）
+	功能：写内容到流中。ptr为被写出的数据存储缓冲区，size为数据项大小（单位是字节），nitems为写出的数据项个数，stream为流指针。返回值为实数写出的完整数据项个数
+	头文件;stdio.h
+
+getc
+	原型：int getc（FILE*stream）
+	功能：从流中取字符。stream为流指针；返回所读入的字符
+	头文件：stdio.h
+
+getch
+	原型：int getch（void）
+	功能：从控制台无回显地读取一个字符。返回所读入的字符
+	头文件：conio.h
+
+getchar
+	原型：int getchar（void）
+	功能：从标准输入流（stdin）中取一字符。返回所读入的字符
+	头文件：conio.h
+
+getche
+	原型：int getche（void）
+	功能：从控制台取一字符，并回显。返回所读入的字符。
+	头文件：conio.h
+
+getpass
+	原型：char*getpass（char*prompt）
+	功能：读一个口令。prompt为提示字符串。函数无回显地返回指令向输入口令（超过8个字符的串）的指针
+	头文件：conio.h
+
+gets
+	原型：char*gets（char*string）
+	功能：从标准设备上（stdin）读取一个字符串。string为存放读入串的指针。返回NULL时，表示出错
+	头文件：conio.h
+
+getw
+	原型：int getw（FILE*stream）
+	功能：从流中去一个二进制的整型数。stream为流指针。返回所读到的数值（EOF表示出错
+	头文件：stdio.h
+
+kbhit
+	原型：int kbhit（void）
+	功能：检查控制台是否有键按动。返回非0时，表示有按键
+	头文件：conio.h
+	
+lseek
+	原型：long lseek（int handle，long offset，int fromwhere）
+	功能：移动文件读/写指针。handle为已打开的文件号。offset为偏移量（字节数）；fromwhere为初始位置。返回-1时，表示出错
+	头文件：io.h
+
+open 
+	原型：int open（char*pathname，int access[，permiss]）
+	功能：打开一个文件用于读或写。pathname为文件名；access为允许操作类型；permiss为权限。返回所打开的文件序号
+	头文件：io.h
+	
+perror 
+	原型：void perror（char*string）
+	功能：打印系统错误信息。string为字符串提示信息。函数打印完提示信息之后，打印一个冒号，然后打印相对于当前errno值得信息
+	头文件：stdio.h
+
+printf
+	原型：int printf（char*format[，argument]）
+	功能：从标准输出设备（stdout）上格式化输出。format为格式串，argument为输出参数
+	头文件：stdio.h
+
+putc
+	原型：int putc（int ch，FILE*stream）
+	功能：输出字符到流中。ch为被输出的字符，stream为流指针。函数返回被输出的字符
+	头文件：stdio.h
+
+putch
+	原型;int putch（int ch）
+	功能：输出一个字符到控制台。ch为要输出的字符。返回值为EOF时，表示出错
+	头文件：conio.h
+
+putchar
+	原型：int putchar（int ch）	
+	功能：输出一个字符到标准输出设备（stdout）上。ch为要输出的字符。返回被输出的字符
+	头文件：conio.h
+
+puts
+	原型：int puts（char*string）
+	功能：输出一个字符串到标准输出设备（stdout）上。string为要输出的字符串。返回值为0时，表示成功
+	头文件：conio.h
+
+putw
+	原型：int putw（int w，FILE*stream）
+	功能：将一个二进制整数写到流的当前位置。w为被写的二进制整数，stream为流指针
+	头文件：stdio.h
+
+read
+	原型：int read（int handle，void*buf，nbyte）
+	功能：从文件中读。handle：已打开的文件号；buf：存储数据的缓冲区；nbyte：读取的最大字节。返回成功读取的字节数
+	头文件：io.h
+
+remove
+	原型：int remove（char*filename）
+	功能：删除一个文件。filename：被删除的文件名；返回-1时，表示出错
+	头文件：stdio.h
+
+rename
+	原型：int rename（char*oldname，char*newname）
+	功能：改文件名。oldname：旧名；newname：新名。返回值为0，表示成功
+	头文件：stdio.h
+
+rewind
+	原型：int rewind（FILE*stream）
+	功能：将我乔恩见指针指向头文件。stream：流指针
+	头文件：stdio.h
+
+scanf
+	原型：int scanf（char*format[，argument，…]）
+	功能：从标准输入设备上格式化输入。format：格式串；argument：输入参数项
+	头文件：stdio.h
+
+setbuf
+	原型：void setbuf（FILE*stream，char*buf）
+	功能：把缓冲区与流相联
+	头文件：stdio.h
+
+setmode
+	原型：int setmode（int handle，unsigned mode）
+	功能：设置打开文件方式。handle：文件号；mode：打开方式
+	头文件：io.h
+
+setvbuf
+	原型：int setvbuf（FILE*stream，char*buf，int type，unsigned size）
+	功能：把缓冲区与流相联。stream：流指针；buf：用户定义的缓冲区；type：缓冲区类型；size：缓冲区大小
+	头文件：dos.h
+
+sprint
+	原型：int sprint（char*strint，char*format[，argument，…]）
+	功能：格式输出到字符串string中
+	头文件：stdio.h
+
+sscanf 
+
+	原型：int sscanf（char*string，char format[，argument，…]）
+	功能：执行从串string中输入
+	头文件：stdio.h
+
+strerror 
+	原型：char*strerror（int errnum）
+	功能：返回指向错误信息字符串的指针
+	头文件：stdio.h
+
+tell
+	原型：long tell（int handle）
+	功能：取文件：读/写指针的当前位置
+	头文件：io.h
+
+ungect
+	原型：int ungect（char ch，FILE*stream）
+	功能：把一字符串退回输入流中
+	头文件：stdio.h
+	
+ungecth
+	原型：int ungecth（int ch）
+	功能：把一个字符退回到键盘缓冲区中
+	头文件：conio.h
+
+vfprintf
+	原型：int vfprintf（FILE*stream，char*format，va_list param）
+	功能：送格式化输出到流stream中
+	头文件：stdio.h
+
+vfscanf
+	原型：int vfscanf（FILE*stream，char*format，va_list param）
+	功能：从流stream中进行格式化输入
+	头文件：stdio.h
+
+vprintf
+	原型：int vprintf（char*format，va_list param）
+	功能：送格式化输出到标准的输出设备
+	头文件：stdio.h
+
+vscanf 
+	原型：int vscanf（char*format，va_list param）
+	功能：从标准的输入设备（stdin）进行格式化输入
+	头文件：stdio.h
+
+vsprintf
+	原型：int vsprintf（char*string，char*format，va_list param）
+	功能：送格式化输出到字符串string中
+	头文件：stdio.h
+	
+write
+	原型：int write（int handle，void*buf，int nbyte）
+	功能：将缓冲区buf的内容写入一个文件中。handle为已打开的文件；buf为要写（存）的数据；nbyte为字节数。返回值为实际所写的字节数
+	头文件：io.h
