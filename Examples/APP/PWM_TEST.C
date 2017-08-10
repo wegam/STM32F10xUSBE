@@ -1,10 +1,19 @@
 #ifdef PWM_TEST
 #include "PWM_TEST.H"
 
+#include "string.h"
+#include "math.h"
+
+
+#include "STM32_EXTI.H"
+#include "STM32_USART.H"
+
 #include "STM32_SYS.H"
 #include "STM32_SYSTICK.H"
 #include "STM32_GPIO.H"
 #include "STM32F10x_BitBand.H"
+
+#define RxBufferSize	16
 
 u16 PWM_Ratio=600;		//占空比
 u16 TIMECUNT=0;		//占空比
@@ -13,10 +22,17 @@ u8 Ecodata=0;			//0--无变化，1--加，2--减，3--按键
 u8 Aflg=0;	//A触点
 u8 Bflg=0;	//B触点
 u8 Buttonflg=0;	//按键
-u16 KeyCount=0;
-u16 ECount=0;
-
+u32 KeyCount=0;
+u32 ECount=0;
+u32 ECountA=0;
+u32 ECountB=0;
+u32 TimeOut=0;
+u8 PWonFlg=0;
+u8 RevBuffer[RxBufferSize]={0};
+u8 RxdBuffer[RxBufferSize]={0};
+u8 RxNum=0;
 void PWM_ECODE(void);			//编码器
+void PWM_DELAY(u32 delay);
 /*******************************************************************************
 * 函数名		:	
 * 功能描述	:	 
@@ -44,6 +60,20 @@ void PWM_TEST_Configuration(void)
 	GPIO_Configuration_IPU(GPIOA,	GPIO_Pin_4);			//将GPIO相应管脚配置为上拉输入模式----V20170605--BUTTON
 	GPIO_Configuration_IPU(GPIOA,	GPIO_Pin_5);			//将GPIO相应管脚配置为上拉输入模式----V20170605--A
 	GPIO_Configuration_IPU(GPIOA,	GPIO_Pin_6);			//将GPIO相应管脚配置为上拉输入模式----V20170605--B
+	
+	EXTI_Configuration(GPIOA,GPIO_Pin_4,EXTI_Mode_Interrupt);
+	EXTI_Configuration(GPIOA,GPIO_Pin_5,EXTI_Mode_Interrupt);
+	
+	USART_DMA_ConfigurationNR	(USART2,115200,(u32*)RxdBuffer,RxBufferSize);	//USART_DMA配置--查询方式，不开中断
+	
+	USART_DMAPrintf(USART2,"参数设置方法1（十六进制:FE A9 XX XX）\r\n");					//自定义printf串口DMA发送程序,后边的省略号就是可变参数
+	for(ECount=0;ECount<0xFFFF;ECount++)
+	{
+	}
+	USART_DMAPrintf(USART2,"参数设置方法2（SET:xx (xx取值为0~60000,50的比值为1/1200））\r\n");					//自定义printf串口DMA发送程序,后边的省略号就是可变参数
+	
+	
+	PWonFlg=1;
 	
 //	GPIO_Configuration_IPD(GPIOA,	GPIO_Pin_4);			//将GPIO相应管脚配置为上拉输入模式----V20170605--BUTTON
 //	GPIO_Configuration_IPD(GPIOA,	GPIO_Pin_5);			//将GPIO相应管脚配置为上拉输入模式----V20170605
@@ -73,27 +103,47 @@ void PWM_TEST_Server(void)
 	if(TIMECUNT>=10)
 	{
 		TIMECUNT=0;
-//		if(ADDflg==0)
-//		{
-//			PWM_Ratio++;
-//			if(PWM_Ratio>=1200)
-//			{
-//				ADDflg=1;
-//				PWM_Ratio=0;
-//			}
-//		}
-//		else
-//		{
-//			PWM_Ratio--;
-//			if(PWM_Ratio<=0)
-//			{
-//				ADDflg=0;
-//				PWM_Ratio--;
-//				PWM_Ratio=0;
-//			}			
-//		}
-//		TIM1->CCR1 = PWM_Ratio*50;
 	}
+	RxNum=USART_ReadBufferIDLE	(USART2,(u32*)RevBuffer,(u32*)RxdBuffer);	//串口空闲模式读串口接收缓冲区，如果有数据，将数据拷贝到RevBuffer,并返回接收到的数据个数，然后重新将接收缓冲区地址指向RxdBuffer
+	if(RxNum)
+	{
+		if(RevBuffer[0]==0xFE&&RevBuffer[1]==0xA9)
+		{
+			PWM_Ratio=(RevBuffer[2]<<8)|(RevBuffer[3]<<0);
+			
+			if(PWM_Ratio>1200)
+				PWM_Ratio=1200;
+			USART_DMAPrintf(USART2,"当前输出比:%4d/1200\r\n",PWM_Ratio);					//自定义printf串口DMA发送程序,后边的省略号就是可变参数
+			TIM1->CCR1 =PWM_Ratio*50;
+		}
+		else if(RevBuffer[0]==0x53&&RevBuffer[1]==0x45&&RevBuffer[2]==0x54&&RevBuffer[3]==0x3A)
+		{
+			u8 i=0;
+			double Npow=0;			
+			PWM_Ratio=0;
+			if(RxNum>=9&&RevBuffer[4]>=0x36)
+			{
+				PWM_Ratio=60000;
+			}
+			else
+			{
+				RxNum=RxNum-4;
+				while(RxNum>i)
+				{
+					i++;
+					Npow=(double)pow((float)10,(float)(RxNum-i));
+					
+					PWM_Ratio+=(u16)(RevBuffer[i+3]-0x30)*Npow;				
+				}
+			}
+			TIM1->CCR1 =PWM_Ratio;
+			Npow=(double)PWM_Ratio/50.0;
+			PWM_Ratio	=(u16)Npow;
+			USART_DMAPrintf(USART2,"当前输出比:%4.4f/1200\r\n",Npow);					//自定义printf串口DMA发送程序,后边的省略号就是可变参数
+		}
+		memset(RevBuffer, 0x00,16);
+	}
+	if(PWonFlg)
 	PWM_ECODE();			//编码器
 }
 /*******************************************************************************
@@ -104,71 +154,93 @@ void PWM_TEST_Server(void)
 *******************************************************************************/
 void PWM_ECODE(void)
 {
-	Aflg=0;	//A触点
-	Bflg=0;	//B触点
-	if(PA4in==0)
+	if(EXTI_GetITStatus(EXTI_Line4)==SET)			//EXTI_GetFlagStatus(u32 EXTI_Line);//PA6in==0
 	{
-		KeyCount++;
-//		if(Buttonflg==0)		//按键标识
-//		{
-//			Buttonflg=1;	//按键
-//			PWM_Ratio=0;
-//			TIM1->CCR1 =0;
-//		}
-//		else
-//		{
-//			Buttonflg=0;	//按键
-//			PWM_Ratio=60000;
-//			TIM1->CCR1 =50000;
-//		}
-	}
-	else if(KeyCount>=100)
-	{		
-		if(Buttonflg==0)		//按键标识
+		KeyCount=0;
+		while(KeyCount++<0xFFFF);
+		if(PWM_Ratio<=1100)		//按键标识
 		{
-			Buttonflg=1;	//按键
-			PWM_Ratio=100;
+			PWM_Ratio+=100;
 		}
 		else
 		{
-			Buttonflg=0;	//按键
-			PWM_Ratio=1100;			
+			PWM_Ratio=0;
 		}
-		KeyCount=0;
+		USART_DMAPrintf(USART2,"当前输出比:%4d/1200\r\n",PWM_Ratio);					//自定义printf串口DMA发送程序,后边的省略号就是可变参数
 		TIM1->CCR1 =PWM_Ratio*50;
-	}
-	else
-	{
-		KeyCount=0;
+		EXTI_ClearITPendingBit(EXTI_Line4);
 	}
 	
-	if(PA6in==0)
+	if(EXTI_GetITStatus(EXTI_Line5)==SET)			//EXTI_GetFlagStatus(u32 EXTI_Line);//PA6in==0
 	{
-		ECount++;
-	}
-	else if(ECount>20)
-	{
-		if(PA5in==0)
+		TimeOut=0;
+		Bflg=0;
+		ECount=0;
+		ECountA=0;
+		ECountB=0;
+		
+		while(((PA5in==0||PA6in==0)||Bflg==0)&&(TimeOut<=0xFFFFFF))
+		{
+			TimeOut++;
+			if((PA5in==0&&PA6in==0)&&ECountA==0)
+			{
+				ECountA++;
+				ECountB++;
+			}
+			else if(ECountA!=0)
+			{
+				if(PA5in==0)
+				{
+					ECountA++;
+					ECount=0;
+				}
+				else
+				{
+					ECount++;				
+				}
+				if(PA6in==0)
+				{
+					ECountB++;
+					ECount=0;
+				}
+				else
+				{
+					ECount++;				
+				}
+				if(ECount>=200)
+				{
+					Bflg=1;
+				}
+			}
+		}
+		
+		if(ECountA>ECountB)
 		{
 			if(PWM_Ratio<1200)
-				PWM_Ratio+=10;
+				PWM_Ratio+=1;
 		}
 		else
 		{
-			if(PWM_Ratio>=10)
-				PWM_Ratio-=10;
-		}
-		ECount=0;
+			if(PWM_Ratio>=1)
+				PWM_Ratio-=1;
+		}		
+		
+		USART_DMAPrintf(USART2,"当前输出比:%4d/1200\r\n",PWM_Ratio);					//自定义printf串口DMA发送程序,后边的省略号就是可变参数
 		TIM1->CCR1 =PWM_Ratio*50;
+		EXTI_ClearITPendingBit(EXTI_Line5);
 	}
-	else
-	{
-		ECount=0;
-	}
-
 }
 
-
+/*******************************************************************************
+* 函数名			:	function
+* 功能描述		:	函数功能说明 
+* 输入			: void
+* 返回值			: void
+*******************************************************************************/
+void PWM_DELAY(u32 delay)
+{
+	while(delay--);
+}
 
 
 #endif
