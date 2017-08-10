@@ -72,7 +72,7 @@ void OFFLINE_ISP_Configuration(void)
 	IWDG_Configuration(2000);					//独立看门狗配置---参数单位ms	
 	SysTick_Configuration(10);				//系统嘀嗒时钟配置72MHz,单位为uS
 	timecunt=0;		//空闲计时
-	OFFLINE_Cof.SPI_FLASH.SPI_FLASH_Info.SPI_FLASH_Request=SPI_FLASH_qCERASE;
+//	OFFLINE_Cof.SPI_FLASH.SPI_FLASH_Info.SPI_FLASH_Request=SPI_FLASH_qCERASE;
 }
 /*******************************************************************************
 * 函数名		:
@@ -194,6 +194,85 @@ void OFFLINE_ISP_StatusProcess(void)		//状态处理
 //		}
 		Usart_ISP_SetSlaveStatus(&(OFFLINE_Cof.ISP_Conf),ISP_STATUS_WaitErased);			//设置从机状态--等待擦除完成
 		
+	}
+	else if(OFFLINE_Cof.ISP_Conf.Connected==ISP_STATUS_WaitConnect||OFFLINE_Cof.ISP_Conf.Connected==ISP_STATUS_Connectting)			//ISP等待连接（作为从机)
+	{
+		if(OFFLINE_Cof.ISP_Conf.Connected==ISP_STATUS_WaitConnect)
+		{
+			OFFLINE_Cof.SPI_FLASH.SPI_FLASH_Info.SPI_FLASH_Request=SPI_FLASH_qCERASE;
+			OFFLINE_Cof.ISP_Conf.Connected=ISP_STATUS_Connectting;						//ISP正在连接（作为从机)---执行格式化
+		}
+		else if(OFFLINE_Cof.SPI_FLASH.SPI_FLASH_Info.SPI_FLASH_Request==SPI_FLASH_qIDLE)
+		{
+			OFFLINE_Cof.SPI_FLASH.SPI_FLASH_Info.SPI_FLASH_Staus=SPI_FLASH_IDLE;
+			OFFLINE_Cof.ISP_Conf.Connected=ISP_STATUS_Connectted;						//ISP正在连接（作为从机)---执行格式化
+//			Usart_ISP_SetSlaveStatus(&(OFFLINE_Cof.ISP_Conf),ISP_STATUS_WaitErased);			//设置从机状态--等待擦除完成
+		}
+	}
+	else if(Usart_ISP_GetSlaveStatus(&(OFFLINE_Cof.ISP_Conf))==ISP_STATUS_WaitGoAddr)
+	{
+		if(OFFLINE_Cof.SPI_FLASH.SPI_FLASH_Info.SPI_FLASH_Staus==SPI_FLASH_IDLE)
+		{
+			u32 temp=0;
+			OFFLINE_Cof.SPI_FLASH.SPI_FLASH_Info.SPI_FLASH_Staus=SPI_FLASH_WRITE;
+//			OFFLINE_Cof.SPI_FLASH.SPI_FLASH_Info.SPI_FLASH_SumReceived;																							//总共接收到的数据个数---4字节0x00-0x03存储
+			OFFLINE_Cof.SPI_FLASH.SPI_FLASH_Info.SPI_FLASH_ISPStartAddr=OFFLINE_Cof.ISP_Conf.ISP_DATA.OffsetAddr;		//烧录时的起始地址---4字节0x04-0x07存储
+			
+			
+			temp=OFFLINE_Cof.SPI_FLASH.SPI_FLASH_Info.SPI_FLASH_SumReceived;																							//总共接收到的数据个数---4字节0x00-0x03存储
+			
+			OFFLINE_Cof.SPI_FLASH.SPI_FLASH_Info.MOSI_Buffer[0]=0xFF&(temp>>24);
+			OFFLINE_Cof.SPI_FLASH.SPI_FLASH_Info.MOSI_Buffer[1]=0xFF&(temp>>16);
+			OFFLINE_Cof.SPI_FLASH.SPI_FLASH_Info.MOSI_Buffer[2]=0xFF&(temp>>8);
+			OFFLINE_Cof.SPI_FLASH.SPI_FLASH_Info.MOSI_Buffer[3]=0xFF&(temp>>0);
+			
+			temp=OFFLINE_Cof.SPI_FLASH.SPI_FLASH_Info.SPI_FLASH_ISPStartAddr;																							//烧录时的起始地址---4字节0x04-0x07存储
+			
+			OFFLINE_Cof.SPI_FLASH.SPI_FLASH_Info.MOSI_Buffer[4]=0xFF&(temp>>24);
+			OFFLINE_Cof.SPI_FLASH.SPI_FLASH_Info.MOSI_Buffer[5]=0xFF&(temp>>16);
+			OFFLINE_Cof.SPI_FLASH.SPI_FLASH_Info.MOSI_Buffer[6]=0xFF&(temp>>8);
+			OFFLINE_Cof.SPI_FLASH.SPI_FLASH_Info.MOSI_Buffer[7]=0xFF&(temp>>0);
+			
+			OFFLINE_Cof.SPI_FLASH.SPI_FLASH_Info.SPI_FLASH_LenghToWrite=8;		//待写入长度
+			OFFLINE_Cof.SPI_FLASH.SPI_FLASH_Info.SPI_FLASH_WriteAdrr=0;				//FLASH起始地址
+		}
+		else if(OFFLINE_Cof.SPI_FLASH.SPI_FLASH_Info.SPI_FLASH_Steps==Step_IDLE)
+		{
+			OFFLINE_Cof.SPI_FLASH.SPI_FLASH_Info.SPI_FLASH_Steps=Step_IDLE;
+			OFFLINE_Cof.SPI_FLASH.SPI_FLASH_Info.SPI_FLASH_Request=SPI_FLASH_qIDLE;
+			OFFLINE_Cof.SPI_FLASH.SPI_FLASH_Info.SPI_FLASH_Staus=SPI_FLASH_IDLE;
+			
+			Usart_ISP_SetSlaveStatus(&(OFFLINE_Cof.ISP_Conf),ISP_STATUS_IDLE);	//ISP空闲状态，可以读写
+		}		
+	}
+	else if(OFFLINE_Cof.SPI_FLASH.SPI_FLASH_Info.SPI_FLASH_SumReceived==0)//总共接收到的数据个数---4字节0x00-0x03存储//刚开机时此应该为0
+	{
+		if(OFFLINE_Cof.SPI_FLASH.SPI_FLASH_Info.SPI_FLASH_Staus==SPI_FLASH_IDLE)
+		{
+			OFFLINE_Cof.SPI_FLASH.SPI_FLASH_Info.SPI_FLASH_Staus=SPI_FLASH_READ;
+			OFFLINE_Cof.SPI_FLASH.SPI_FLASH_Info.SPI_FLASH_ReadAdrr=0;				//读待写数据信息从0开始
+			OFFLINE_Cof.SPI_FLASH.SPI_FLASH_Info.SPI_FLASH_LenghToRead=8;
+		}
+		else if(OFFLINE_Cof.SPI_FLASH.SPI_FLASH_Info.SPI_FLASH_Steps==Step_IDLE)
+		{
+			u32 temp=0;
+			temp+=OFFLINE_Cof.SPI_FLASH.SPI_FLASH_Info.MISO_Buffer[0];
+			temp=(temp<<8)|OFFLINE_Cof.SPI_FLASH.SPI_FLASH_Info.MISO_Buffer[1];
+			temp=(temp<<8)|OFFLINE_Cof.SPI_FLASH.SPI_FLASH_Info.MISO_Buffer[2];
+			temp=(temp<<8)|OFFLINE_Cof.SPI_FLASH.SPI_FLASH_Info.MISO_Buffer[3];
+			OFFLINE_Cof.SPI_FLASH.SPI_FLASH_Info.SPI_FLASH_SumOfData=temp;			//需要写入的数据个数
+			
+			temp=0;
+			temp+=OFFLINE_Cof.SPI_FLASH.SPI_FLASH_Info.MISO_Buffer[4];
+			temp=(temp<<8)|OFFLINE_Cof.SPI_FLASH.SPI_FLASH_Info.MISO_Buffer[5];
+			temp=(temp<<8)|OFFLINE_Cof.SPI_FLASH.SPI_FLASH_Info.MISO_Buffer[6];
+			temp=(temp<<8)|OFFLINE_Cof.SPI_FLASH.SPI_FLASH_Info.MISO_Buffer[7];
+			OFFLINE_Cof.SPI_FLASH.SPI_FLASH_Info.SPI_FLASH_ISPStartAddr=temp;			//需要写入的数据个数
+			
+			OFFLINE_Cof.SPI_FLASH.SPI_FLASH_Info.SPI_FLASH_Staus=SPI_FLASH_IDLE;
+			memcpy(OFFLINE_Cof.ISP_Conf.ISP_DATA.ISP_TvBuffer, OFFLINE_Cof.SPI_FLASH.SPI_FLASH_Info.MISO_Buffer, OFFLINE_Cof.ISP_Conf.ISP_DATA.SendLen+1);	//复制数据
+			Usart_ISP_SetSlaveStatus(&(OFFLINE_Cof.ISP_Conf),ISP_STATUS_WaitSData);	//设置从机状态
+		}
 	}
 }
 

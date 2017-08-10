@@ -84,6 +84,10 @@ typedef	enum _ISP_FUN	//USART 应答
 typedef enum _ISP_SLAVE_STATUS			//ISP状态标志---工作在从机状态时
 {
 	ISP_STATUS_IDLE=0,					//ISP空闲状态，可以读写
+	ISP_STATUS_UnConnect,				//ISP未连接（作为从机)
+	ISP_STATUS_WaitConnect,			//ISP等待连接（作为从机)
+	ISP_STATUS_Connectting,			//ISP正在连接（作为从机)---执行格式化
+	ISP_STATUS_Connectted,			//ISP已经连接（作为从机)
 	ISP_STATUS_WaitCommand,			//ISP等待命令（作为从机)
 	ISP_STATUS_WaitEraseAddr,		//ISP等待待擦除地址
 	ISP_STATUS_WaitErase,				//ISP等待擦除
@@ -163,9 +167,12 @@ typedef	struct _ISP_Conf					//USART 在线编程配置文件
 	ISP_SLAVE_STATUS_TypeDef	ISP_SLAVE_STATUS		;		//ISP状态标志---工作在从机状态时
 	ISP_MASTER_STATUS_TypeDef	ISP_MASTER_STATUS		;		//ISP状态标志---工作在主机状态时
 	ISP_VERSION_TypeDef	SlaveVersion							;		//从机自举程序版本信息
-	ISP_DATA_TypeDef		ISP_DATA									;		//ISP数据存储区域
+	ISP_DATA_TypeDef		ISP_DATA									;		//ISP数据存储区域---从机
+	ISP_DATA_TypeDef		ISP_MDATA									;		//ISP数据存储区域---主机
 	ISP_FUN_TypeDef			ISP_FUN										;		//ISP模块工作状态（主机-烧录/从机-更新自身程序)
-	unsigned int OverRunTime											;		//超时时间
+	
+	unsigned int 	OverRunTime											;		//超时时间
+	unsigned char Connected												;		//连接状态--从机更新固件时使用，如果Connected==0，表示未连接，需要格式化，如果Connected==1，表示已经连接
 	
 
 }ISP_Conf_TypeDef;

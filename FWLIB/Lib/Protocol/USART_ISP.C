@@ -95,9 +95,19 @@ void Usart_ISP_SlaveProcess(ISP_Conf_TypeDef *ISP_Conf)		//Ä£¿é×÷Îª´Ó»úÊ±µÄ´¦Àí³
 		{
 			if(ISP_Conf->ISP_DATA.ISP_RvBuffer[0]==0x7F)	//×Ô¾ÙÓ¦´ð
 			{
-				Usart_ISP_Reset(ISP_Conf);														//ÖØÖÃ±à³ÌÆ÷---»Ö¸´ËùÓÐ²ÎÊýÎªÄ¬ÈÏÖµ
-				Usart_ISP_SetSlaveStatus(ISP_Conf,ISP_STATUS_WaitCommand);		//ISPµÈ´ýÃüÁî£¨×÷Îª´Ó»ú)
-				Usart_ISP_ACK(ISP_Conf);															//ISPÓ¦´ð
+				if(ISP_Conf->Connected==ISP_STATUS_UnConnect)
+				{
+					Usart_ISP_Reset(ISP_Conf);														//ÖØÖÃ±à³ÌÆ÷---»Ö¸´ËùÓÐ²ÎÊýÎªÄ¬ÈÏÖµ
+					ISP_Conf->Connected=ISP_STATUS_WaitConnect;						//ISPµÈ´ýÁ¬½Ó£¨×÷Îª´Ó»ú)
+				}
+				else if(ISP_Conf->Connected==ISP_STATUS_Connectting||ISP_Conf->Connected==ISP_STATUS_WaitConnect)
+				{
+				}
+				else if(ISP_Conf->Connected==ISP_STATUS_Connectted)
+				{					
+					Usart_ISP_SetSlaveStatus(ISP_Conf,ISP_STATUS_WaitCommand);		//ISPµÈ´ýÃüÁî£¨×÷Îª´Ó»ú)
+					Usart_ISP_ACK(ISP_Conf);
+				}																							//ISPÓ¦´ð
 			}
 		}
 		else if(ISP_Conf->ISP_DATA.ReceivedLen==2&&ISP_Conf->ISP_SLAVE_STATUS==ISP_STATUS_WaitCommand)				//2×Ö½Ú---½ÓÊÕÃüÁî¹ý³Ì
@@ -391,7 +401,8 @@ void Usart_ISP_GetAddr(ISP_Conf_TypeDef *ISP_Conf)		//ISP»ñÈ¡Ð´Êý¾ÝÆðÊ¼µØÖ·(Ö÷»ú
 		else if(ISP_Conf->ISP_SLAVE_STATUS==ISP_STATUS_WaitGoAddr)			//µÈ´ý½ÓÊÕÐ´Êý¾ÝµØÖ·£¬½ÓÊÕµ½µØÖ·ºóÓ¦´ð£¬ÔÙµÈ´ý´ýÐ´ÈëµÄÊý¾Ý
 		{
 			ISP_Conf->ISP_DATA.GoAddr=addr;																//´ýÐ´Êý¾ÝµÄÆðÊ¼µØÖ·
-			Usart_ISP_SetSlaveStatus(ISP_Conf,ISP_STATUS_IDLE);						//ISP¿ÕÏÐ×´Ì¬£¬¿ÉÒÔ¶ÁÐ´
+			ISP_Conf->Connected=ISP_STATUS_UnConnect;											//ISPÎ´Á¬½Ó£¨×÷Îª´Ó»ú)---´ËÎª¶Ï¿ªÁ¬½Ó×´Ì¬
+//			Usart_ISP_SetSlaveStatus(ISP_Conf,ISP_STATUS_IDLE);						//ISP¿ÕÏÐ×´Ì¬£¬¿ÉÒÔ¶ÁÐ´
 			Usart_ISP_ACK(ISP_Conf);	//ISPÓ¦´ð
 		}
 	}
@@ -637,13 +648,14 @@ void Usart_ISP_Reset(ISP_Conf_TypeDef *ISP_Conf)	//ÖØÖÃ±à³ÌÆ÷---»Ö¸´ËùÓÐ²ÎÊýÎªÄ¬
 {	
 	ISP_Conf->ISP_SLAVE_STATUS			=	ISP_STATUS_IDLE;	//FLASH¿ÕÏÐ×´Ì¬£¬¿ÉÒÔ¶ÁÐ´
 	ISP_Conf->OverRunTime						=	0;								//³¬Ê±Ê±¼ä
-	ISP_Conf->ISP_DATA.ReceivedLen	=	0;		//´®¿Ú½ÓÊÕµÄÊý¾Ý¸öÊý
-	ISP_Conf->ISP_DATA.SendLen			=	0;		//ÐèÒªÍù´®¿Ú·¢ËÍµÄÊý¾Ý¸öÊý
-	ISP_Conf->ISP_DATA.OffsetAddr		=	0;		//Ð´´Ó»úÊ±µÄµØÖ·Æ«ÒÆ
-	ISP_Conf->ISP_DATA.StartAddr		=	0;		//ÆðÊ¼µØÖ·
-	ISP_Conf->ISP_DATA.ReadAddr			=	0;		//¶ÁÊý¾ÝÆðÊ¼µØÖ·
-	ISP_Conf->ISP_DATA.WriteAddr		=	0;		//Ð´ÈëÊý¾ÝÆðÊ¼µØÖ·
-	ISP_Conf->ISP_DATA.WriteLen			=	0;		//ÐèÒªÐ´ÈëµÄ³¤¶È
+	ISP_Conf->ISP_DATA.ReceivedLen	=	0;			//´®¿Ú½ÓÊÕµÄÊý¾Ý¸öÊý
+	ISP_Conf->ISP_DATA.SendLen			=	0;			//ÐèÒªÍù´®¿Ú·¢ËÍµÄÊý¾Ý¸öÊý
+	ISP_Conf->ISP_DATA.OffsetAddr		=	0;			//Ð´´Ó»úÊ±µÄµØÖ·Æ«ÒÆ
+	ISP_Conf->ISP_DATA.StartAddr		=	0;			//ÆðÊ¼µØÖ·
+	ISP_Conf->ISP_DATA.ReadAddr			=	0;			//¶ÁÊý¾ÝÆðÊ¼µØÖ·
+	ISP_Conf->ISP_DATA.WriteAddr		=	0;			//Ð´ÈëÊý¾ÝÆðÊ¼µØÖ·
+	ISP_Conf->ISP_DATA.WriteLen			=	0;			//ÐèÒªÐ´ÈëµÄ³¤¶È
+	ISP_Conf->Connected=ISP_STATUS_UnConnect;	//ISPÎ´Á¬½Ó£¨×÷Îª´Ó»ú)
 	memset(ISP_Conf->ISP_DATA.ISP_RxBuffer,0xFF, ISP_BufferSize);	//½ÓÊÕ»º³åÇø
 	memset(ISP_Conf->ISP_DATA.ISP_RvBuffer,0xFF, ISP_BufferSize);	//½ÓÊÕ»º³åÇø--±¸·ÝÇø
 	memset(ISP_Conf->ISP_DATA.ISP_TxBuffer,0xFF, ISP_BufferSize);	//·¢ËÍ»º³åÇø
