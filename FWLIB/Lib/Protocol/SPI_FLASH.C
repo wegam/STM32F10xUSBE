@@ -216,7 +216,7 @@ void SPI_FLASH_Conf(SPI_FLASH_TypeDef *SPI_Conf)
 	SPI_Conf->SPIx=SPI2;
 	SPI_Conf->SPI_CS_PORT=GPIOC;
 	SPI_Conf->SPI_CS_PIN=GPIO_Pin_8;	
-	SPI_Conf->SPI_BaudRatePrescaler_x=SPI_BaudRatePrescaler_32;
+	SPI_Conf->SPI_BaudRatePrescaler_x=SPI_BaudRatePrescaler_128;
 	
 	#elif	CMSIS_CDC_BD
 	

@@ -67,10 +67,22 @@ void PWM_TEST_Configuration(void)
 	USART_DMA_ConfigurationNR	(USART2,115200,(u32*)RxdBuffer,RxBufferSize);	//USART_DMA配置--查询方式，不开中断
 	
 	USART_DMAPrintf(USART2,"参数设置方法1（十六进制:FE A9 XX XX）\r\n");					//自定义printf串口DMA发送程序,后边的省略号就是可变参数
+	
 	for(ECount=0;ECount<0xFFFF;ECount++)
 	{
 	}
 	USART_DMAPrintf(USART2,"参数设置方法2（SET:xx (xx取值为0~60000,50的比值为1/1200））\r\n");					//自定义printf串口DMA发送程序,后边的省略号就是可变参数
+	for(ECount=0;ECount<0xFFFF;ECount++)
+	{
+	}
+	USART_DMAPrintf(USART2,"D4J1-D4Q3为PWM输出\r\n");					//自定义printf串口DMA发送程序,后边的省略号就是可变参数
+	for(ECount=0;ECount<0xFFFF;ECount++)
+	{
+	}
+	USART_DMAPrintf(USART2,"D4J1为编码器输入，编码器调节步长为1/1200\r\n");					//自定义printf串口DMA发送程序,后边的省略号就是可变参数
+	for(ECount=0;ECount<0xFFFF;ECount++)
+	{
+	}
 	
 	
 	PWonFlg=1;
@@ -113,7 +125,7 @@ void PWM_TEST_Server(void)
 			
 			if(PWM_Ratio>1200)
 				PWM_Ratio=1200;
-			USART_DMAPrintf(USART2,"当前输出比:%4d/1200\r\n",PWM_Ratio);					//自定义printf串口DMA发送程序,后边的省略号就是可变参数
+			USART_DMAPrintf(USART2,"当前输出占空比:%4d/1200\r\n",PWM_Ratio);					//自定义printf串口DMA发送程序,后边的省略号就是可变参数
 			TIM1->CCR1 =PWM_Ratio*50;
 		}
 		else if(RevBuffer[0]==0x53&&RevBuffer[1]==0x45&&RevBuffer[2]==0x54&&RevBuffer[3]==0x3A)
@@ -139,7 +151,7 @@ void PWM_TEST_Server(void)
 			TIM1->CCR1 =PWM_Ratio;
 			Npow=(double)PWM_Ratio/50.0;
 			PWM_Ratio	=(u16)Npow;
-			USART_DMAPrintf(USART2,"当前输出比:%4.4f/1200\r\n",Npow);					//自定义printf串口DMA发送程序,后边的省略号就是可变参数
+			USART_DMAPrintf(USART2,"当前输出占空比:%4.4f/1200\r\n",Npow);					//自定义printf串口DMA发送程序,后边的省略号就是可变参数
 		}
 		memset(RevBuffer, 0x00,16);
 	}
@@ -166,7 +178,7 @@ void PWM_ECODE(void)
 		{
 			PWM_Ratio=0;
 		}
-		USART_DMAPrintf(USART2,"当前输出比:%4d/1200\r\n",PWM_Ratio);					//自定义printf串口DMA发送程序,后边的省略号就是可变参数
+		USART_DMAPrintf(USART2,"当前输出占空比:%4d/1200\r\n",PWM_Ratio);					//自定义printf串口DMA发送程序,后边的省略号就是可变参数
 		TIM1->CCR1 =PWM_Ratio*50;
 		EXTI_ClearITPendingBit(EXTI_Line4);
 	}
@@ -225,7 +237,7 @@ void PWM_ECODE(void)
 				PWM_Ratio-=1;
 		}		
 		
-		USART_DMAPrintf(USART2,"当前输出比:%4d/1200\r\n",PWM_Ratio);					//自定义printf串口DMA发送程序,后边的省略号就是可变参数
+		USART_DMAPrintf(USART2,"当前输出占空比:%4d/1200\r\n",PWM_Ratio);					//自定义printf串口DMA发送程序,后边的省略号就是可变参数
 		TIM1->CCR1 =PWM_Ratio*50;
 		EXTI_ClearITPendingBit(EXTI_Line5);
 	}

@@ -245,7 +245,7 @@ void OFFLINE_ISP_StatusProcess(void)		//状态处理
 			Usart_ISP_SetSlaveStatus(&(OFFLINE_Cof.ISP_Conf),ISP_STATUS_IDLE);	//ISP空闲状态，可以读写
 		}		
 	}
-	else if(OFFLINE_Cof.SPI_FLASH.SPI_FLASH_Info.SPI_FLASH_SumReceived==0)//总共接收到的数据个数---4字节0x00-0x03存储//刚开机时此应该为0
+	else if(OFFLINE_Cof.SPI_FLASH.SPI_FLASH_Info.SPI_FLASH_SumOfData==0)//总共接收到的数据个数---4字节0x00-0x03存储//刚开机时此应该为0
 	{
 		if(OFFLINE_Cof.SPI_FLASH.SPI_FLASH_Info.SPI_FLASH_Staus==SPI_FLASH_IDLE)
 		{

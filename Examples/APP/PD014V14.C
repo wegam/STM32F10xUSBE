@@ -34,7 +34,7 @@ u16	DelayTime=0;
 u16	StepTime=0;
 
 u16 Lock_Toggle_CNT=0;
-
+PD014_INF_TypeDef	PD014_Conf;
 
 void PD014V14_PinSet(void);
 void Lock_Toggle(void);			//双向电子锁控制
@@ -57,7 +57,9 @@ void PD014V14_Configuration(void)
 	
 	IWDG_Configuration(1000);			//独立看门狗配置---参数单位ms	
 	
-	PWM_OUT(TIM2,PWM_OUTChannel1,1,900);						//PWM设定-20161127版本--SYS-LED
+	PWM_OUT(TIM2,PWM_OUTChannel1,0.5,990);						//PWM设定-20161127版本--SYS-LED
+	
+	PD014V14_GetSwitchID();				//获取拨码开关地址
 	
 	P_Sens=1;
 
@@ -87,6 +89,16 @@ void PD014V14_Server(void)
 //		StepTime=0;
 ////		GPIO_Toggle	(GPIOA,	GPIO_Pin_5);		//将GPIO相应管脚输出翻转----V20170605
 //	}
+}
+/*******************************************************************************
+* 函数名			:	PD014V14_Process
+* 功能描述		:	PD014V14_Process 
+* 输入			: void
+* 返回值			: void
+*******************************************************************************/
+void PD014V14_Process(void)		//PD014V14所有板内处理数理函数
+{
+
 }
 
 /*******************************************************************************
@@ -120,6 +132,16 @@ void PD014V14_PinSet(void)
 	GPIO_Configuration_IPU(GPIOB,	GPIO_Pin_14);					//将GPIO相应管脚配置为上拉输入模式----V20170605
 	GPIO_Configuration_IPU(GPIOC,	GPIO_Pin_6);					//将GPIO相应管脚配置为上拉输入模式----V20170605
 	GPIO_Configuration_IPU(GPIOC,	GPIO_Pin_8);					//将GPIO相应管脚配置为上拉输入模式----V20170605	
+	
+	//拨码开关
+	GPIO_Configuration_IPU(GPIOB,	GPIO_Pin_7);					//将GPIO相应管脚配置为上拉输入模式----V20170605
+	GPIO_Configuration_IPU(GPIOB,	GPIO_Pin_6);					//将GPIO相应管脚配置为上拉输入模式----V20170605
+	GPIO_Configuration_IPU(GPIOB,	GPIO_Pin_5);					//将GPIO相应管脚配置为上拉输入模式----V20170605
+	GPIO_Configuration_IPU(GPIOB,	GPIO_Pin_4);					//将GPIO相应管脚配置为上拉输入模式----V20170605
+	GPIO_Configuration_IPU(GPIOB,	GPIO_Pin_3);					//将GPIO相应管脚配置为上拉输入模式----V20170605
+	GPIO_Configuration_IPU(GPIOC,	GPIO_Pin_12);					//将GPIO相应管脚配置为上拉输入模式----V20170605
+	GPIO_Configuration_IPU(GPIOC,	GPIO_Pin_11);					//将GPIO相应管脚配置为上拉输入模式----V20170605
+	GPIO_Configuration_IPU(GPIOC,	GPIO_Pin_10);					//将GPIO相应管脚配置为上拉输入模式----V20170605
 }
 /*******************************************************************************
 * 函数名			:	function
@@ -184,6 +206,71 @@ void Lock_Toggle(void)
 		ct_pmos7=0;
 		ct_pmos8=0;
 	}
+}
+/*******************************************************************************
+* 函数名			:	PD014V14_GetSwitchID
+* 功能描述		:	获取拨码开关地址 
+* 输入			: void
+* 返回值			: void
+*******************************************************************************/
+void PD014V14_GetSwitchID(void)				//获取拨码开关地址
+{
+	u8 tempID=0;
+	tempID=tempID<<1;
+	tempID+=PD014_Switch8;		//S8-MSB
+	tempID=tempID<<1;
+	tempID+=PD014_Switch7;		//
+	tempID=tempID<<1;
+	tempID+=PD014_Switch6;		//
+	tempID=tempID<<1;
+	tempID+=PD014_Switch5;		//
+	tempID=tempID<<1;
+	tempID+=PD014_Switch4;		//
+	tempID=tempID<<1;
+	tempID+=PD014_Switch3;		//
+	tempID=tempID<<1;
+	tempID+=PD014_Switch2;		//
+	tempID=tempID<<1;
+	tempID+=PD014_Switch1;		//
+	tempID=tempID^0xFF;
+	
+	
+	if(PD014_Conf.PD014_DATA.SWITCHID&0x80)	//最高位为1，则CAN开启
+	{
+		PD014_Conf.PD014_DATA.CANFLG=1;
+	}
+	if(PD014_Conf.PD014_DATA.SWITCHID&0x7F)	//最高位为1，则CAN开启
+	{
+		PD014_Conf.MODE=NORMEL;					//有拨码，正常模式
+	}
+	else
+	{
+		PD014_Conf.MODE=TEST;						//无拨码，测试模式
+	}
+	
+	PD014_Conf.PD014_DATA.SWITCHID=tempID;
+}
+/*******************************************************************************
+* 函数名			:	PD014V14_GetOnlieDevice
+* 功能描述		:	函数功能说明 
+* 输入			: void
+* 返回值			: void
+*******************************************************************************/
+void PD014V14_GetOnlieDevice(void)			//获取在线发药头
+{
+}
+/*******************************************************************************
+* 函数名			:	PD014V14_ResetData
+* 功能描述		:	复位数据 
+* 输入			: void
+* 返回值			: void
+*******************************************************************************/
+void PD014V14_ResetData(void)					//复位数据
+{
 
 }
+
+
+
+
 #endif

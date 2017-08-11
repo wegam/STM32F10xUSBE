@@ -5,6 +5,7 @@
 #include "stm32f10x_gpio.h"
 #include "stm32f10x_rcc.h"
 #include "stm32f10x_type.h"
+#include "STM32F10x_BitBand.H"
 
 #include "STM32_SYS.H"
 #include "STM32_PWM.H"

@@ -31,6 +31,7 @@
 
 u16 Time=0;
 u16 data=0;
+u8 Flag=0;
 
 
 CD4511_Pindef CD4511_Pin;
@@ -72,30 +73,61 @@ void PC006V20_Configuration(void)
 void PC006V20_Server(void)
 {
 	++Time;	
-	if(Time<=50)
-	{
-		PB14=0;
-		PB15=1;		
-	}
-	else	if(Time<=100)
-	{
-		PB14=1;
-		PB15=1;				
-	}
-	else	if(Time<=150)
-	{
-		PB14=1;
-		PB15=0;				
-	}
-	else if(Time>5000)	//反转
+//	if(Time<=50)
+//	{
+//		PB14=0;
+//		PB15=1;		
+//	}
+//	else	if(Time<=100)
+//	{
+//		PB14=1;
+//		PB15=1;				
+//	}
+//	else	if(Time<=150)
+//	{
+//		PB14=1;
+//		PB15=0;				
+//	}
+//	else if(Time>5000)	//反转
+//	{
+//		Time=0;
+//	}
+//	else
+//	{
+//		PB14=1;
+//		PB15=1;
+//	}
+	if(Time>2000)	//反转
 	{
 		Time=0;
+		if(Flag==0)
+		{
+			Flag=1;
+		}
+		else
+		{
+			Flag=0;
+		}
+	}
+	else if(Time<50)
+	{
+		if(Flag==0)
+		{
+			PB14=0;
+			PB15=1;
+		}
+		else
+		{
+			PB14=1;
+			PB15=0;
+		}		
 	}
 	else
 	{
 		PB14=1;
-		PB15=1;
+		PB15=1;	
 	}
+	
 	
 //	if(Time<=100)	//停止
 //	{

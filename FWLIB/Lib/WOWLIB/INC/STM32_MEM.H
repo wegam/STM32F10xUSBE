@@ -25,16 +25,16 @@
 
 
 
-//结点结构体定义
-typedef struct ListNode
-{	
-	u16 Lenth;
-//	const char*	Buffer=NULL;
-	ListNode*	pNext;
-}ListNode;
+////结点结构体定义
+//typedef struct ListNode
+//{	
+//	u16 Lenth;
+////	const char*	Buffer=NULL;
+//	ListNode*	pNext;
+//}ListNode;
 
 //链表的操作，以有头节点为例，无头节点类似  
-ListNode* head = NULL;
+//ListNode* head = NULL;
 /************************************************************************************** 
 *函数名称	：Create 
 *函数功能	：创建链表. 
@@ -42,8 +42,8 @@ ListNode* head = NULL;
 *返回值		：表头节点指针head 
 *************************************************************************************/
 //创建链表，头结点data=0，pNext=NULL;
-ListNode *Create()
-{
+//ListNode *Create()
+//{
 //	ListNode *NewNode	=	NULL;		//p1保存创建的新节点的地址
 //	ListNode *next 		= NULL;		//p2保存原链表最后一个节点的地址
 
@@ -66,9 +66,9 @@ ListNode *Create()
 //		return head;	    	//返回创建链表的头指针
 //	}
 //	
-	return head;	    	//返回创建链表的头指针 
+//	return head;	    	//返回创建链表的头指针 
 
-}
+//}
 
 
 
