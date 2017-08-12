@@ -32,8 +32,11 @@ Page：
 
 #include "string.h"
 
+#define 	STM32_CDC
 
 #define 	USART_BufferSize				512
+
+
 
 //ISP_Conf_TypeDef 	ISP_Conf;
 //SPI_FLASH_TypeDef	SPI_FLASH;
@@ -72,7 +75,7 @@ void OFFLINE_ISP_Configuration(void)
 	IWDG_Configuration(2000);					//独立看门狗配置---参数单位ms	
 	SysTick_Configuration(10);				//系统嘀嗒时钟配置72MHz,单位为uS
 	timecunt=0;		//空闲计时
-//	OFFLINE_Cof.SPI_FLASH.SPI_FLASH_Info.SPI_FLASH_Request=SPI_FLASH_qCERASE;
+	OFFLINE_Cof.SPI_FLASH.SPI_FLASH_Info.SPI_FLASH_Request=SPI_FLASH_qCERASE;
 }
 /*******************************************************************************
 * 函数名		:
@@ -95,40 +98,10 @@ void OFFLINE_ISP_Server(void)
 		Usart_ISP_Process(&(OFFLINE_Cof.ISP_Conf));
 		SPI_FLASH_Process(&(OFFLINE_Cof.SPI_FLASH));			//FLASH数据处理：所有的FLASH对外操作接口
 		
-//		SPI_FLASH_BufferWrite	(&(OFFLINE_Cof.SPI_FLASH),	RevBuffe, OFFLINE_Cof.SPI_FLASH.SPI_FLASH_Info.SPI_FLASH_WriteAdrr, RxNum);	//FLASH写缓冲数据
-//		SPI_FLASH_BufferRead	(&(OFFLINE_Cof.SPI_FLASH),	RevBuffe, OFFLINE_Cof.SPI_FLASH.SPI_FLASH_Info.SPI_FLASH_WriteAdrr, RxNum);
-//		OFFLINE_Cof.SPI_FLASH.SPI_FLASH_Info.SPI_FLASH_WriteAdrr+=RxNum;
 	}
-	OFFLINE_ISP_StatusProcess();		//状态处理
-	Usart_ISP_Process(&(OFFLINE_Cof.ISP_Conf));
+//	OFFLINE_ISP_StatusProcess();		//状态处理
+//	Usart_ISP_Process(&(OFFLINE_Cof.ISP_Conf));
 	SPI_FLASH_Process(&(OFFLINE_Cof.SPI_FLASH));			//FLASH数据处理：所有的FLASH对外操作接口
-	
-//	PWM_Ratio+=1;
-//	if(PWM_Ratio>=3600)
-//	{
-//		flag=1;
-//		PWM_Ratio=0;
-//	}
-//	if(flag==0)
-//	{
-//		PWM_Ratio++;
-//		if(PWM_Ratio>=3600)
-//		{
-//			flag=1;
-////			PWM_Ratio=0;
-//		}
-//	}
-//	else
-//	{
-//		PWM_Ratio--;
-//		if(PWM_Ratio<=1800)
-//		{
-//			flag=0;
-//		}
-//	}
-//	
-//	SetPWM_Ratio(PWM_Ratio);		//设置占空比
-	
 }
 /*******************************************************************************
 *函数名			:	function
@@ -145,12 +118,12 @@ void OFFLINE_ISP_StatusProcess(void)		//状态处理
 		{
 			OFFLINE_Cof.SPI_FLASH.SPI_FLASH_Info.SPI_FLASH_Staus=SPI_FLASH_READ;
 			OFFLINE_Cof.SPI_FLASH.SPI_FLASH_Info.SPI_FLASH_ReadAdrr=OFFLINE_Cof.ISP_Conf.ISP_DATA.ReadAddr-OFFLINE_Cof.ISP_Conf.ISP_DATA.OffsetAddr+OFFLINE_Cof.SPI_FLASH.SPI_FLASH_Info.SPI_FLASH_OffsetAdrr;
-			OFFLINE_Cof.SPI_FLASH.SPI_FLASH_Info.SPI_FLASH_LenghToRead=OFFLINE_Cof.ISP_Conf.ISP_DATA.SendLen+1;
+			OFFLINE_Cof.SPI_FLASH.SPI_FLASH_Info.SPI_FLASH_LenghToRead=OFFLINE_Cof.ISP_Conf.ISP_DATA.USARTSendLen+1;
 		}
 		else if(OFFLINE_Cof.SPI_FLASH.SPI_FLASH_Info.SPI_FLASH_Steps==Step_IDLE)
 		{
 			OFFLINE_Cof.SPI_FLASH.SPI_FLASH_Info.SPI_FLASH_Staus=SPI_FLASH_IDLE;
-			memcpy(OFFLINE_Cof.ISP_Conf.ISP_DATA.ISP_TvBuffer, OFFLINE_Cof.SPI_FLASH.SPI_FLASH_Info.MISO_Buffer, OFFLINE_Cof.ISP_Conf.ISP_DATA.SendLen+1);	//复制数据
+			memcpy(OFFLINE_Cof.ISP_Conf.ISP_DATA.ISP_TvBuffer, OFFLINE_Cof.SPI_FLASH.SPI_FLASH_Info.MISO_Buffer, OFFLINE_Cof.ISP_Conf.ISP_DATA.USARTSendLen+1);	//复制数据
 			Usart_ISP_SetSlaveStatus(&(OFFLINE_Cof.ISP_Conf),ISP_STATUS_WaitSData);	//设置从机状态
 		}
 	}
@@ -270,7 +243,7 @@ void OFFLINE_ISP_StatusProcess(void)		//状态处理
 			OFFLINE_Cof.SPI_FLASH.SPI_FLASH_Info.SPI_FLASH_ISPStartAddr=temp;			//需要写入的数据个数
 			
 			OFFLINE_Cof.SPI_FLASH.SPI_FLASH_Info.SPI_FLASH_Staus=SPI_FLASH_IDLE;
-			memcpy(OFFLINE_Cof.ISP_Conf.ISP_DATA.ISP_TvBuffer, OFFLINE_Cof.SPI_FLASH.SPI_FLASH_Info.MISO_Buffer, OFFLINE_Cof.ISP_Conf.ISP_DATA.SendLen+1);	//复制数据
+			memcpy(OFFLINE_Cof.ISP_Conf.ISP_DATA.ISP_TvBuffer, OFFLINE_Cof.SPI_FLASH.SPI_FLASH_Info.MISO_Buffer, OFFLINE_Cof.ISP_Conf.ISP_DATA.USARTSendLen+1);	//复制数据
 			Usart_ISP_SetSlaveStatus(&(OFFLINE_Cof.ISP_Conf),ISP_STATUS_WaitSData);	//设置从机状态
 		}
 	}
@@ -286,6 +259,12 @@ void OFFLINE_ISP_StatusProcess(void)		//状态处理
 void OFFLINE_ISP_Conf(void)
 {
 	OFFLINE_Cof.ISP_Conf.USARTx=USART1;
+	
+	OFFLINE_Cof.ISP_Conf.RESET_CTL_PORT=GPIOB;
+	OFFLINE_Cof.ISP_Conf.RESET_CTL_Pin=GPIO_Pin_0;
+	
+	OFFLINE_Cof.ISP_Conf.BOOT0_CTL_PORT=GPIOA;
+	OFFLINE_Cof.ISP_Conf.BOOT0_CTL_Pin=GPIO_Pin_8;
 	
 	SPI_FLASH_Conf(&(OFFLINE_Cof.SPI_FLASH));
 	Usart_ISP_Cof(&(OFFLINE_Cof.ISP_Conf));	

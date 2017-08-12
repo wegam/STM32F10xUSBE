@@ -21,6 +21,7 @@ Page£º
 
 #include "STM32_USART.H"
 #include "STM32_TOOLS.H"
+#include "STM32_GPIO.H"
 
 //#define USB_TEST_BD				//USB_TEST°å
 //#define SPI_FLASH_OSTL
@@ -55,6 +56,8 @@ Page£º
 void Usart_ISP_Cof(ISP_Conf_TypeDef *ISP_Conf)
 {
 	USART_DMA_ConfigurationEV	(ISP_Conf->USARTx,115200,(u32*)ISP_Conf->ISP_DATA.ISP_RxBuffer,ISP_BufferSize);	//USART_DMAÅäÖÃ--²éÑ¯·½Ê½£¬²»¿ªÖÐ¶Ï
+	GPIO_Configuration_OPP50	(ISP_Conf->RESET_CTL_PORT,ISP_Conf->RESET_CTL_Pin);			//½«GPIOÏàÓ¦¹Ü½ÅÅäÖÃÎªPP(ÍÆÍì)Êä³öÄ£Ê½£¬×î´óËÙ¶È50MHz----V20170605
+	GPIO_Configuration_OPP50	(ISP_Conf->BOOT0_CTL_PORT,ISP_Conf->BOOT0_CTL_Pin);			//½«GPIOÏàÓ¦¹Ü½ÅÅäÖÃÎªPP(ÍÆÍì)Êä³öÄ£Ê½£¬×î´óËÙ¶È50MHz----V20170605
 	Usart_ISP_Reset(ISP_Conf);																																								//ÖØÖÃ±à³ÌÆ÷---»Ö¸´ËùÓÐ²ÎÊýÎªÄ¬ÈÏÖµ
 	ISP_Conf->ISP_FUN=ISP_SLAVE;			//²âÊÔ---½«Ä£¿éÉèÖÃÎª´Ó»ú
 }
@@ -72,12 +75,14 @@ void Usart_ISP_Process(ISP_Conf_TypeDef *ISP_Conf)
 	}
 	else if(ISP_Conf->ISP_FUN==ISP_MASTER)	//Ä£¿é×÷ÎªÖ÷»ú----ÉÕÂ¼Ä¿±ê°å
 	{
-		Usart_ISP_SlaveProcess(ISP_Conf);			//Ä£¿é×÷ÎªÖ÷»úÊ±µÄ´¦Àí³ÌÐò
+		Usart_ISP_MasterProcess(ISP_Conf);			//Ä£¿é×÷ÎªÖ÷»úÊ±µÄ´¦Àí³ÌÐò
 	}
 	else
 	{
-		Usart_ISP_CheckFun(ISP_Conf);					//¼ì²âISPÄ£¿é¹¤×÷Ä£Ê½---¿ÕÏÐÊ±¼ì²â
-	}
+//		Usart_ISP_CheckFun(ISP_Conf);					//¼ì²âISPÄ£¿é¹¤×÷Ä£Ê½---¿ÕÏÐÊ±¼ì²â
+	}	
+//	Usart_ISP_MasterProcess(ISP_Conf);			//Ä£¿é×÷ÎªÖ÷»úÊ±µÄ´¦Àí³ÌÐò
+	Usart_ISP_SlaveProcess(ISP_Conf);			//Ä£¿é×÷Îª´Ó»úÊ±µÄ´¦Àí³ÌÐò
 }
 /*******************************************************************************
 * º¯ÊýÃû			:	Usart_ISP_SlaveProcess
@@ -160,6 +165,8 @@ void Usart_ISP_SlaveProcess(ISP_Conf_TypeDef *ISP_Conf)		//Ä£¿é×÷Îª´Ó»úÊ±µÄ´¦Àí³
 *******************************************************************************/
 void Usart_ISP_MasterProcess(ISP_Conf_TypeDef *ISP_Conf)		//Ä£¿é×÷ÎªÖ÷»úÊ±µÄ´¦Àí³ÌÐò
 {
+	Usart_MISP_StatusProcess(ISP_Conf);			//Æô¶¯´Ó»úÉè±¸Ê¹´Ó»úÔËÐÐ
+	Usart_ISP_Send(ISP_Conf);						//·¢ËÍº¯Êý°üÀ¨´Ó»ú·¢ËÍÓ¦´ð¡¢·¢ËÍµØÖ·¡¢·¢ËÍÃüÁî¡¢·¢ËÍÊý¾Ý
 }
 /*******************************************************************************
 * º¯ÊýÃû			:	Usart_ISP_CheckFun
@@ -169,7 +176,35 @@ void Usart_ISP_MasterProcess(ISP_Conf_TypeDef *ISP_Conf)		//Ä£¿é×÷ÎªÖ÷»úÊ±µÄ´¦Àí
 *******************************************************************************/
 void Usart_ISP_CheckFun(ISP_Conf_TypeDef *ISP_Conf)				//¼ì²âISPÄ£¿é¹¤×÷Ä£Ê½---¿ÕÏÐÊ±¼ì²â
 {
-	Usart_ISP_Reset(ISP_Conf);	//ÖØÖÃ±à³ÌÆ÷---»Ö¸´ËùÓÐ²ÎÊýÎªÄ¬ÈÏÖµ---Ä£Ê½ÇÐ»»ºó¸´Î»
+//	GPIO_Configuration_OPP50	(ISP_Conf->RESET_CTL_PORT,ISP_Conf->RESET_CTL_Pin);			//½«GPIOÏàÓ¦¹Ü½ÅÅäÖÃÎªPP(ÍÆÍì)Êä³öÄ£Ê½£¬×î´óËÙ¶È50MHz----V20170605
+//	GPIO_Configuration_OPP50	(ISP_Conf->BOOT0_CTL_PORT,ISP_Conf->BOOT0_CTL_Pin);			//½«GPIOÏàÓ¦¹Ü½ÅÅäÖÃÎªPP(ÍÆÍì)Êä³öÄ£Ê½£¬×î´óËÙ¶È50MHz----V20170605
+//	GPIO_Configuration_INA		(ISP_Conf->RESET_CTL_PORT,ISP_Conf->RESET_CTL_Pin);			//½«GPIOÏàÓ¦¹Ü½ÅÅäÖÃÎªPP(ÍÆÍì)Êä³öÄ£Ê½£¬×î´óËÙ¶È50MHz----V20170605
+//	GPIO_Configuration_INA		(ISP_Conf->BOOT0_CTL_PORT,ISP_Conf->BOOT0_CTL_Pin);			//½«GPIOÏàÓ¦¹Ü½ÅÅäÖÃÎªPP(ÍÆÍì)Êä³öÄ£Ê½£¬×î´óËÙ¶È50MHz----V20170605
+//	GPIO_ReadInputDataBit(ISP_Conf->RESET_CTL_PORT,ISP_Conf->RESET_CTL_Pin);
+//	GPIO_ReadInputDataBit(ISP_Conf->BOOT0_CTL_PORT,ISP_Conf->BOOT0_CTL_Pin);
+//	GPIO_Configuration_IPD(ISP_Conf->RESET_CTL_PORT,ISP_Conf->RESET_CTL_Pin);			//½«GPIOÏàÓ¦¹Ü½ÅÅäÖÃÎªÏÂÀ­ÊäÈëÄ£Ê½----V20170605
+//	GPIO_Configuration_IPD(ISP_Conf->BOOT0_CTL_PORT,ISP_Conf->BOOT0_CTL_Pin);			//½«GPIOÏàÓ¦¹Ü½ÅÅäÖÃÎªÏÂÀ­ÊäÈëÄ£Ê½----V20170605
+//	GPIO_Configuration_IPU(ISP_Conf->RESET_CTL_PORT,ISP_Conf->RESET_CTL_Pin);			//½«GPIOÏàÓ¦¹Ü½ÅÅäÖÃÎªÉÏÀ­ÊäÈëÄ£Ê½----V20170605
+//	GPIO_Configuration_IPU(ISP_Conf->BOOT0_CTL_PORT,ISP_Conf->BOOT0_CTL_Pin);			//½«GPIOÏàÓ¦¹Ü½ÅÅäÖÃÎªÉÏÀ­ÊäÈëÄ£Ê½----V20170605
+	//ÅÐ¶ÏÖ÷»ú»¹ÊÇ´Ó»ú
+	//---------------------ÅÐ¶ÏÊÇ·ñÎª´Ó»ú£º±à³ÌÆ÷½«RESET½ÅÀ­µÍ£¬½«BOOT0½ÅÀ­¸ß
+	GPIO_Configuration_IPU(ISP_Conf->RESET_CTL_PORT,ISP_Conf->RESET_CTL_Pin);			//½«GPIOÏàÓ¦¹Ü½ÅÅäÖÃÎªÉÏÀ­ÊäÈëÄ£Ê½----V20170605
+	GPIO_Configuration_IPD(ISP_Conf->BOOT0_CTL_PORT,ISP_Conf->BOOT0_CTL_Pin);			//½«GPIOÏàÓ¦¹Ü½ÅÅäÖÃÎªÏÂÀ­ÊäÈëÄ£Ê½----V20170605
+	if((GPIO_ReadInputDataBit(ISP_Conf->RESET_CTL_PORT,ISP_Conf->RESET_CTL_Pin)==Bit_RESET)&&(GPIO_ReadInputDataBit(ISP_Conf->BOOT0_CTL_PORT,ISP_Conf->BOOT0_CTL_Pin)==Bit_SET))
+	{
+		ISP_Conf->ISP_FUN=ISP_SLAVE;		//ISP×÷Îª´Ó»ú
+	}
+	else
+	{
+		ISP_Conf->ISP_FUN=ISP_MASTER;		//ISP×÷ÎªÖ÷»ú--¸üÐÂ×ÔÉí³ÌÐò
+		GPIO_Configuration_OPP50	(ISP_Conf->RESET_CTL_PORT,ISP_Conf->RESET_CTL_Pin);			//½«GPIOÏàÓ¦¹Ü½ÅÅäÖÃÎªPP(ÍÆÍì)Êä³öÄ£Ê½£¬×î´óËÙ¶È50MHz----V20170605
+		GPIO_Configuration_OPP50	(ISP_Conf->BOOT0_CTL_PORT,ISP_Conf->BOOT0_CTL_Pin);			//½«GPIOÏàÓ¦¹Ü½ÅÅäÖÃÎªPP(ÍÆÍì)Êä³öÄ£Ê½£¬×î´óËÙ¶È50MHz----V20170605
+	}
+	
+	//---------------------ÅÐ¶ÏÊÇ·ñÎªÖ÷»ú(²»Îª´Ó»úÊ±ÔòÈÏÎªÊÇ´Ó»ú£©£º´Ó»úÕý³£¹¤×÷Ê±£¬RESET½Å´øÉÏÀ­£¬BOOT0½ÅÎªµÍ
+	
+	
+	
 }
 /*******************************************************************************
 * º¯ÊýÃû			:	Usart_ISP_ACK
@@ -240,10 +275,10 @@ void Usart_ISP_CommandRead(ISP_Conf_TypeDef *ISP_Conf)			//´®¿Ú½ÓÊÕÃüÁî£¨Ö÷»ú->´
 		ISP_Conf->ISP_DATA.ISP_TvBuffer[14]=ISP_ANSWER_ACK;		//Ó¦´ð
 		
 		Usart_ISP_SetSlaveStatus(ISP_Conf,ISP_STATUS_WaitCommand);		//ISPµÈ´ýÃüÁî£¨×÷Îª´Ó»ú)--´¦ÀíÍêGetÃüÁîºóµÈ´ýÏÂÒ»ÏÂÃüÁî
-		ISP_Conf->ISP_DATA.SendLen=15;												//´®¿ÚÐèÒª·¢ËÍµÄÊý¾Ý³¤¶È
+		ISP_Conf->ISP_DATA.USARTSendLen=15;												//´®¿ÚÐèÒª·¢ËÍµÄÊý¾Ý³¤¶È
 		
-		memcpy(ISP_Conf->ISP_DATA.ISP_TxBuffer, ISP_Conf->ISP_DATA.ISP_TvBuffer, ISP_Conf->ISP_DATA.SendLen);
-		USART_DMASend(ISP_Conf->USARTx,(u32*)ISP_Conf->ISP_DATA.ISP_TxBuffer,ISP_Conf->ISP_DATA.SendLen);	//´®¿ÚDMA·¢ËÍ³ÌÐò	
+		memcpy(ISP_Conf->ISP_DATA.ISP_TxBuffer, ISP_Conf->ISP_DATA.ISP_TvBuffer, ISP_Conf->ISP_DATA.USARTSendLen);
+		USART_DMASend(ISP_Conf->USARTx,(u32*)ISP_Conf->ISP_DATA.ISP_TxBuffer,ISP_Conf->ISP_DATA.USARTSendLen);	//´®¿ÚDMA·¢ËÍ³ÌÐò	
 			
 	}
 	else if(C0==ISP_COMMAND_GetVS)	//»ñÈ¡×Ô¾Ù³ÌÐò°æ±¾¼° Flash µÄ¶Á±£»¤×´Ì¬
@@ -255,10 +290,10 @@ void Usart_ISP_CommandRead(ISP_Conf_TypeDef *ISP_Conf)			//´®¿Ú½ÓÊÕÃüÁî£¨Ö÷»ú->´
 		ISP_Conf->ISP_DATA.ISP_TvBuffer[4]=ISP_ANSWER_ACK;		//Ó¦´ð
 		
 		Usart_ISP_SetSlaveStatus(ISP_Conf,ISP_STATUS_WaitCommand);		//ISPµÈ´ýÃüÁî£¨×÷Îª´Ó»ú)--´¦ÀíÍêGetVSÃüÁîºóµÈ´ýÏÂÒ»ÏÂÃüÁî
-		ISP_Conf->ISP_DATA.SendLen=5;												//´®¿ÚÐèÒª·¢ËÍµÄÊý¾Ý³¤¶È
+		ISP_Conf->ISP_DATA.USARTSendLen=5;												//´®¿ÚÐèÒª·¢ËÍµÄÊý¾Ý³¤¶È
 		
-		memcpy(ISP_Conf->ISP_DATA.ISP_TxBuffer, ISP_Conf->ISP_DATA.ISP_TvBuffer, ISP_Conf->ISP_DATA.SendLen);
-		USART_DMASend(ISP_Conf->USARTx,(u32*)ISP_Conf->ISP_DATA.ISP_TxBuffer,ISP_Conf->ISP_DATA.SendLen);	//´®¿ÚDMA·¢ËÍ³ÌÐò	
+		memcpy(ISP_Conf->ISP_DATA.ISP_TxBuffer, ISP_Conf->ISP_DATA.ISP_TvBuffer, ISP_Conf->ISP_DATA.USARTSendLen);
+		USART_DMASend(ISP_Conf->USARTx,(u32*)ISP_Conf->ISP_DATA.ISP_TxBuffer,ISP_Conf->ISP_DATA.USARTSendLen);	//´®¿ÚDMA·¢ËÍ³ÌÐò	
 	}
 	else if(C0==ISP_COMMAND_GetID)	//»ñÈ¡Ð¾Æ¬ ID
 	{
@@ -269,10 +304,10 @@ void Usart_ISP_CommandRead(ISP_Conf_TypeDef *ISP_Conf)			//´®¿Ú½ÓÊÕÃüÁî£¨Ö÷»ú->´
 		ISP_Conf->ISP_DATA.ISP_TvBuffer[4]=ISP_ANSWER_ACK;		//Ó¦´ð
 		
 		Usart_ISP_SetSlaveStatus(ISP_Conf,ISP_STATUS_WaitCommand);		//ISPµÈ´ýÃüÁî£¨×÷Îª´Ó»ú)--´¦ÀíÍêGetIDÃüÁîºóµÈ´ýÏÂÒ»ÏÂÃüÁî
-		ISP_Conf->ISP_DATA.SendLen=5;												//´®¿ÚÐèÒª·¢ËÍµÄÊý¾Ý³¤¶È
+		ISP_Conf->ISP_DATA.USARTSendLen=5;												//´®¿ÚÐèÒª·¢ËÍµÄÊý¾Ý³¤¶È
 		
-		memcpy(ISP_Conf->ISP_DATA.ISP_TxBuffer, ISP_Conf->ISP_DATA.ISP_TvBuffer, ISP_Conf->ISP_DATA.SendLen);
-		USART_DMASend(ISP_Conf->USARTx,(u32*)ISP_Conf->ISP_DATA.ISP_TxBuffer,ISP_Conf->ISP_DATA.SendLen);	//´®¿ÚDMA·¢ËÍ³ÌÐò	
+		memcpy(ISP_Conf->ISP_DATA.ISP_TxBuffer, ISP_Conf->ISP_DATA.ISP_TvBuffer, ISP_Conf->ISP_DATA.USARTSendLen);
+		USART_DMASend(ISP_Conf->USARTx,(u32*)ISP_Conf->ISP_DATA.ISP_TxBuffer,ISP_Conf->ISP_DATA.USARTSendLen);	//´®¿ÚDMA·¢ËÍ³ÌÐò	
 	}
 	else if(C0==ISP_COMMAND_RM)			//´ÓÓ¦ÓÃ³ÌÐòÖ¸¶¨µÄµØÖ·¿ªÊ¼¶ÁÈ¡×î¶à 256 ¸ö×Ö½ÚµÄ´æ´¢Æ÷¿Õ¼ä£º¶ÁÊý¾Ý·ÖÎå²½£º1-¶ÁÊý¾ÝÃüÁî£¬2-¶ÁÊý¾ÝÆðÊ¼µØÖ·£¬3-ÐèÒª¶ÁÈ¡µÄ³¤¶È£¬4-¶ÁÊý¾Ý¹ý³Ì£¬5-ÉÏ±¨Êý¾Ý
 	{
@@ -441,7 +476,7 @@ void Usart_ISP_GetLengh(ISP_Conf_TypeDef *ISP_Conf)				//ISP»ñÈ¡ÐèÒª¶ÁÈ¡µÄÊý¾Ý³¤
 	}
 	else
 	{
-		ISP_Conf->ISP_DATA.SendLen=C0;										//ÐèÒªÍù´®¿Ú·¢ËÍµÄÊý¾Ý¸öÊý
+		ISP_Conf->ISP_DATA.USARTSendLen=C0;										//ÐèÒªÍù´®¿Ú·¢ËÍµÄÊý¾Ý¸öÊý
 		Usart_ISP_SetSlaveStatus(ISP_Conf,ISP_STATUS_WaitReadData);	//ÉèÖÃ´Ó»ú×´Ì¬--ISPµÈ´ý¶ÁÊý¾Ý²Ù×÷
 	}
 //		ISP_Conf->ISP_SLAVE_STATUS=ISP_STATUS_WaitReadData;	//ISPµÈ´ý¶ÁÊý¾Ý²Ù×÷
@@ -560,8 +595,8 @@ void Usart_ISP_SendBuffer(ISP_Conf_TypeDef *ISP_Conf)	//ISPÉÏ´«Êý¾Ý£¨´Ó»ú->Ö÷»ú)
 {	
 
 	ISP_Conf->ISP_DATA.ISP_TxBuffer[0]=0x79;
-	memcpy(&ISP_Conf->ISP_DATA.ISP_TxBuffer[1], ISP_Conf->ISP_DATA.ISP_TvBuffer, ISP_Conf->ISP_DATA.SendLen+1);	//¸´ÖÆÊý¾Ý
-	USART_DMASend(ISP_Conf->USARTx,(u32*)ISP_Conf->ISP_DATA.ISP_TxBuffer,ISP_Conf->ISP_DATA.SendLen+2);				//´®¿ÚDMA·¢ËÍ³ÌÐò
+	memcpy(&ISP_Conf->ISP_DATA.ISP_TxBuffer[1], ISP_Conf->ISP_DATA.ISP_TvBuffer, ISP_Conf->ISP_DATA.USARTSendLen+1);	//¸´ÖÆÊý¾Ý
+	USART_DMASend(ISP_Conf->USARTx,(u32*)ISP_Conf->ISP_DATA.ISP_TxBuffer,ISP_Conf->ISP_DATA.USARTSendLen+2);				//´®¿ÚDMA·¢ËÍ³ÌÐò
 	Usart_ISP_SetSlaveStatus(ISP_Conf,ISP_STATUS_WaitCommand);				//ÒÑ¾­Íê³ÉÊý¾Ý·¢ËÍÃüÁî£¬×´Ì¬¸üÐÂÎªµÈ´ýÏÂÒ»¸öÃüÁîISP_STATUS_WaitCommand
 
 	
@@ -638,6 +673,189 @@ void Usart_ISP_SetSlaveStatus(ISP_Conf_TypeDef *ISP_Conf,ISP_SLAVE_STATUS_TypeDe
 {	
 	ISP_Conf->ISP_SLAVE_STATUS=Status;	//ÉèÖÃ×´Ì¬Öµ
 }
+
+
+
+
+
+
+
+
+
+
+
+
+//------------------------------------Ö÷»ú×¨ÓÐº¯Êý
+/*******************************************************************************
+*º¯ÊýÃû			:	Usart_ISP_GetDevice
+*¹¦ÄÜÃèÊö		:	Æô¶¯´Ó»úÉè±¸Ê¹´Ó»úÔËÐÐ
+*ÊäÈë				: 
+*·µ»ØÖµ			:	ÎÞ
+*******************************************************************************/
+void Usart_MISP_GetDevice(ISP_Conf_TypeDef *ISP_Conf)			//»ñÈ¡´Ó»úÐ¾Æ¬ÐÅÏ¢
+{
+	GPIO_ResetBits(ISP_Conf->BOOT0_CTL_PORT,ISP_Conf->BOOT0_CTL_Pin);		//BOOT0À­µÍ
+	GPIO_SetBits(ISP_Conf->RESET_CTL_PORT,ISP_Conf->RESET_CTL_Pin);	//RESET½ÅÀ­¸ß
+}
+/*******************************************************************************
+*º¯ÊýÃû			:	Usart_ISP_Connect
+*¹¦ÄÜÃèÊö		:	Ö÷»úÁ¬½Ó´Ó»úº¯Êý
+*ÊäÈë				: 
+*·µ»ØÖµ			:	ÎÞ
+*******************************************************************************/
+void Usart_MISP_Connect(ISP_Conf_TypeDef *ISP_Conf)					//Ö÷»úÁ¬½Ó´Ó»úº¯Êý
+{
+		ISP_Conf->ISP_DATA.USARTSendLen=1;										//·¢ËÍÒ»×Ö½Ú0x7F
+		ISP_Conf->ISP_DATA.ISP_TvBuffer[0]=0x7F;							//Á¬½Ó·û
+}
+/*******************************************************************************
+*º¯ÊýÃû			:	Usart_ISP_Send
+*¹¦ÄÜÃèÊö		:	¸´Î»´Ó»úÉè±¸--Ê¹´Ó»ú½øÐÐISPÄ£Ê½
+*ÊäÈë				: 
+*·µ»ØÖµ			:	ÎÞ
+*******************************************************************************/
+void Usart_MISP_ResetDevice(ISP_Conf_TypeDef *ISP_Conf)			//¸´Î»´Ó»úÉè±¸--Ê¹´Ó»ú½øÐÐISPÄ£Ê½
+{
+	GPIO_SetBits(ISP_Conf->BOOT0_CTL_PORT,ISP_Conf->BOOT0_CTL_Pin);		//BOOT0À­¸ß
+	GPIO_ResetBits(ISP_Conf->RESET_CTL_PORT,ISP_Conf->RESET_CTL_Pin);	//RESET½ÅÀ­µÍ
+}
+/*******************************************************************************
+*º¯ÊýÃû			:	Usart_ISP_SetDevice
+*¹¦ÄÜÃèÊö		:	Æô¶¯´Ó»ú½ÓÊÕBOOT0Ê¹´Ó»ú½øÐÐÏÂÔØ×´Ì¬
+*ÊäÈë				: 
+*·µ»ØÖµ			:	ÎÞ
+*******************************************************************************/
+void Usart_MISP_SetDevice(ISP_Conf_TypeDef *ISP_Conf)			//Æô¶¯´Ó»ú½ÓÊÕBOOT0Ê¹´Ó»ú½øÐÐÏÂÔØ×´Ì¬
+{
+	GPIO_SetBits(ISP_Conf->BOOT0_CTL_PORT,ISP_Conf->BOOT0_CTL_Pin);		//BOOT0À­µÍ
+	GPIO_SetBits(ISP_Conf->RESET_CTL_PORT,ISP_Conf->RESET_CTL_Pin);			//RESET½ÅÀ­¸ß
+}
+/*******************************************************************************
+*º¯ÊýÃû			:	Usart_MISP_RunDevice
+*¹¦ÄÜÃèÊö		:	Æô¶¯´Ó»úÉè±¸Ê¹´Ó»úÕý³£ÔËÐÐ
+*ÊäÈë				: 
+*·µ»ØÖµ			:	ÎÞ
+*******************************************************************************/
+void Usart_MISP_RunDevice(ISP_Conf_TypeDef *ISP_Conf)			//Æô¶¯´Ó»úÉè±¸Ê¹´Ó»úÕý³£ÔËÐÐ
+{
+	GPIO_ResetBits(ISP_Conf->BOOT0_CTL_PORT,ISP_Conf->BOOT0_CTL_Pin);		//BOOT0À­µÍ
+	GPIO_SetBits(ISP_Conf->RESET_CTL_PORT,ISP_Conf->RESET_CTL_Pin);			//RESET½ÅÀ­¸ß
+}
+/*******************************************************************************
+*º¯ÊýÃû			:	Usart_MISP_ReadAck
+*¹¦ÄÜÃèÊö		:	Ö÷»ú¶ÁÈ¡´Ó»úÓ¦´ð
+*ÊäÈë				: 
+*·µ»ØÖµ			:	TRUE£ºÓÐÓ¦´ð£»FALSE£ºÎÞÓ¦´ð
+*******************************************************************************/
+bool Usart_MISP_ReadAck(ISP_Conf_TypeDef *ISP_Conf)			//Ö÷»ú¶ÁÈ¡´Ó»úÓ¦´ð:ÓÐÓ¦´ð·µ»ØTRUE£¬·ñÔò·µ»ØFALSE
+{
+	ISP_Conf->ISP_DATA.ReceivedLen=USART_ReadBufferIDLE(ISP_Conf->USARTx,(u32*)ISP_Conf->ISP_DATA.ISP_RvBuffer,(u32*)ISP_Conf->ISP_DATA.ISP_RxBuffer);	//´®¿Ú¿ÕÏÐÄ£Ê½¶Á´®¿Ú½ÓÊÕ»º³åÇø£¬Èç¹ûÓÐÊý¾Ý£¬½«Êý¾Ý¿½±´µ½RevBuffer,²¢·µ»Ø½ÓÊÕµ½µÄ
+	if(ISP_Conf->ISP_DATA.ReceivedLen)
+	{
+		if(ISP_Conf->ISP_DATA.ISP_RvBuffer[0]==0x79)
+		{
+			return TRUE;
+		}
+		else
+		{
+			return FALSE;
+		}
+	}
+	return FALSE;
+}
+/*******************************************************************************
+*º¯ÊýÃû			:	Usart_MISP_StatusProcess
+*¹¦ÄÜÃèÊö		:	º¯Êý¹¦ÄÜËµÃ÷
+*ÊäÈë				: 
+*·µ»ØÖµ			:	ÎÞ
+*******************************************************************************/
+void Usart_MISP_StatusProcess(ISP_Conf_TypeDef *ISP_Conf)			//Æô¶¯´Ó»úÉè±¸Ê¹´Ó»úÔËÐÐ
+{
+	if(ISP_Conf->OverRunTime++>2000000)			//10S³¬Ê±
+	{
+		Usart_ISP_Reset(ISP_Conf);						//ÖØÖÃ±à³ÌÆ÷---»Ö¸´ËùÓÐ²ÎÊýÎªÄ¬ÈÏÖµ
+	}
+	if(ISP_Conf->ISP_MASTER_STATUS==ISP_MSTATUS_IDLE)
+	{
+		ISP_Conf->ISP_MASTER_STATUS=ISP_MSTATUS_ResetDevice;
+		ISP_Conf->OverRunTime=0;						//³¬Ê±Ê±¼ä
+	}
+	else if(ISP_Conf->ISP_MASTER_STATUS==ISP_MSTATUS_ResetDevice)		//Ö´ÐÐÉÏµç¸´Î»
+	{
+		if(ISP_Conf->TimeCount++<10000)				//¼ÆÊ±Ê±¼ä--100mS
+		{			
+			Usart_MISP_ResetDevice(ISP_Conf);			//¸´Î»´Ó»úÉè±¸--Ê¹´Ó»ú½øÐÐISPÄ£Ê½			
+		}
+		else
+		{
+			ISP_Conf->TimeCount=0;																			//¼ÆÊ±Ê±¼ä--ÇåÁã
+			ISP_Conf->ISP_MASTER_STATUS=ISP_MSTATUS_WriteConnect;				//ISPÖ÷»ú×¼±¸Á¬½Ó----¸´Î»ºó¼ì²â´Ó»ú
+			Usart_MISP_SetDevice(ISP_Conf);															//Æô¶¯´Ó»ú½ÓÊÕBOOT0Ê¹´Ó»ú½øÐÐÏÂÔØ×´Ì¬
+		}
+	}
+	else if(ISP_Conf->ISP_MASTER_STATUS==ISP_MSTATUS_WriteConnect)	//ISPÖ÷»ú×¼±¸Á¬½Ó----¸´Î»ºó¼ì²â´Ó»ú
+	{
+		ISP_Conf->MasterLastStatus=ISP_MSTATUS_WriteConnect;					//´æ´¢Ö÷»úÉÏÒ»¸ö×´Ì¬£¬¸ù¾ÝÉÏÒ»¸ö×´Ì¬µÈµ½´Ó»úÓ¦´ðÊ±½øÐÐÏÂÒ»²½²Ù×÷:µÈ´ýÓ¦´ð
+		ISP_Conf->ISP_MASTER_STATUS=ISP_MSTATUS_WaitAck;							//ISPÖ÷»úµÈ´ý´Ó»úÓ¦´ð
+		Usart_MISP_Connect(ISP_Conf);																	//Ö÷»úÁ¬½Ó´Ó»úº¯Êý
+	}
+	else if(ISP_Conf->ISP_MASTER_STATUS==ISP_MSTATUS_WaitAck)				//ISPÖ÷»úµÈ´ý´Ó»úÓ¦´ð
+	{
+		bool Result=FALSE;				//¶¨Òå²¼¶û±äÁ¿
+		Result=Usart_MISP_ReadAck(ISP_Conf);					//Ö÷»ú¶ÁÈ¡´Ó»úÓ¦´ð:ÓÐÓ¦´ð·µ»ØTRUE£¬·ñÔò·µ»ØFALSE
+		if(Result==TRUE)
+		{
+			if(ISP_Conf->MasterLastStatus==ISP_MSTATUS_WriteConnect)			//´æ´¢Ö÷»úÉÏÒ»¸ö×´Ì¬£¬¸ù¾ÝÉÏÒ»¸ö×´Ì¬µÈµ½´Ó»úÓ¦´ðÊ±½øÐÐÏÂÒ»²½²Ù×÷:µÈ´ýÓ¦´ð
+			{
+				ISP_Conf->ISP_MASTER_STATUS=ISP_MSTATUS_Connectted;			//ISPÖ÷»úÓë´Ó»úÒÑ¾­Á¬½ÓÍê³É
+			}
+		}
+		else
+		{
+			if(ISP_Conf->MasterLastStatus==ISP_MSTATUS_WriteConnect)			//´æ´¢Ö÷»úÉÏÒ»¸ö×´Ì¬£¬¸ù¾ÝÉÏÒ»¸ö×´Ì¬µÈµ½´Ó»úÓ¦´ðÊ±½øÐÐÏÂÒ»²½²Ù×÷:µÈ´ýÓ¦´ð
+			{
+				if(ISP_Conf->TimeCount++>1000)				//¼ÆÊ±Ê±¼ä--100mS,³¬Ê±ÎÞÓ¦´ð£¬ÖØÐÂ·¢ËÍÁ¬½ÓÃüÁî
+				{
+					ISP_Conf->TimeCount=0;							//¼ÆÊ±Ê±¼ä--ÇåÁã
+					ISP_Conf->ISP_MASTER_STATUS=ISP_MSTATUS_WriteConnect;		//ISPÖ÷»ú×¼±¸Á¬½Ó----¸´Î»ºó¼ì²â´Ó»ú
+				}
+				if(ISP_Conf->OverRunTime++>400000)				//¸´Î»ºó2ÃëÄÚÃ»Á¬½ÓÉÏ´Ó»úÖØÐÂ¸´Î»Ä£¿é
+				{
+					Usart_ISP_Reset(ISP_Conf);							//ÖØÖÃ±à³ÌÆ÷---»Ö¸´ËùÓÐ²ÎÊýÎªÄ¬ÈÏÖµ
+				}
+			}			
+		}
+	}
+}
+
+
+
+
+
+
+
+
+
+
+
+//------------------------------------¹«¹²º¯Êý
+/*******************************************************************************
+*º¯ÊýÃû			:	function
+*¹¦ÄÜÃèÊö		:	·¢ËÍº¯Êý°üÀ¨´Ó»ú·¢ËÍÓ¦´ð¡¢·¢ËÍµØÖ·¡¢·¢ËÍÃüÁî¡¢·¢ËÍÊý¾Ý
+*ÊäÈë				: 
+*·µ»ØÖµ			:	ÎÞ
+*******************************************************************************/
+void Usart_ISP_Send(ISP_Conf_TypeDef *ISP_Conf)						//·¢ËÍº¯Êý°üÀ¨´Ó»ú·¢ËÍÓ¦´ð¡¢·¢ËÍµØÖ·¡¢·¢ËÍÃüÁî¡¢·¢ËÍÊý¾Ý
+{
+	if(ISP_Conf->ISP_DATA.USARTSendLen)
+	{
+		memcpy(ISP_Conf->ISP_DATA.ISP_TxBuffer, ISP_Conf->ISP_DATA.ISP_TvBuffer,ISP_Conf->ISP_DATA.USARTSendLen);		//¸´ÖÆÊý¾Ý
+		memset(ISP_Conf->ISP_DATA.ISP_TvBuffer,0xFF, ISP_BufferSize);	//½ÓÊÕ»º³åÇø
+		USART_DMASend(ISP_Conf->USARTx,(u32*)ISP_Conf->ISP_DATA.ISP_TxBuffer,ISP_Conf->ISP_DATA.USARTSendLen);			//´®¿ÚDMA·¢ËÍ³ÌÐò
+		ISP_Conf->ISP_DATA.USARTSendLen=0;
+	}
+}
+
 /*******************************************************************************
 * º¯ÊýÃû			:	Usart_ISP_Reset
 * ¹¦ÄÜÃèÊö		:	ÖØÖÃ±à³ÌÆ÷---»Ö¸´ËùÓÐ²ÎÊýÎªÄ¬ÈÏÖµ
@@ -646,16 +864,35 @@ void Usart_ISP_SetSlaveStatus(ISP_Conf_TypeDef *ISP_Conf,ISP_SLAVE_STATUS_TypeDe
 *******************************************************************************/
 void Usart_ISP_Reset(ISP_Conf_TypeDef *ISP_Conf)	//ÖØÖÃ±à³ÌÆ÷---»Ö¸´ËùÓÐ²ÎÊýÎªÄ¬ÈÏÖµ
 {	
-	ISP_Conf->ISP_SLAVE_STATUS			=	ISP_STATUS_IDLE;	//FLASH¿ÕÏÐ×´Ì¬£¬¿ÉÒÔ¶ÁÐ´
-	ISP_Conf->OverRunTime						=	0;								//³¬Ê±Ê±¼ä
-	ISP_Conf->ISP_DATA.ReceivedLen	=	0;			//´®¿Ú½ÓÊÕµÄÊý¾Ý¸öÊý
-	ISP_Conf->ISP_DATA.SendLen			=	0;			//ÐèÒªÍù´®¿Ú·¢ËÍµÄÊý¾Ý¸öÊý
-	ISP_Conf->ISP_DATA.OffsetAddr		=	0;			//Ð´´Ó»úÊ±µÄµØÖ·Æ«ÒÆ
-	ISP_Conf->ISP_DATA.StartAddr		=	0;			//ÆðÊ¼µØÖ·
-	ISP_Conf->ISP_DATA.ReadAddr			=	0;			//¶ÁÊý¾ÝÆðÊ¼µØÖ·
-	ISP_Conf->ISP_DATA.WriteAddr		=	0;			//Ð´ÈëÊý¾ÝÆðÊ¼µØÖ·
-	ISP_Conf->ISP_DATA.WriteLen			=	0;			//ÐèÒªÐ´ÈëµÄ³¤¶È
-	ISP_Conf->Connected=ISP_STATUS_UnConnect;	//ISPÎ´Á¬½Ó£¨×÷Îª´Ó»ú)
+	ISP_Conf->ISP_DATA.OffsetAddr				=	0;			//Ð´´Ó»úÊ±µÄµØÖ·Æ«ÒÆ
+	ISP_Conf->ISP_DATA.StartAddr				=	0;			//ÆðÊ¼µØÖ·
+	ISP_Conf->ISP_DATA.GoAddr						=	0;			//¸´Î»ÔËÐÐÆðÊ¼µØÖ·
+	
+	ISP_Conf->ISP_DATA.ReceivedLen			=	0;			//´®¿Ú½ÓÊÕµÄÊý¾Ý¸öÊý
+	ISP_Conf->ISP_DATA.USARTSendLen			=	0;			//ÐèÒªÍù´®¿Ú·¢ËÍµÄÊý¾Ý¸öÊý---//µ±¼ì²âµ½SendLen²»Îª0Ê±×Ô¶¯·¢ËÍÊý¾Ý
+	
+	ISP_Conf->ISP_DATA.FLASHNumToSave		=	0;			//ÐèÒªÍùFLASHÀï±£´æµÄÊý¾Ý¸öÊý---µ±´Ë²»Îª0Ê±SPI-FLASH×Ô¶¯´æ´¢Êý¾Ý
+	ISP_Conf->ISP_DATA.FLASHNumToRead		=	0;			//ÐèÒª´ÓFLASHÀï¶ÁÈ¡µÄÊý¾Ý¸öÊý---µ±´Ë²»Îª0Ê±£¬SPI-FLASH×Ô¶¯Í¨¹ýWriteAddrµØÖ·´ÓSPI-FLASH¶ÁÈ¡Êý¾Ý
+	
+	ISP_Conf->ISP_DATA.ReadAddr					=	0;			//¶ÁÊý¾ÝÆðÊ¼µØÖ·
+	
+	ISP_Conf->ISP_DATA.WriteAddr				=	0;			//Ð´ÈëÊý¾ÝÆðÊ¼µØÖ·
+	ISP_Conf->ISP_DATA.WriteLen					=	0;			//ÐèÒªÐ´ÈëµÄ³¤¶È	
+
+	ISP_Conf->ISP_DATA.SumHaveReceived	=	0;			//×÷Îª´Ó»úÊ±×Ü¹²½ÓÊÕµ½µÄÊý¾Ý¸öÊý
+	ISP_Conf->ISP_DATA.SumHaveWritten		=	0;			//Ö÷»ú×Ü¹²Íù´Ó»úÐ´ÈëµÄÊý¾Ý¸öÊý	
+	
+	ISP_Conf->ISP_FUN										=	ISP_IDLE;						//ISP×´Ì¬Îª¿ÕÏÐ£¬¸ù¾ÝRESET½Ó¿Ú×´Ì¬ºÍBOOT0½Ó¿Ú×´Ì¬¿ÉÒÔÇÐ»»ÎªMASTER»òÕßSLAVE
+	ISP_Conf->ISP_SLAVE_STATUS					=	ISP_STATUS_IDLE;		//FLASH¿ÕÏÐ×´Ì¬£¬¿ÉÒÔ¶ÁÐ´
+	ISP_Conf->SlaveLastStatus						=	ISP_STATUS_IDLE;		//´æ´¢´Ó»úÉÏÒ»¸ö×´Ì¬£¬¸ù¾ÝÉÏÒ»¸ö×´Ì¬½øÐÐÏÂÒ»²½²Ù×÷
+	
+	ISP_Conf->ISP_MASTER_STATUS					=	ISP_MSTATUS_IDLE;		//ISPÖ÷»ú¿ÕÏÐ×´Ì¬----¿ªÊ¼Ð´Ç°»òÕßÐ´Íê³Éºó×´Ì¬
+	ISP_Conf->MasterLastStatus					=	ISP_MSTATUS_IDLE;		//´æ´¢Ö÷»úÉÏÒ»¸ö×´Ì¬£¬¸ù¾ÝÉÏÒ»¸ö×´Ì¬µÈµ½´Ó»úÓ¦´ðÊ±½øÐÐÏÂÒ»²½²Ù×÷
+	
+	ISP_Conf->OverRunTime								=	0;									//³¬Ê±Ê±¼ä	
+	ISP_Conf->TimeCount									=	0;									//¼ÆÊ±Ê±¼ä	
+	ISP_Conf->Connected=ISP_STATUS_UnConnect;							//ISPÎ´Á¬½Ó£¨×÷Îª´Ó»ú)
+	
 	memset(ISP_Conf->ISP_DATA.ISP_RxBuffer,0xFF, ISP_BufferSize);	//½ÓÊÕ»º³åÇø
 	memset(ISP_Conf->ISP_DATA.ISP_RvBuffer,0xFF, ISP_BufferSize);	//½ÓÊÕ»º³åÇø--±¸·ÝÇø
 	memset(ISP_Conf->ISP_DATA.ISP_TxBuffer,0xFF, ISP_BufferSize);	//·¢ËÍ»º³åÇø

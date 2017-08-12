@@ -200,6 +200,7 @@ void SPI_FLASH_ChipErase		(SPI_FLASH_TypeDef *SPI_Conf);										//FLASHÕûÆ¬²Á³
 void SPI_FLASH_ENALBE		(SPI_FLASH_TypeDef 	*SPI_Conf);								//SPI_FLASH_Ê¹ÄÜ
 void SPI_FLASH_DISALBE	(SPI_FLASH_TypeDef 	*SPI_Conf);								//SPI_FLASH_¹Ø±Õ
 //------------
+u8 SPI_USER_SendData(SPI_FLASH_TypeDef *SPI_Conf,u8 byte);			//×Ô¶¨ÒåÐ´µ¥×Ö½ÚÊý¾Ý
 u8 	SPI_FLASH_WriteReadByte	(SPI_FLASH_TypeDef *SPI_Conf,u8 byte);			//Flash·¢ËÍÒ»×Ö½Ú²¢¶ÁÈ¡Ò»×Ö½ÚÊý¾Ý
 //------------
 void SPI_FLASH_WriteEnable	(SPI_FLASH_TypeDef *SPI_Conf);							//0x06Ð´Ê¹ÄÜ
