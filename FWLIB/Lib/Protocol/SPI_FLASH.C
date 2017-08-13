@@ -341,7 +341,7 @@ void SPI_FLASH_Conf(SPI_FLASH_TypeDef *SPI_Conf)
 	SPI_Conf->SPI_FLASH_Info.SPI_FLASH_Request=SPI_FLASH_qIDLE;		//初始待写入数据为0
 	SPI_Conf->SPI_FLASH_Info.SPI_FLASH_LenghToWrite=0;						//初始待写入数据为0
 	
-	
+	SPI_Conf->SPI_FLASH_Info.SPI_FLASH_OffsetAdrr=256;	
 	
 }
 /*******************************************************************************
@@ -628,7 +628,7 @@ void SPI_FLASH_ConfigurationNR(SPI_FLASH_TypeDef *SPI_Conf)
 	{
 		SPI_SSOutputCmd(SPI_Conf->SPIx, DISABLE);								//如果在主机模式下的片选方式为硬件（SPI_NSS_Hard）方式，此处必须打开，否则NSS无信号
 	}
-	SPI_Conf->SPI_FLASH_Info.SPI_FLASH_OffsetAdrr=256;
+	
 }
 
 /*******************************************************************************
@@ -868,7 +868,7 @@ void SPI_FLASH_PageWrite(SPI_FLASH_TypeDef *SPI_Conf,u8* pBuffer, u32 WriteAddr,
 *******************************************************************************/
 void SPI_FLASH_BufferWrite(SPI_FLASH_TypeDef *SPI_Conf,u8* pBuffer, u32 WriteAddr, u16 NumByteToWrite)
 {
-  u8 NumOfPage = 0, NumOfSingle = 0, Addr = 0, count = 0, temp = 0;
+  u16 NumOfPage = 0, NumOfSingle = 0, Addr = 0, count = 0, temp = 0;
 	u32	SPI_FLASH_PageSize=SPI_Conf->SPI_FLASH_Info.SPI_FLASH_PageSize;		//获取此芯片的页大小
 	
 	SPI_Conf->SPI_FLASH_Info.SPI_FLASH_Steps=Step_IDLE;		//写状态
@@ -938,7 +938,7 @@ void SPI_FLASH_BufferWrite(SPI_FLASH_TypeDef *SPI_Conf,u8* pBuffer, u32 WriteAdd
     }
   }
 	SPI_Conf->SPI_FLASH_Info.SPI_FLASH_Steps=Step_WRITE;		//写状态
-	SPI_Conf->SPI_FLASH_Info.SPI_FLASH_LenghToWrite=0;
+//	SPI_Conf->SPI_FLASH_Info.SPI_FLASH_LenghToWrite=0;
 //	SPI_Conf->SPI_FLASH_Info.SPI_FLASH_Steps=Step_IDLE;					//写状态
 //	SPI_Conf->SPI_FLASH_Info.SPI_FLASH_Staus=SPI_FLASH_IDLE;		//空闲状态
 }
@@ -1265,7 +1265,19 @@ void SPI_FLASH_Process(SPI_FLASH_TypeDef *SPI_Conf)			//FLASH数据处理：所有的FLA
 	}
 	else if(SPI_Conf->SPI_FLASH_Info.SPI_FLASH_Staus==SPI_FLASH_WRITE)		//写
 	{
-		SPI_FLASH_BufferWrite(SPI_Conf,SPI_Conf->SPI_FLASH_Info.MOSI_Buffer, SPI_Conf->SPI_FLASH_Info.SPI_FLASH_WriteAdrr, SPI_Conf->SPI_FLASH_Info.SPI_FLASH_LenghToWrite);	//FLASH写缓冲数据
+		if(SPI_Conf->SPI_FLASH_Info.SPI_FLASH_LenghToWrite==0)
+		{
+			SPI_Conf->SPI_FLASH_Info.SPI_FLASH_Staus=SPI_FLASH_IDLE;
+		}
+		else
+		{
+			SPI_FLASH_BufferWrite(SPI_Conf,SPI_Conf->SPI_FLASH_Info.MOSI_Buffer, SPI_Conf->SPI_FLASH_Info.SPI_FLASH_WriteAdrr, SPI_Conf->SPI_FLASH_Info.SPI_FLASH_LenghToWrite);	//FLASH写缓冲数据
+			SPI_Conf->SPI_FLASH_Info.SPI_FLASH_WriteAdrr=0;
+			SPI_Conf->SPI_FLASH_Info.SPI_FLASH_LenghToWrite=0;
+//			SPI_Conf->SPI_FLASH_Info.SPI_FLASH_Staus=SPI_FLASH_IDLE;//FLASH空闲状态，可以读写
+//			SPI_Conf->SPI_FLASH_Info.SPI_FLASH_Steps=Step_IDLE;//起始步骤，当前为空闲
+//			SPI_Conf->SPI_FLASH_Info.SPI_FLASH_Request=SPI_FLASH_qIDLE;//FLASH空闲
+		}
 	}	
 }
 /*******************************************************************************

@@ -59,7 +59,7 @@ void Usart_ISP_Cof(ISP_Conf_TypeDef *ISP_Conf)
 	GPIO_Configuration_OPP50	(ISP_Conf->RESET_CTL_PORT,ISP_Conf->RESET_CTL_Pin);			//½«GPIOÏàÓ¦¹Ü½ÅÅäÖÃÎªPP(ÍÆÍì)Êä³öÄ£Ê½£¬×î´óËÙ¶È50MHz----V20170605
 	GPIO_Configuration_OPP50	(ISP_Conf->BOOT0_CTL_PORT,ISP_Conf->BOOT0_CTL_Pin);			//½«GPIOÏàÓ¦¹Ü½ÅÅäÖÃÎªPP(ÍÆÍì)Êä³öÄ£Ê½£¬×î´óËÙ¶È50MHz----V20170605
 	Usart_ISP_Reset(ISP_Conf);																																								//ÖØÖÃ±à³ÌÆ÷---»Ö¸´ËùÓĞ²ÎÊıÎªÄ¬ÈÏÖµ
-	ISP_Conf->ISP_FUN=ISP_SLAVE;			//²âÊÔ---½«Ä£¿éÉèÖÃÎª´Ó»ú
+//	ISP_Conf->ISP_FUN=ISP_SLAVE;			//²âÊÔ---½«Ä£¿éÉèÖÃÎª´Ó»ú
 }
 /*******************************************************************************
 * º¯ÊıÃû			:	Usart_ISP_CommandSend
@@ -79,10 +79,10 @@ void Usart_ISP_Process(ISP_Conf_TypeDef *ISP_Conf)
 	}
 	else
 	{
-//		Usart_ISP_CheckFun(ISP_Conf);					//¼ì²âISPÄ£¿é¹¤×÷Ä£Ê½---¿ÕÏĞÊ±¼ì²â
+		Usart_ISP_CheckFun(ISP_Conf);					//¼ì²âISPÄ£¿é¹¤×÷Ä£Ê½---¿ÕÏĞÊ±¼ì²â
 	}	
 //	Usart_ISP_MasterProcess(ISP_Conf);			//Ä£¿é×÷ÎªÖ÷»úÊ±µÄ´¦Àí³ÌĞò
-	Usart_ISP_SlaveProcess(ISP_Conf);			//Ä£¿é×÷Îª´Ó»úÊ±µÄ´¦Àí³ÌĞò
+//	Usart_ISP_SlaveProcess(ISP_Conf);			//Ä£¿é×÷Îª´Ó»úÊ±µÄ´¦Àí³ÌĞò
 }
 /*******************************************************************************
 * º¯ÊıÃû			:	Usart_ISP_SlaveProcess
@@ -149,6 +149,10 @@ void Usart_ISP_SlaveProcess(ISP_Conf_TypeDef *ISP_Conf)		//Ä£¿é×÷Îª´Ó»úÊ±µÄ´¦Àí³
 	{
 		Usart_ISP_WriteMemory(ISP_Conf);			//ISPĞ´Êı¾İ£¨Ö÷»ú->´Ó»ú£©Ğ´Êı¾İÊ±£¬´«ÍêµØÖ·ºóµÈ´ı´«ÈëÊı¾İ£¬ÔÙÖ´ĞĞĞ´²Ù×÷
 	}
+	else if(ISP_Conf->ISP_SLAVE_STATUS==ISP_STATUS_WaitReset)	//³ÌĞòÏÂÔØÍêºó´Ó»úĞèÒªÖØÖÃ
+	{
+		Usart_ISP_CheckFun(ISP_Conf);					//¼ì²âISPÄ£¿é¹¤×÷Ä£Ê½---¿ÕÏĞÊ±¼ì²â
+	}
 	else	if(ISP_Conf->ISP_SLAVE_STATUS!=ISP_STATUS_IDLE)				//·Ç³õÊ¼×´Ì¬Ê±³¬Ê±¸´Î»
 	{
 		ISP_Conf->OverRunTime=ISP_Conf->OverRunTime+1;					//³¬Ê±Ê±¼ä
@@ -176,6 +180,7 @@ void Usart_ISP_MasterProcess(ISP_Conf_TypeDef *ISP_Conf)		//Ä£¿é×÷ÎªÖ÷»úÊ±µÄ´¦Àí
 *******************************************************************************/
 void Usart_ISP_CheckFun(ISP_Conf_TypeDef *ISP_Conf)				//¼ì²âISPÄ£¿é¹¤×÷Ä£Ê½---¿ÕÏĞÊ±¼ì²â
 {
+	u32 delaytime=0x00;
 //	GPIO_Configuration_OPP50	(ISP_Conf->RESET_CTL_PORT,ISP_Conf->RESET_CTL_Pin);			//½«GPIOÏàÓ¦¹Ü½ÅÅäÖÃÎªPP(ÍÆÍì)Êä³öÄ£Ê½£¬×î´óËÙ¶È50MHz----V20170605
 //	GPIO_Configuration_OPP50	(ISP_Conf->BOOT0_CTL_PORT,ISP_Conf->BOOT0_CTL_Pin);			//½«GPIOÏàÓ¦¹Ü½ÅÅäÖÃÎªPP(ÍÆÍì)Êä³öÄ£Ê½£¬×î´óËÙ¶È50MHz----V20170605
 //	GPIO_Configuration_INA		(ISP_Conf->RESET_CTL_PORT,ISP_Conf->RESET_CTL_Pin);			//½«GPIOÏàÓ¦¹Ü½ÅÅäÖÃÎªPP(ÍÆÍì)Êä³öÄ£Ê½£¬×î´óËÙ¶È50MHz----V20170605
@@ -188,23 +193,33 @@ void Usart_ISP_CheckFun(ISP_Conf_TypeDef *ISP_Conf)				//¼ì²âISPÄ£¿é¹¤×÷Ä£Ê½---¿
 //	GPIO_Configuration_IPU(ISP_Conf->BOOT0_CTL_PORT,ISP_Conf->BOOT0_CTL_Pin);			//½«GPIOÏàÓ¦¹Ü½ÅÅäÖÃÎªÉÏÀ­ÊäÈëÄ£Ê½----V20170605
 	//ÅĞ¶ÏÖ÷»ú»¹ÊÇ´Ó»ú
 	//---------------------ÅĞ¶ÏÊÇ·ñÎª´Ó»ú£º±à³ÌÆ÷½«RESET½ÅÀ­µÍ£¬½«BOOT0½ÅÀ­¸ß
-	GPIO_Configuration_IPU(ISP_Conf->RESET_CTL_PORT,ISP_Conf->RESET_CTL_Pin);			//½«GPIOÏàÓ¦¹Ü½ÅÅäÖÃÎªÉÏÀ­ÊäÈëÄ£Ê½----V20170605
+//	GPIO_Configuration_IPU(ISP_Conf->RESET_CTL_PORT,ISP_Conf->RESET_CTL_Pin);			//½«GPIOÏàÓ¦¹Ü½ÅÅäÖÃÎªÉÏÀ­ÊäÈëÄ£Ê½----V20170605
+	
 	GPIO_Configuration_IPD(ISP_Conf->BOOT0_CTL_PORT,ISP_Conf->BOOT0_CTL_Pin);			//½«GPIOÏàÓ¦¹Ü½ÅÅäÖÃÎªÏÂÀ­ÊäÈëÄ£Ê½----V20170605
-	if((GPIO_ReadInputDataBit(ISP_Conf->RESET_CTL_PORT,ISP_Conf->RESET_CTL_Pin)==Bit_RESET)&&(GPIO_ReadInputDataBit(ISP_Conf->BOOT0_CTL_PORT,ISP_Conf->BOOT0_CTL_Pin)==Bit_SET))
+	if(ISP_Conf->ISP_SLAVE_STATUS==ISP_STATUS_WaitReset)	//³ÌĞòÏÂÔØÍêºó´Ó»úĞèÒªÖØÖÃ
 	{
-		ISP_Conf->ISP_FUN=ISP_SLAVE;		//ISP×÷Îª´Ó»ú
+		while((GPIO_ReadInputDataBit(ISP_Conf->BOOT0_CTL_PORT,ISP_Conf->BOOT0_CTL_Pin)==Bit_SET));
+		Usart_ISP_Reset(ISP_Conf);						//ÖØÖÃ±à³ÌÆ÷---»Ö¸´ËùÓĞ²ÎÊıÎªÄ¬ÈÏÖµ
 	}
 	else
-	{
-		ISP_Conf->ISP_FUN=ISP_MASTER;		//ISP×÷ÎªÖ÷»ú--¸üĞÂ×ÔÉí³ÌĞò
-		GPIO_Configuration_OPP50	(ISP_Conf->RESET_CTL_PORT,ISP_Conf->RESET_CTL_Pin);			//½«GPIOÏàÓ¦¹Ü½ÅÅäÖÃÎªPP(ÍÆÍì)Êä³öÄ£Ê½£¬×î´óËÙ¶È50MHz----V20170605
-		GPIO_Configuration_OPP50	(ISP_Conf->BOOT0_CTL_PORT,ISP_Conf->BOOT0_CTL_Pin);			//½«GPIOÏàÓ¦¹Ü½ÅÅäÖÃÎªPP(ÍÆÍì)Êä³öÄ£Ê½£¬×î´óËÙ¶È50MHz----V20170605
+	{		
+		while(delaytime++<0xFFFF)
+		{
+			if((GPIO_ReadInputDataBit(ISP_Conf->BOOT0_CTL_PORT,ISP_Conf->BOOT0_CTL_Pin)==Bit_SET))
+			{
+				ISP_Conf->ISP_FUN=ISP_SLAVE;		//ISP×÷Îª´Ó»ú
+				return;
+			}
+		}
+		//---------------------ÅĞ¶ÏÊÇ·ñÎªÖ÷»ú(²»Îª´Ó»úÊ±ÔòÈÏÎªÊÇ´Ó»ú£©£º´Ó»úÕı³£¹¤×÷Ê±£¬RESET½Å´øÉÏÀ­£¬BOOT0½ÅÎªµÍ
+		{
+			ISP_Conf->ISP_FUN=ISP_MASTER;		//ISP×÷ÎªÖ÷»ú--¸üĞÂ×ÔÉí³ÌĞò
+			GPIO_Configuration_OPP50	(ISP_Conf->RESET_CTL_PORT,ISP_Conf->RESET_CTL_Pin);			//½«GPIOÏàÓ¦¹Ü½ÅÅäÖÃÎªPP(ÍÆÍì)Êä³öÄ£Ê½£¬×î´óËÙ¶È50MHz----V20170605
+			GPIO_Configuration_OPP50	(ISP_Conf->BOOT0_CTL_PORT,ISP_Conf->BOOT0_CTL_Pin);			//½«GPIOÏàÓ¦¹Ü½ÅÅäÖÃÎªPP(ÍÆÍì)Êä³öÄ£Ê½£¬×î´óËÙ¶È50MHz----V20170605
+		}
 	}
 	
-	//---------------------ÅĞ¶ÏÊÇ·ñÎªÖ÷»ú(²»Îª´Ó»úÊ±ÔòÈÏÎªÊÇ´Ó»ú£©£º´Ó»úÕı³£¹¤×÷Ê±£¬RESET½Å´øÉÏÀ­£¬BOOT0½ÅÎªµÍ
-	
-	
-	
+		
 }
 /*******************************************************************************
 * º¯ÊıÃû			:	Usart_ISP_ACK
@@ -435,10 +450,13 @@ void Usart_ISP_GetAddr(ISP_Conf_TypeDef *ISP_Conf)		//ISP»ñÈ¡Ğ´Êı¾İÆğÊ¼µØÖ·(Ö÷»ú
 		}
 		else if(ISP_Conf->ISP_SLAVE_STATUS==ISP_STATUS_WaitGoAddr)			//µÈ´ı½ÓÊÕĞ´Êı¾İµØÖ·£¬½ÓÊÕµ½µØÖ·ºóÓ¦´ğ£¬ÔÙµÈ´ı´ıĞ´ÈëµÄÊı¾İ
 		{
+			u32 timedelay=0;
 			ISP_Conf->ISP_DATA.GoAddr=addr;																//´ıĞ´Êı¾İµÄÆğÊ¼µØÖ·
 			ISP_Conf->Connected=ISP_STATUS_UnConnect;											//ISPÎ´Á¬½Ó£¨×÷Îª´Ó»ú)---´ËÎª¶Ï¿ªÁ¬½Ó×´Ì¬
 //			Usart_ISP_SetSlaveStatus(ISP_Conf,ISP_STATUS_IDLE);						//ISP¿ÕÏĞ×´Ì¬£¬¿ÉÒÔ¶ÁĞ´
 			Usart_ISP_ACK(ISP_Conf);	//ISPÓ¦´ğ
+			while(timedelay++<0xFF);
+//			Usart_ISP_Reset(ISP_Conf);						//ÖØÖÃ±à³ÌÆ÷---»Ö¸´ËùÓĞ²ÎÊıÎªÄ¬ÈÏÖµ
 		}
 	}
 }
@@ -771,18 +789,18 @@ bool Usart_MISP_ReadAck(ISP_Conf_TypeDef *ISP_Conf)			//Ö÷»ú¶ÁÈ¡´Ó»úÓ¦´ğ:ÓĞÓ¦´ğ·
 *******************************************************************************/
 void Usart_MISP_StatusProcess(ISP_Conf_TypeDef *ISP_Conf)			//Æô¶¯´Ó»úÉè±¸Ê¹´Ó»úÔËĞĞ
 {
-	if(ISP_Conf->OverRunTime++>2000000)			//10S³¬Ê±
+	if(ISP_Conf->OverRunTime++>2000000)			//10S³¬Ê±---Ó¦´ğ0.5S³¬Ê±
 	{
 		Usart_ISP_Reset(ISP_Conf);						//ÖØÖÃ±à³ÌÆ÷---»Ö¸´ËùÓĞ²ÎÊıÎªÄ¬ÈÏÖµ
 	}
-	if(ISP_Conf->ISP_MASTER_STATUS==ISP_MSTATUS_IDLE)
+	if(ISP_Conf->ISP_MASTER_STATUS==ISP_MSTATUS_IDLE)								//¹¤×÷ÔÚÖ÷»úÄ£Ê½ÏÂµÄ¿ÕÏĞ---×¼±¸¿ªÊ¼¼ì²éÓĞÎŞ´Ó»úÁ¬½Ó
 	{
 		ISP_Conf->ISP_MASTER_STATUS=ISP_MSTATUS_ResetDevice;
 		ISP_Conf->OverRunTime=0;						//³¬Ê±Ê±¼ä
 	}
 	else if(ISP_Conf->ISP_MASTER_STATUS==ISP_MSTATUS_ResetDevice)		//Ö´ĞĞÉÏµç¸´Î»
 	{
-		if(ISP_Conf->TimeCount++<10000)				//¼ÆÊ±Ê±¼ä--100mS
+		if(ISP_Conf->TimeCount++<10000)					//¼ÆÊ±Ê±¼ä--100mS
 		{			
 			Usart_MISP_ResetDevice(ISP_Conf);			//¸´Î»´Ó»úÉè±¸--Ê¹´Ó»ú½øĞĞISPÄ£Ê½			
 		}
@@ -799,7 +817,10 @@ void Usart_MISP_StatusProcess(ISP_Conf_TypeDef *ISP_Conf)			//Æô¶¯´Ó»úÉè±¸Ê¹´Ó»ú
 		ISP_Conf->ISP_MASTER_STATUS=ISP_MSTATUS_WaitAck;							//ISPÖ÷»úµÈ´ı´Ó»úÓ¦´ğ
 		Usart_MISP_Connect(ISP_Conf);																	//Ö÷»úÁ¬½Ó´Ó»úº¯Êı
 	}
-	else if(ISP_Conf->ISP_MASTER_STATUS==ISP_MSTATUS_WaitAck)				//ISPÖ÷»úµÈ´ı´Ó»úÓ¦´ğ
+	else if(ISP_Conf->ISP_MASTER_STATUS==ISP_MSTATUS_Connectted)		//ISPÖ÷»úÓë´Ó»úÒÑ¾­Á¬½ÓÍê³É---×¼±¸Ğ´ÈëÊı¾İ/¼ì²éÓĞÃ»ÓĞ¶ÁĞ´±£»¤£¬ÓĞÔòĞèÒª½â³ı±£»¤£¬Ã»ÓĞ¾Í¿ªÊ¼Ğ´Êı¾İ
+	{
+	}
+	else if(ISP_Conf->ISP_MASTER_STATUS==ISP_MSTATUS_WaitAck)				//ISPÖ÷»úµÈ´ı´Ó»úÓ¦´ğÒÔ¼°µÈ´ı³¬Ê±´¦Àí
 	{
 		bool Result=FALSE;				//¶¨Òå²¼¶û±äÁ¿
 		Result=Usart_MISP_ReadAck(ISP_Conf);					//Ö÷»ú¶ÁÈ¡´Ó»úÓ¦´ğ:ÓĞÓ¦´ğ·µ»ØTRUE£¬·ñÔò·µ»ØFALSE
@@ -819,25 +840,15 @@ void Usart_MISP_StatusProcess(ISP_Conf_TypeDef *ISP_Conf)			//Æô¶¯´Ó»úÉè±¸Ê¹´Ó»ú
 					ISP_Conf->TimeCount=0;							//¼ÆÊ±Ê±¼ä--ÇåÁã
 					ISP_Conf->ISP_MASTER_STATUS=ISP_MSTATUS_WriteConnect;		//ISPÖ÷»ú×¼±¸Á¬½Ó----¸´Î»ºó¼ì²â´Ó»ú
 				}
-				if(ISP_Conf->OverRunTime++>400000)				//¸´Î»ºó2ÃëÄÚÃ»Á¬½ÓÉÏ´Ó»úÖØĞÂ¸´Î»Ä£¿é
+				if(ISP_Conf->OverRunTime++>100000)				//¸´Î»ºó0.5ÃëÄÚÃ»Á¬½ÓÉÏ´Ó»úÖØĞÂ¸´Î»Ä£¿é
 				{
 					Usart_ISP_Reset(ISP_Conf);							//ÖØÖÃ±à³ÌÆ÷---»Ö¸´ËùÓĞ²ÎÊıÎªÄ¬ÈÏÖµ
 				}
 			}			
 		}
 	}
+	
 }
-
-
-
-
-
-
-
-
-
-
-
 //------------------------------------¹«¹²º¯Êı
 /*******************************************************************************
 *º¯ÊıÃû			:	function

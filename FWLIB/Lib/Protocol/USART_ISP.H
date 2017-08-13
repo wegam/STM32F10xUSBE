@@ -102,7 +102,8 @@ typedef enum _ISP_SLAVE_STATUS			//ISP状态标志---工作在从机状态时
 	ISP_STATUS_WaitReadData,		//ISP等待读数据操作
 	ISP_STATUS_WaitLengh,				//ISP等待待读取长度
 	ISP_STATUS_WaitSData,				//ISP等待发送数据
-	ISP_STATUS_WaitGoAddr				//等待待跳转到内部 Flash 或 SRAM 内的应用程序代码地址//Go 命令用于从应用程序指定的地址开始执行已下载的代码或其它任何代码
+	ISP_STATUS_WaitGoAddr,				//等待待跳转到内部 Flash 或 SRAM 内的应用程序代码地址//Go 命令用于从应用程序指定的地址开始执行已下载的代码或其它任何代码
+	ISP_STATUS_WaitReset				//ISP等待发送数据
 }ISP_SLAVE_STATUS_TypeDef;
 typedef enum _ISP_MASTER_STATUS		//ISP状态标志---工作在主机状态时
 {
