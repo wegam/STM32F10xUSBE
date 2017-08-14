@@ -27,7 +27,7 @@
 3. UART：激活奇偶校验（偶校验）
 每个数据包或者被接受（ACK 应答）或者被丢弃（NACK 应答）：
 --------------------------------------------------------------------------------------*/
-#define	ISP_BufferSize	256
+#define	ISP_BufferSize	512
 	
 typedef	enum _ISP_COMMAND			//USART 自举程序命令
 {
@@ -110,12 +110,22 @@ typedef enum _ISP_MASTER_STATUS		//ISP状态标志---工作在主机状态时
 	ISP_MSTATUS_IDLE=0x1E,			//ISP主机空闲状态----开始写前或者写完成后状态
 	ISP_MSTATUS_ResetDevice,		//ISP主机准备连接----复位从机
 	ISP_MSTATUS_WriteConnect,		//ISP主机准备连接----复位后检测从机
-//	ISP_MSTATUS_Connectting,		//ISP主机与从机正在建立连接
+//	ISP_MSTATUS_Connectting,	//ISP主机与从机正在建立连接
 	ISP_MSTATUS_Connectted,			//ISP主机与从机已经连接完成
+	ISP_MSTATUS_WriteUnprotect,	//禁止所有Flash扇区的写保护
+	ISP_MSTATUS_WaitUnprotect,	//等待禁用Flash扇区写保护操作完成
+	ISP_MSTATUS_FlashUnprotected,	//已禁止所有Flash扇区的写保护，可以进行写操作,下一步进行写操作
+	ISP_MSTATUS_GetFirmwareInf,	//获取固件信息
+	ISP_MSTATUS_WaitFirmwareInf,	//等待固件信息
+	ISP_MSTATUS_GetedFirmwareInf,	//已获取固件信息
 	ISP_MSTATUS_WriteGet,				//ISP主机获取从机设备信息---主要为协议信息
 	ISP_MSTATUS_WaitAck,				//ISP主机等待从机应答
 	ISP_MSTATUS_WriteEraseCMD,	//ISP主机写擦除命令---需要应答
 	ISP_MSTATUS_WriteEraseConf,	//ISP主机写擦除参数---整片擦除(0xFF 0x00)或者选择地址擦除，然后等待擦除完成，完成后从机返回一个ACK应答
+	ISP_MSTATUS_EraseDone,	//ISP主机写擦除参数---整片擦除(0xFF 0x00)或者选择地址擦除，然后等待擦除完成，完成后从机返回一个ACK应答
+	ISP_MSTATUS_ReadFirmware,		//读固件
+	ISP_MSTATUS_WaitFirmware,		//等待固件
+	ISP_MSTATUS_GettedFirmware,	//已经获取固件
 	ISP_MSTATUS_WriteWM,				//ISP主机发送写命令，Write Memory:从应用程序指定的地址开始将最多 256 个字节的数据写入 RAM 或 Flash---需要应答
 	ISP_MSTATUS_WriteAddr,			//ISP主机发送要写入数据的起始地址---需要应答
 	ISP_MSTATUS_WriteData,			//ISP主机正在执行擦除工作
@@ -123,6 +133,7 @@ typedef enum _ISP_MASTER_STATUS		//ISP状态标志---工作在主机状态时
 	ISP_MSTATUS_WriteRMLengh,		//ISP主机发送需要读取的数据长度
 	ISP_MSTATUS_Verify,					//数据校验，主机写完从机后校验数据
 	ISP_MSTATUS_WriteGo,				//ISP主机发送Go命令---执行完Go全部命令后重启从机运行
+	ISP_MSTATUS_WriteGoAddr,		//写运行地址
 	ISP_MSTATUS_ResetDevice2,		//ISP主机往从机写完全部数据后对从机进行复位重启
 }ISP_MASTER_STATUS_TypeDef;
 
@@ -147,6 +158,7 @@ typedef	struct _ISP_DATA				//ISP数据存储区域
 	unsigned int OffsetAddr				;		//写从机时的地址偏移
 	unsigned int StartAddr				;		//起始地址
 	unsigned int GoAddr						;		//复位运行起始地址
+	unsigned int FirmwareLen			;		//固件长度---需要ISP下载的总数据
 	
 	unsigned int ReceivedLen			;		//串口接收的数据个数
 	unsigned int USARTSendLen			;		//需要往串口发送的数据个数---//当检测到SendLen不为0时自动发送数据
@@ -154,11 +166,11 @@ typedef	struct _ISP_DATA				//ISP数据存储区域
 	unsigned int FLASHNumToSave		;		//需要往FLASH里保存的数据个数---当此不为0时SPI-FLASH自动存储数据
 	unsigned int FLASHNumToRead		;		//需要从FLASH里读取的数据个数---当此不为0时，SPI-FLASH自动通过WriteAddr地址从SPI-FLASH读取数据
 	
-	unsigned int ReadAddr					;				//读数据起始地址
-	unsigned int ReadLen					;				//需要读取的长度
+	unsigned int ReadAddr					;		//读数据起始地址
+	unsigned int ReadLen					;		//需要读取的长度
 	
-	unsigned int WriteAddr				;				//要写入Flash的数据起始地址--ISP接口
-	unsigned int WriteLen					;				//要写入Flash的数据长度（字节数)--ISP接口
+	unsigned int WriteAddr				;		//要写入Flash的数据起始地址--ISP接口
+	unsigned int WriteLen					;		//要写入Flash的数据长度（字节数)--ISP接口
 	
 
 	unsigned int 	SumHaveReceived		;		//作为从机时总共接收到的数据个数
@@ -211,7 +223,7 @@ void Usart_ISP_CheckFun(ISP_Conf_TypeDef *ISP_Conf);				//检测ISP模块工作模式---
 
 void Usart_ISP_ACK(ISP_Conf_TypeDef *ISP_Conf);	//ISP应答
 void Usart_ISP_NACK(ISP_Conf_TypeDef *ISP_Conf);		//ISP不应答
-void Usart_ISP_CommandSend(ISP_Conf_TypeDef *ISP_Conf,unsigned char Command);	//串口编程发送命令程序
+
 void Usart_ISP_CommandRead(ISP_Conf_TypeDef *ISP_Conf);			//串口接收命令（主机->从机)
 void Usart_ISP_GetAddr(ISP_Conf_TypeDef *ISP_Conf);					//ISP获取写数据起始地址(主机->从机)
 void Usart_ISP_SetAddr(ISP_Conf_TypeDef *ISP_Conf);					//ISP设置写数据起始地址(主机->从机)
@@ -226,13 +238,20 @@ void Usart_ISP_SetSlaveStatus(ISP_Conf_TypeDef *ISP_Conf,ISP_SLAVE_STATUS_TypeDe
 //------------------------------------从机专有函数
 
 //------------------------------------主机专有函数
-void Usart_MISP_GetDevice(ISP_Conf_TypeDef *ISP_Conf);				//获取从机芯片信息
-void Usart_MISP_Connect(ISP_Conf_TypeDef *ISP_Conf);					//主机连接从机函数
-void Usart_MISP_ResetDevice(ISP_Conf_TypeDef *ISP_Conf);			//复位从机
-void Usart_MISP_SetDevice(ISP_Conf_TypeDef *ISP_Conf);				//启动从机接收BOOT0使从机进行下载状态
-void Usart_MISP_RunDevice(ISP_Conf_TypeDef *ISP_Conf);				//启动从机设备使从机正常运行
-bool Usart_MISP_ReadAck(ISP_Conf_TypeDef *ISP_Conf);					//主机读取从机应答:有应答返回TRUE，否则返回FALSE
 void Usart_MISP_StatusProcess(ISP_Conf_TypeDef *ISP_Conf);			//启动从机设备使从机运行
+u8 Usart_MISP_GetStatus(ISP_Conf_TypeDef *ISP_Conf);	//返回从机状态值
+void Usart_MISP_GetFirmwareInf(ISP_Conf_TypeDef *ISP_Conf);			//从Flash中获取固件信息
+void Usart_MISP_GetDevice(ISP_Conf_TypeDef *ISP_Conf);					//获取从机芯片信息
+void Usart_MISP_WriteUnprotect(ISP_Conf_TypeDef *ISP_Conf);			//Write Unprotect命令用于禁止所有Flash扇区的写保护。
+void Usart_MISP_Connect(ISP_Conf_TypeDef *ISP_Conf);						//主机连接从机函数
+void Usart_MISP_ResetDevice(ISP_Conf_TypeDef *ISP_Conf);				//复位从机
+void Usart_MISP_SetDevice(ISP_Conf_TypeDef *ISP_Conf);					//启动从机接收BOOT0使从机进行下载状态
+void Usart_MISP_RunDevice(ISP_Conf_TypeDef *ISP_Conf);					//启动从机设备使从机正常运行
+void Usart_MISP_CommandSend(ISP_Conf_TypeDef *ISP_Conf,unsigned char Command);	//串口编程发送命令程序
+bool Usart_MISP_ReadAck(ISP_Conf_TypeDef *ISP_Conf);						//主机读取从机应答:有应答返回TRUE，否则返回FALSE
+
+
+
 
 
 //------------------------------------公共函数

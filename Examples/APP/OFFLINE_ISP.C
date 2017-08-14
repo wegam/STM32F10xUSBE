@@ -34,15 +34,15 @@ Page：
 
 #define 	STM32_CDC
 
-#define 	USART_BufferSize				512
+//#define 	USART_BufferSize				512
 
 
 
 //ISP_Conf_TypeDef 	ISP_Conf;
 //SPI_FLASH_TypeDef	SPI_FLASH;
 
-u8 RxdBuffe[USART_BufferSize]={0};
-u8 RevBuffe[USART_BufferSize]={0};
+//u8 RxdBuffe[USART_BufferSize]={0};
+//u8 RevBuffe[USART_BufferSize]={0};
 u16 PWM_Ratio=0;
 u8 flag=0;
 u32 timecunt=0;		//空闲计时
@@ -120,7 +120,7 @@ void OFFLINE_ISP_StatusProcess(void)		//状态处理
 			OFFLINE_Cof.SPI_FLASH.SPI_FLASH_Info.SPI_FLASH_ReadAdrr=OFFLINE_Cof.ISP_Conf.ISP_DATA.ReadAddr-OFFLINE_Cof.ISP_Conf.ISP_DATA.OffsetAddr+OFFLINE_Cof.SPI_FLASH.SPI_FLASH_Info.SPI_FLASH_OffsetAdrr;
 			OFFLINE_Cof.SPI_FLASH.SPI_FLASH_Info.SPI_FLASH_LenghToRead=OFFLINE_Cof.ISP_Conf.ISP_DATA.USARTSendLen+1;
 		}
-		else if(OFFLINE_Cof.SPI_FLASH.SPI_FLASH_Info.SPI_FLASH_Steps==Step_IDLE)
+		else if(OFFLINE_Cof.SPI_FLASH.SPI_FLASH_Info.SPI_FLASH_Steps==Step_IDLE)	//读数据完成
 		{
 			OFFLINE_Cof.SPI_FLASH.SPI_FLASH_Info.SPI_FLASH_Staus=SPI_FLASH_IDLE;
 			memcpy(OFFLINE_Cof.ISP_Conf.ISP_DATA.ISP_TvBuffer, OFFLINE_Cof.SPI_FLASH.SPI_FLASH_Info.MISO_Buffer, OFFLINE_Cof.ISP_Conf.ISP_DATA.USARTSendLen+1);	//复制数据
@@ -257,6 +257,48 @@ void OFFLINE_ISP_StatusProcess(void)		//状态处理
 			
 			OFFLINE_Cof.SPI_FLASH.SPI_FLASH_Info.SPI_FLASH_Staus=SPI_FLASH_IDLE;
 			memcpy(OFFLINE_Cof.ISP_Conf.ISP_DATA.ISP_TvBuffer, OFFLINE_Cof.SPI_FLASH.SPI_FLASH_Info.MISO_Buffer, OFFLINE_Cof.ISP_Conf.ISP_DATA.USARTSendLen+1);	//复制数据
+		}
+	}
+	
+//-----------------------------主机
+	else if(Usart_MISP_GetStatus(&(OFFLINE_Cof.ISP_Conf))==ISP_MSTATUS_GetFirmwareInf||Usart_MISP_GetStatus(&(OFFLINE_Cof.ISP_Conf))==ISP_MSTATUS_WaitFirmwareInf)
+	{
+		OFFLINE_Cof.ISP_Conf.ISP_MDATA.StartAddr	=OFFLINE_Cof.SPI_FLASH.SPI_FLASH_Info.SPI_FLASH_ISPStartAddr;		//起始地址
+		OFFLINE_Cof.ISP_Conf.ISP_MDATA.GoAddr			=OFFLINE_Cof.SPI_FLASH.SPI_FLASH_Info.SPI_FLASH_ISPStartAddr;		//重运行地址
+		OFFLINE_Cof.ISP_Conf.ISP_MDATA.FirmwareLen=OFFLINE_Cof.SPI_FLASH.SPI_FLASH_Info.SPI_FLASH_SumOfData;			//需要ISP下载的总数据大小
+		OFFLINE_Cof.ISP_Conf.ISP_MASTER_STATUS=ISP_MSTATUS_GetedFirmwareInf;			//状态---已获取到固件信息
+	}
+	else if(Usart_MISP_GetStatus(&(OFFLINE_Cof.ISP_Conf))==ISP_MSTATUS_ReadFirmware||Usart_MISP_GetStatus(&(OFFLINE_Cof.ISP_Conf))==ISP_MSTATUS_WaitFirmware)
+	{
+//		OFFLINE_Cof.ISP_Conf.ISP_MASTER_STATUS=ISP_MSTATUS_GettedFirmware;							//状态---已获取到固件
+//		OFFLINE_Cof.ISP_Conf.ISP_MDATA.WriteLen=OFFLINE_Cof.SPI_FLASH.SPI_FLASH_Info.SPI_FLASH_LenghToRead;
+		if(OFFLINE_Cof.SPI_FLASH.SPI_FLASH_Info.SPI_FLASH_Staus==SPI_FLASH_IDLE)
+		{
+			OFFLINE_Cof.SPI_FLASH.SPI_FLASH_Info.SPI_FLASH_Staus=SPI_FLASH_READ;
+			OFFLINE_Cof.SPI_FLASH.SPI_FLASH_Info.SPI_FLASH_ReadAdrr=OFFLINE_Cof.ISP_Conf.ISP_MDATA.WriteAddr-OFFLINE_Cof.ISP_Conf.ISP_MDATA.OffsetAddr+OFFLINE_Cof.SPI_FLASH.SPI_FLASH_Info.SPI_FLASH_OffsetAdrr;
+			if(OFFLINE_Cof.SPI_FLASH.SPI_FLASH_Info.SPI_FLASH_SumOfData-OFFLINE_Cof.ISP_Conf.ISP_MDATA.SumHaveWritten>256)
+			{
+				OFFLINE_Cof.SPI_FLASH.SPI_FLASH_Info.SPI_FLASH_LenghToRead=0xFF+1;
+			}
+			else
+			{
+				OFFLINE_Cof.SPI_FLASH.SPI_FLASH_Info.SPI_FLASH_LenghToRead=OFFLINE_Cof.SPI_FLASH.SPI_FLASH_Info.SPI_FLASH_SumOfData-OFFLINE_Cof.ISP_Conf.ISP_MDATA.SumHaveWritten+1;
+			}
+		}
+		else if(OFFLINE_Cof.SPI_FLASH.SPI_FLASH_Info.SPI_FLASH_Steps==Step_IDLE)	//读数据完成
+		{
+			unsigned char Bcc=0xFF;
+			
+			OFFLINE_Cof.SPI_FLASH.SPI_FLASH_Info.SPI_FLASH_Staus=SPI_FLASH_IDLE;
+			OFFLINE_Cof.ISP_Conf.ISP_DATA.ISP_TvBuffer[0]=OFFLINE_Cof.SPI_FLASH.SPI_FLASH_Info.SPI_FLASH_LenghToRead-1;			//数据长度
+			
+			memcpy(&(OFFLINE_Cof.ISP_Conf.ISP_DATA.ISP_TvBuffer[1]), OFFLINE_Cof.SPI_FLASH.SPI_FLASH_Info.MISO_Buffer, OFFLINE_Cof.SPI_FLASH.SPI_FLASH_Info.SPI_FLASH_LenghToRead+1);	//复制数据
+			
+			Bcc=BCC8(OFFLINE_Cof.ISP_Conf.ISP_DATA.ISP_TvBuffer,OFFLINE_Cof.SPI_FLASH.SPI_FLASH_Info.SPI_FLASH_LenghToRead+1);		//异或校验;
+			OFFLINE_Cof.ISP_Conf.ISP_DATA.ISP_TvBuffer[OFFLINE_Cof.SPI_FLASH.SPI_FLASH_Info.SPI_FLASH_LenghToRead+1]=Bcc;
+			
+			OFFLINE_Cof.ISP_Conf.ISP_MASTER_STATUS=ISP_MSTATUS_GettedFirmware;							//状态---已获取到固件
+			OFFLINE_Cof.ISP_Conf.ISP_MDATA.WriteLen=OFFLINE_Cof.SPI_FLASH.SPI_FLASH_Info.SPI_FLASH_LenghToRead+2;
 		}
 	}
 }
