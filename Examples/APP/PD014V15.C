@@ -13,9 +13,9 @@
 * INFORMATION CONTAINED HEREIN IN CONNECTION WITH THEIR PRODUCTS.
 *******************************************************************************/
 
-#ifdef PD014V14			//盒剂发药控制板
+#ifdef PD014V15			//盒剂发药控制板
 
-#include "PD014V14.H"
+#include "PD014V15.H"
 
 #include "DRV8801.H"
 #include "A3987.H"
@@ -28,6 +28,7 @@
 #include "STM32_PWM.H"
 #include "STM32_USART.H"
 #include "STM32_TOOLS.H"
+#include "STM32_EXTI.H"
 
 #include "string.h"				//串和内存操作函数头文件
 #include "stm32f10x_dma.h"
@@ -59,15 +60,15 @@ void PD014V14_Configuration(void)
 	
 	RS485_DMA_ConfigurationNR	(&PD014R485,19200,(u32*)PD014_Conf.PD014_DATA.RxdBuffe,RS485BufferSize);	//USART_DMA配置--查询方式，不开中断,配置完默认为接收状态
 	
-	SysTick_Configuration(10);	//系统嘀嗒时钟配置72MHz,单位为uS--1ms
-	
-	IWDG_Configuration(1000);			//独立看门狗配置---参数单位ms	
-	
-	PWM_OUT(TIM2,PWM_OUTChannel1,0.5,950);						//PWM设定-20161127版本--SYS-LED
-	
+	IWDG_Configuration(5000);			//独立看门狗配置---参数单位ms	
+//	
+	PWM_OUT(TIM2,PWM_OUTChannel1,1,500);						//PWM设定-20161127版本--SYS-LED
+//	
 	PD014V14_GetSwitchID();				//获取拨码开关地址
 	
 	PD014V14_GetOnlieDevice();			//获取在线发药头
+	
+	SysTick_Configuration(1000);	//系统嘀嗒时钟配置72MHz,单位为uS--1ms
 }
 /*******************************************************************************
 * 函数名		:	
@@ -80,38 +81,31 @@ void PD014V14_Server(void)
 {	
 	u8 RxNum=0;
 	
+//	P_Sens=1;			//传感器供电开关--开
+	
 	IWDG_Feed();								//独立看门狗喂狗
 	
-	if(PD014_Conf.PD014_DATA.DeviceOnlie==0x00)
-	{
-		if(PD014_Conf.PD014_DATA.TimeCount++>=1000000)		//等待100mS
-		{
-			PD014_Conf.PD014_DATA.TimeCount=0;
-			PD014V14_GetOnlieDevice();			//获取在线发药头
-		}
-	}
-	else
-	{
-		//数据格式:B0-SWITCHID，B1-CMD，B2~B9:数据，B10:前面所有数据异或校验
-		RxNum=RS485_ReadBufferIDLE(&PD014R485,(u32*)PD014_Conf.PD014_DATA.RevBuffe,(u32*)PD014_Conf.PD014_DATA.RxdBuffe);	//串口空闲模式读串口接收缓冲区，如果有数据，将数据拷贝到RevBuffer,并返回接收到的数据个数，然后重新将接收缓冲区地址指向RxdBuffer
-		if(RxNum&&(PD014_Conf.PD014_DATA.RevBuffe[0]==PD014_Conf.PD014_DATA.SWITCHID))		//如果拨码地址相同，则进入Process
-		{
-			unsigned char Bcc=BCC8(PD014_Conf.PD014_DATA.RevBuffe,10);		//异或校验;
-			if(Bcc==PD014_Conf.PD014_DATA.RevBuffe[10])			//异或校验通过
-			{
-				PD014V14_Process();		//PD014V14所有板内处理数理函数
-			}
-			else
-			{
-				PD014_Conf.PD014_DATA.TxdBuffe[0]=PD014_NACK;
-				PD014_Conf.PD014_DATA.TxdBuffe[1]=PD014_BccError;
-				PD014_Conf.PD014_DATA.TxdBuffe[2]=PD014_NACK^PD014_BccError;
-				PD014V14_NACK();			//数据校验不通过，NACK应答主机
-			}
-		}
-	}
-	PD014V14_SendM();			//发药
-//	Lock_Toggle();			//双向电子锁控制
+
+	//数据格式:B0-SWITCHID，B1-CMD，B2~B9:数据，B10:前面所有数据异或校验
+//	RxNum=RS485_ReadBufferIDLE(&PD014R485,(u32*)PD014_Conf.PD014_DATA.RevBuffe,(u32*)PD014_Conf.PD014_DATA.RxdBuffe);	//串口空闲模式读串口接收缓冲区，如果有数据，将数据拷贝到RevBuffer,并返回接收到的数据个数，然后重新将接收缓冲区地址指向RxdBuffer
+//	if(RxNum)		//如果拨码地址相同，则进入Process
+//	{
+//		unsigned char Bcc=BCC8(PD014_Conf.PD014_DATA.RevBuffe,10);		//异或校验;
+//		if(Bcc==PD014_Conf.PD014_DATA.RevBuffe[10])			//异或校验通过
+//		{
+//			PD014V14_Process();		//PD014V14所有板内处理数理函数
+//		}
+//		else
+//		{
+//			PD014_Conf.PD014_DATA.TxdBuffe[0]=PD014_NACK;
+//			PD014_Conf.PD014_DATA.TxdBuffe[1]=PD014_BccError;
+//			PD014_Conf.PD014_DATA.TxdBuffe[2]=PD014_NACK^PD014_BccError;
+//			PD014V14_NACK();			//数据校验不通过，NACK应答主机
+//		}
+//	}
+
+//	PD014V14_SendM();			//发药
+	Lock_Toggle();			//双向电子锁控制
 }
 /*******************************************************************************
 * 函数名			:	PD014V14_Process
@@ -192,6 +186,8 @@ void PD014V14_PinSet(void)
 	GPIO_Configuration_IPU(GPIOB,	GPIO_Pin_14);					//将GPIO相应管脚配置为上拉输入模式----V20170605
 	GPIO_Configuration_IPU(GPIOC,	GPIO_Pin_6);					//将GPIO相应管脚配置为上拉输入模式----V20170605
 	GPIO_Configuration_IPU(GPIOC,	GPIO_Pin_8);					//将GPIO相应管脚配置为上拉输入模式----V20170605	
+
+//	EXTI_Configuration(GPIOA,GPIO_Pin_4,EXTI_Mode_Interrupt);
 	
 	//拨码开关
 	GPIO_Configuration_IPU(GPIOB,	GPIO_Pin_7);					//将GPIO相应管脚配置为上拉输入模式----V20170605
@@ -389,22 +385,264 @@ void PD014V14_SendM(void)		//发药
 	{
 		if(PD014_Conf.PD014_DATA.STATUS[i]==PD014_STA_SEND)
 		{
-			if(i==1)
-				ct_pmos1=1;
+			if(i==0)
+			{
+								
+				if(PD014_Conf.PD014_DATA.RELAYTIME[i]++<10000)
+				{
+					ct_pmos1=1;
+				}
+				else if(PD014_Conf.PD014_DATA.RELAYTIME[i]++>=20000)
+				{
+					PD014_Conf.PD014_DATA.RELAYTIME[i]=0;
+				}
+				else
+				{
+					ct_pmos1=0;
+				}
+				if(Sens_In1)
+				{
+					PD014_Conf.PD014_DATA.SENSTIME[i]++;
+				}
+				else
+				{
+					if(PD014_Conf.PD014_DATA.SENSTIME[i]>=1000)
+					{
+						PD014_Conf.PD014_DATA.SED[i]+=1;
+						if(PD014_Conf.PD014_DATA.SED[i]>=PD014_Conf.PD014_DATA.WSD[i])
+						{
+							PD014_Conf.PD014_DATA.STATUS[i]=PD014_STA_SENDED;
+						}
+					}
+					PD014_Conf.PD014_DATA.SENSTIME[i]=0;
+				}
+			}
+			else if(i==1)
+			{
+								
+				if(PD014_Conf.PD014_DATA.RELAYTIME[i]++<10000)
+				{
+					ct_pmos2=1;
+				}
+				else if(PD014_Conf.PD014_DATA.RELAYTIME[i]++>=20000)
+				{
+					PD014_Conf.PD014_DATA.RELAYTIME[i]=0;
+				}
+				else
+				{
+					ct_pmos2=0;
+				}
+				if(Sens_In2)
+				{
+					PD014_Conf.PD014_DATA.SENSTIME[i]++;
+				}
+				else
+				{
+					if(PD014_Conf.PD014_DATA.SENSTIME[i]>=1000)
+					{
+						PD014_Conf.PD014_DATA.SED[i]+=1;
+						if(PD014_Conf.PD014_DATA.SED[i]>=PD014_Conf.PD014_DATA.WSD[i])
+						{
+							PD014_Conf.PD014_DATA.STATUS[i]=PD014_STA_SENDED;
+						}
+					}
+					PD014_Conf.PD014_DATA.SENSTIME[i]=0;
+				}
+			}
 			else if(i==2)
-				ct_pmos2=1;
+			{
+								
+				if(PD014_Conf.PD014_DATA.RELAYTIME[i]++<10000)
+				{
+					ct_pmos3=1;
+				}
+				else if(PD014_Conf.PD014_DATA.RELAYTIME[i]++>=20000)
+				{
+					PD014_Conf.PD014_DATA.RELAYTIME[i]=0;
+				}
+				else
+				{
+					ct_pmos3=0;
+				}
+				if(Sens_In3)
+				{
+					PD014_Conf.PD014_DATA.SENSTIME[i]++;
+				}
+				else
+				{
+					if(PD014_Conf.PD014_DATA.SENSTIME[i]>=1000)
+					{
+						PD014_Conf.PD014_DATA.SED[i]+=1;
+						if(PD014_Conf.PD014_DATA.SED[i]>=PD014_Conf.PD014_DATA.WSD[i])
+						{
+							PD014_Conf.PD014_DATA.STATUS[i]=PD014_STA_SENDED;
+						}
+					}
+					PD014_Conf.PD014_DATA.SENSTIME[i]=0;
+				}
+			}
 			else if(i==3)
-				ct_pmos3=1;
+			{
+								
+				if(PD014_Conf.PD014_DATA.RELAYTIME[i]++<10000)
+				{
+					ct_pmos4=1;
+				}
+				else if(PD014_Conf.PD014_DATA.RELAYTIME[i]++>=20000)
+				{
+					PD014_Conf.PD014_DATA.RELAYTIME[i]=0;
+				}
+				else
+				{
+					ct_pmos4=0;
+				}
+				if(Sens_In4)
+				{
+					PD014_Conf.PD014_DATA.SENSTIME[i]++;
+				}
+				else
+				{
+					if(PD014_Conf.PD014_DATA.SENSTIME[i]>=1000)
+					{
+						PD014_Conf.PD014_DATA.SED[i]+=1;
+						if(PD014_Conf.PD014_DATA.SED[i]>=PD014_Conf.PD014_DATA.WSD[i])
+						{
+							PD014_Conf.PD014_DATA.STATUS[i]=PD014_STA_SENDED;
+						}
+					}
+					PD014_Conf.PD014_DATA.SENSTIME[i]=0;
+				}
+			}
 			else if(i==4)
-				ct_pmos4=1;
+			{
+								
+				if(PD014_Conf.PD014_DATA.RELAYTIME[i]++<10000)
+				{
+					ct_pmos5=1;
+				}
+				else if(PD014_Conf.PD014_DATA.RELAYTIME[i]++>=20000)
+				{
+					PD014_Conf.PD014_DATA.RELAYTIME[i]=0;
+				}
+				else
+				{
+					ct_pmos5=0;
+				}
+				if(Sens_In5)
+				{
+					PD014_Conf.PD014_DATA.SENSTIME[i]++;
+				}
+				else
+				{
+					if(PD014_Conf.PD014_DATA.SENSTIME[i]>=1000)
+					{
+						PD014_Conf.PD014_DATA.SED[i]+=1;
+						if(PD014_Conf.PD014_DATA.SED[i]>=PD014_Conf.PD014_DATA.WSD[i])
+						{
+							PD014_Conf.PD014_DATA.STATUS[i]=PD014_STA_SENDED;
+						}
+					}
+					PD014_Conf.PD014_DATA.SENSTIME[i]=0;
+				}
+			}
 			else if(i==5)
-				ct_pmos5=1;
+			{
+								
+				if(PD014_Conf.PD014_DATA.RELAYTIME[i]++<10000)
+				{
+					ct_pmos6=1;
+				}
+				else if(PD014_Conf.PD014_DATA.RELAYTIME[i]++>=20000)
+				{
+					PD014_Conf.PD014_DATA.RELAYTIME[i]=0;
+				}
+				else
+				{
+					ct_pmos6=0;
+				}
+				if(Sens_In6)
+				{
+					PD014_Conf.PD014_DATA.SENSTIME[i]++;
+				}
+				else
+				{
+					if(PD014_Conf.PD014_DATA.SENSTIME[i]>=1000)
+					{
+						PD014_Conf.PD014_DATA.SED[i]+=1;
+						if(PD014_Conf.PD014_DATA.SED[i]>=PD014_Conf.PD014_DATA.WSD[i])
+						{
+							PD014_Conf.PD014_DATA.STATUS[i]=PD014_STA_SENDED;
+						}
+					}
+					PD014_Conf.PD014_DATA.SENSTIME[i]=0;
+				}
+			}
 			else if(i==6)
-				ct_pmos6=1;
+			{
+								
+				if(PD014_Conf.PD014_DATA.RELAYTIME[i]++<10000)
+				{
+					ct_pmos7=1;
+				}
+				else if(PD014_Conf.PD014_DATA.RELAYTIME[i]++>=20000)
+				{
+					PD014_Conf.PD014_DATA.RELAYTIME[i]=0;
+				}
+				else
+				{
+					ct_pmos7=0;
+				}
+				if(Sens_In7)
+				{
+					PD014_Conf.PD014_DATA.SENSTIME[i]++;
+				}
+				else
+				{
+					if(PD014_Conf.PD014_DATA.SENSTIME[i]>=1000)
+					{
+						PD014_Conf.PD014_DATA.SED[i]+=1;
+						if(PD014_Conf.PD014_DATA.SED[i]>=PD014_Conf.PD014_DATA.WSD[i])
+						{
+							PD014_Conf.PD014_DATA.STATUS[i]=PD014_STA_SENDED;
+						}
+					}
+					PD014_Conf.PD014_DATA.SENSTIME[i]=0;
+				}
+			}
 			else if(i==7)
-				ct_pmos7=1;
-			else if(i==8)
-				ct_pmos8=1;
+			{
+								
+				if(PD014_Conf.PD014_DATA.RELAYTIME[i]++<10000)
+				{
+					ct_pmos8=1;
+				}
+				else if(PD014_Conf.PD014_DATA.RELAYTIME[i]++>=20000)
+				{
+					PD014_Conf.PD014_DATA.RELAYTIME[i]=0;
+				}
+				else
+				{
+					ct_pmos8=0;
+				}
+				if(Sens_In8)
+				{
+					PD014_Conf.PD014_DATA.SENSTIME[i]++;
+				}
+				else
+				{
+					if(PD014_Conf.PD014_DATA.SENSTIME[i]>=1000)
+					{
+						PD014_Conf.PD014_DATA.SED[i]+=1;
+						if(PD014_Conf.PD014_DATA.SED[i]>=PD014_Conf.PD014_DATA.WSD[i])
+						{
+							PD014_Conf.PD014_DATA.STATUS[i]=PD014_STA_SENDED;
+						}
+					}
+					PD014_Conf.PD014_DATA.SENSTIME[i]=0;
+				}
+			}
+			//----------传感器计时
+
 		}
 		else
 		{

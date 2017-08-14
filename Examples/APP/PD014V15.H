@@ -1,5 +1,5 @@
-#ifndef __PD014V14_H
-#define __PD014V14_H
+#ifndef __PD014V15_H
+#define __PD014V15_H
 
 
 //·¢Ò©µç´ÅÌú¿ØÖÆ
@@ -48,7 +48,7 @@ typedef	enum _PD014_COMMAND		//PD014ÃüÁî(×´Ì¬²éÑ¯¡¢¶Á·¢Ò©Í·¡¢·¢Ò©¡¢ÉÏ±¨·¢Ò©½á¹û¡
 //1)·¢Ò©¿ØÖÆ°å¹¤×÷ÔÚ´Ó»úÄ£Ê½£¬ËùÓÐµÄ¶¯×÷¶¼ÓÉÉÏ²ã¿ØÖÆ£¬°üÀ¨ÃüÁîÏÂ·¢ºÍ½á¹ûÉÏ±¨¶¼Í¨¹ýÃüÁîÀ´Ö´ÐÐ
 //2)Ð­ÒéÖ´ÐÐ³ÌÐò£¬½ÓÊÕµ½ÉÏÎ»»úµÄÃüÁî£¬
 //3)
-	PD014_CMD_IDLE,				//¿ÕÃüÁî--ÎÞÐèÒªÖ´ÐÐµÄ¶¯×÷
+	PD014_CMD_IDLE=0x00,				//¿ÕÃüÁî--ÎÞÐèÒªÖ´ÐÐµÄ¶¯×÷
 	PD014_CMD_GetDevice,	//»ñÈ¡ÔÚÏß·¢Ò©Í·£¨¿É´ø²ÎÊý£¬Èç¹û´ø²ÎÊý£¬²ÎÊýÎªÄ£Ê½£©
 	PD014_CMD_GetStatus,	//»ñÈ¡×´Ì¬
 	PD014_CMD_GetSED,			//»ñÈ¡ÒÑ·¢Ò©ÊýÁ¿
@@ -63,7 +63,7 @@ typedef	enum _PD014_STATUS		//PD014×´Ì¬(¿ÕÏÐ¡¢Ã¦¡¢ÕýÔÚ·¢Ò©¡¢·¢Ò©Íê³É¡¢È±Ò©¡¢ÉèÖÃ
 //1)·¢Ò©¿ØÖÆ°å¹¤×÷ÔÚ´Ó»úÄ£Ê½£¬ËùÓÐµÄ¶¯×÷¶¼ÓÉÉÏ²ã¿ØÖÆ£¬°üÀ¨ÃüÁîÏÂ·¢ºÍ½á¹ûÉÏ±¨¶¼Í¨¹ýÃüÁîÀ´Ö´ÐÐ
 //2)Ð­ÒéÖ´ÐÐ³ÌÐò£¬½ÓÊÕµ½ÉÏÎ»»úµÄÃüÁî£¬
 //3)	
-	PD014_STA_IDLE,				//¿ÕÏÐ----¿ÉÒÔ½ÓÊÕÃüÁî»òÕßÖ´ÐÐ¶¯×÷
+	PD014_STA_IDLE=0x00,				//¿ÕÏÐ----¿ÉÒÔ½ÓÊÕÃüÁî»òÕßÖ´ÐÐ¶¯×÷
 	PD014_STA_BUSY,				//Ã¦
 	PD014_STA_UPDATA,			//ÕýÔÚÉÏ±¨Êý¾Ý
 	PD014_STA_SEND,				//·¢Ò©
@@ -87,7 +87,7 @@ typedef	enum _PD014_Answer	//USART Ó¦´ð
 
 typedef	enum _PD014_MODE	//USART Ó¦´ð
 {
-	NORMEL,									//ACK Ó¦´ð(±»½ÓÊÜ£©
+	NORMEL=0x00,									//ACK Ó¦´ð(±»½ÓÊÜ£©
 	TEST										//NACK Ó¦´ð£¨²»½ÓÊÜ»òÕß²»Ê¶±ð--¶ªÆú)
 }PD014_MODE_TypeDef;
 

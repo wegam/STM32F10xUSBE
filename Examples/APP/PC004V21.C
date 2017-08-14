@@ -114,6 +114,7 @@
 #define	PC004V10_BufferSize 32															//DMA1缓冲大小
 
 u8 PC004V10_Buffer[PC004V10_BufferSize]={0};								//RS485缓存
+u8 PC004V10_TBuffer[PC004V10_BufferSize]={0};								//RS485缓存
 u8 PC004V10_Num[13]={0};																		//接收到的数据
 
 u8 ID_ARR[8][8]={0,0};			//存储已连接数码管ID列表
@@ -127,7 +128,11 @@ u8 Buzzer_time=0;						//开机蜂鸣器响应次数
 u8 Self_Dsp=0;							//拔码开关为0时，自检测试显示标识变量
 
 u8 num=0;
+u8 PB1Flg=0;
+u8 PW1Flg=0;
+u8 KeyTime=0;
 
+RS485_TypeDef  RS485_Conf;
 CanRxMsg RxMessage;
 CanTxMsg TxMessage;
 
@@ -152,22 +157,34 @@ void PC004V21_Configuration(void)
 	IWDG_Configuration(1000);			//独立看门狗配置---参数单位ms	
 	
 	PWM_OUT(TIM2,PWM_OUTChannel1,1,900);						//PWM设定-20161127版本
+	PWM_OUT(TIM3,PWM_OUTChannel3,0.5,10);						//PWM设定-20161127版本
 	
+	RS485_DMA_ConfigurationNR	(&RS485_Conf,19200,(u32*)PC004V10_Buffer,PC004V10_BufferSize);	//USART_DMA配置--查询方式，不开中断,配置完默认为接收状态
+	
+//	CAN_Configuration_NR(10000);										//CAN配置---标志位查询方式，不开中断
+//	
+//	CAN_FilterInitConfiguration_StdData(0,0X000,0X000);			//CAN滤波器配置
+//	
+//	USART_DMA_Configuration(USART2,9600,1,1,(u32*)PC004V10_Buffer,(u32*)PC004V10_Buffer,PC004V10_BufferSize);	//USART_DMA配置
 
-	
-	CAN_Configuration_NR(10000);										//CAN配置---标志位查询方式，不开中断
-	
-	CAN_FilterInitConfiguration_StdData(0,0X000,0X000);			//CAN滤波器配置
-	
-	USART_DMA_Configuration(USART2,9600,1,1,(u32*)PC004V10_Buffer,(u32*)PC004V10_Buffer,PC004V10_BufferSize);	//USART_DMA配置
-
-	PC004V10_RS4851_CTL(RS485RX);
+//	PC004V10_RS4851_CTL(RS485RX);
 	
 	PC004V10_Num[8]=1;
 	PC004V10_Num[9]=0;
 	PC004V10_Num[11]=0;
 	PC004V10_Num[12]=0;
-
+	
+	PC004V10_TBuffer[0]=0x00;
+	PC004V10_TBuffer[1]=0x05;
+	PC004V10_TBuffer[2]=0x03;
+	PC004V10_TBuffer[3]=0x03;
+	PC004V10_TBuffer[4]=0x00;
+	PC004V10_TBuffer[5]=0x00;
+	PC004V10_TBuffer[6]=0x00;
+	PC004V10_TBuffer[7]=0x00;
+	PC004V10_TBuffer[8]=0x00;
+	PC004V10_TBuffer[9]=0x00;
+	PC004V10_TBuffer[10]=0x05;
 //	SysTick_Configuration(1000);							//系统嘀嗒时钟配置72MHz,单位为uS
 }
 /*******************************************************************************
@@ -186,17 +203,50 @@ void PC004V21_Server(void)
 	
 	SYSTime++;
 		
-	if(SYSTime>=100)
+	if(SYSTime>=1000)
 	{
 		SYSTime=0;
 		num++;
 		if(num>255)
 			num=0;
+		RS485_DMASend(&RS485_Conf,(u32*)PC004V10_TBuffer,11);	//RS485-DMA发送程序
+//		GPIO_Toggle	(GPIOB,GPIO_Pin_0);		//将GPIO相应管脚输出翻转----V20170605//锁接口
 //		TxMessage.Data[3]=num;
 //		PC004V10_CAN_COMMAD();					//CAN发送命令函数，地址，命令类型，数据--时间同步--发送获取D命令
-		PC004V10_Num[0]=num;
-		CAN_StdTX_DATA(0X15,1,PC004V10_Num);			//CAN使用标准帧发送数据
+//		PC004V10_Num[0]=num;
+//		CAN_StdTX_DATA(0X15,1,PC004V10_Num);			//CAN使用标准帧发送数据
 //		CAN_ExtTX_DATA(0X15,1,PC004V10_Num);			//CAN使用扩展帧发送数据
+	}
+	if(PB1in)
+	{
+		KeyTime=0;
+	}
+	else
+	{
+		if(KeyTime++==10)
+		{
+			if(PB1Flg==0)
+				PB1Flg=1;
+		}
+//		if(PB1Flg==0)
+//			PWM_OUT(TIM3,PWM_OUTChannel3,0.5,10);						//PWM设定-20161127版本
+//		else
+//			PWM_OUT(TIM3,PWM_OUTChannel3,1,500);						//PWM设定-20161127版本
+	}
+	if(PB1Flg==1)
+	{
+		if(PW1Flg==0)
+		{
+			PW1Flg=1;
+			PB1Flg=0;
+			PWM_OUT(TIM3,PWM_OUTChannel3,0.5,10);						//PWM设定-20161127版本
+		}
+		else
+		{
+			PW1Flg=0;
+			PB1Flg=0;
+			PWM_OUT(TIM3,PWM_OUTChannel3,2,500);						//PWM设定-20161127版本
+		}
 	}
 	//**************检查通讯标志位，查看是否为通讯中断，如果是，则此次时间增量无效
 //	status=PC004V10_485_TR();				//485收发程序//通讯接口
@@ -230,7 +280,11 @@ void PC004V21_Server(void)
 void PC004V21_PinSet(void)
 {
 	//********************RS485_CTL配置
-	GPIO_Configuration_OPP50(GPIOA,GPIO_Pin_1);				//将GPIO相应管脚配置为PP(推挽)输出模式，最大速度50MHz----V20170605
+	GPIO_Configuration_OPP50(GPIOA,GPIO_Pin_1);					//将GPIO相应管脚配置为PP(推挽)输出模式，最大速度50MHz----V20170605
+	
+	GPIO_Configuration_OPP50(GPIOB,GPIO_Pin_0);					//将GPIO相应管脚配置为PP(推挽)输出模式，最大速度50MHz----V20170605//锁接口
+	
+	GPIO_Configuration_INF(GPIOB,GPIO_Pin_1);						//将GPIO相应管脚配置为浮空输入模式----V20170605
 	
 	//********************拔码开关配置
 	GPIO_Configuration_IPU(GPIOC,GPIO_Pin_0);						//将GPIO相应管脚配置为上拉输入模式----V20170605
@@ -241,6 +295,10 @@ void PC004V21_PinSet(void)
 	GPIO_Configuration_IPU(GPIOC,GPIO_Pin_5);						//将GPIO相应管脚配置为上拉输入模式----V20170605
 	GPIO_Configuration_IPU(GPIOC,GPIO_Pin_6);						//将GPIO相应管脚配置为上拉输入模式----V20170605
 	GPIO_Configuration_IPU(GPIOC,GPIO_Pin_7);						//将GPIO相应管脚配置为上拉输入模式----V20170605
+	
+	RS485_Conf.USARTx=UART4;
+	RS485_Conf.RS485_CTL_PORT=GPIOC;
+	RS485_Conf.RS485_CTL_Pin=GPIO_Pin_12;
 
 
 }
@@ -256,7 +314,7 @@ u8 PC004V10_485_TR(void)				//485收发程序//通讯接口
 	//***********串口状态检测控制485脚为接收方式
 	u16 num=0;
 //	u8 temp=0;
-	num=USART_RX_FlagClear(USART2);						//清除串口DMA发送全局中断标志
+//	num=USART_RX_FlagClear(USART2);						//清除串口DMA发送全局中断标志
 	//1)**********对接收到的数据进行规格检测
 	if(num)
 	{	
@@ -307,11 +365,11 @@ u8 PC004V10_485_TR(void)				//485收发程序//通讯接口
 		return 1;		
 	}
 	//2)**********根据串口2DMA发送完成中断
-	else if(USART_TX_DMAFlagClear(USART2))
-	{
-		memset(PC004V10_Buffer,0,PC004V10_BufferSize);			//初始化缓冲		
-		return 1;
-	}
+//	else if(USART_TX_DMAFlagClear(USART2))
+//	{
+//		memset(PC004V10_Buffer,0,PC004V10_BufferSize);			//初始化缓冲		
+//		return 1;
+//	}
 	//3)**********数据发送完成后将485控制脚拉低转为接收模式
 	else	if(USART_GetFlagStatus(USART2,USART_FLAG_TC)==SET)
 	{
