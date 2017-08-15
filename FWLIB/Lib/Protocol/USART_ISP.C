@@ -475,22 +475,6 @@ void Usart_ISP_GetAddr(ISP_Conf_TypeDef *ISP_Conf)		//ISP获取写数据起始地址(主机
 *输入				: 
 *返回值			:	无
 *******************************************************************************/
-void Usart_ISP_SetAddr(ISP_Conf_TypeDef *ISP_Conf)					//ISP设置写数据起始地址(主机->从机)
-{
-	#ifdef	Usart_ISP_Simulation 		//模拟从机
-	{
-	}
-	#else
-	{
-	}
-	#endif
-}
-/*******************************************************************************
-*函数名			:	function
-*功能描述		:	函数功能说明
-*输入				: 
-*返回值			:	无
-*******************************************************************************/
 void Usart_ISP_GetLengh(ISP_Conf_TypeDef *ISP_Conf)				//ISP获取需要读取的数据长度(主机->从机)，读数据时，传入地址后再传入待读取的数据长度
 {	
 	//ISP获取需要读取的数据长度(主机->从机)，读数据时，传入地址后再传入待读取的数据长度，接收到长度数据后执行读数据操作，然后上传数据
@@ -508,22 +492,7 @@ void Usart_ISP_GetLengh(ISP_Conf_TypeDef *ISP_Conf)				//ISP获取需要读取的数据长
 	}
 //		ISP_Conf->ISP_SLAVE_STATUS=ISP_STATUS_WaitReadData;	//ISP等待读数据操作
 }
-/*******************************************************************************
-*函数名			:	function
-*功能描述		:	函数功能说明
-*输入				: 
-*返回值			:	无
-*******************************************************************************/
-void Usart_ISP_SetLengh(ISP_Conf_TypeDef *ISP_Conf)				//ISP获取需要读取的数据长度(主机->从机)
-{
-	#ifdef	Usart_ISP_Simulation 		//模拟从机
-	{
-	}
-	#else
-	{
-	}
-	#endif
-}
+
 
 /*******************************************************************************
 * 函数名			:	Usart_ISP_CommandSend
@@ -1161,6 +1130,424 @@ void Usart_ISP_Reset(ISP_Conf_TypeDef *ISP_Conf)	//重置编程器---恢复所有参数为默
 	memset(ISP_Conf->ISP_DATA.ISP_TvBuffer,0xFF, ISP_BufferSize);	//发送缓冲区--备份区
 }
 
+//---------------------公共函数
 
+
+
+
+
+//---------------------主机专用函数
+/*******************************************************************************
+*函数名			:	USM_BSP_PROCESS
+*功能描述		:	函数功能说明
+*输入				: 
+*返回值			:	无
+*******************************************************************************/
+void USM_BSP_PROCESS(BSP_Conf_TypeDef *BSP_Conf)
+{
+	if(BSP_Conf->BSPM_Info.BSP_MASTER_STATUS==BSP_MSTATUS_IDLE)
+	{
+		BSP_Conf->BSPM_Info.BSP_MASTER_STATUS=BSP_MSTATUS_ResetDevice;
+		USM_BSP_RESET(BSP_Conf);			//复位从机
+	}
+	else if(BSP_Conf->BSPM_Info.BSP_MASTER_STATUS==BSP_MSTATUS_ResetDevice)
+	{
+		USM_BSP_RESET(BSP_Conf);			//复位从机
+	}
+}
+/*******************************************************************************
+*函数名			:	USM_BSP_RESET
+*功能描述		:	复位从机：
+							A模式--进入BOOT：RST高，BOT低（设置约100ms）->RST低，BOT高->进入BOOT
+							B模式--进入运行：RST高，BOT低（设置约50ms）->RST低，BOT低（设置约50ms）->RST高，BOT低->运行程序
+*输入				: 
+*返回值			:	无
+*******************************************************************************/
+void USM_BSP_RESET(BSP_Conf_TypeDef *BSP_Conf)		//复位从机
+{	
+	if((BSP_Conf->BSPM_Info.BSP_MASTER_STATUS==BSP_MSTATUS_ResetDevice)&&(BSP_Conf->BSP_DATA.TimeCount++<10000))
+	{
+		GPIO_SetBits	(BSP_Conf->BSP_Port.BOOT0_CTL_PORT,BSP_Conf->BSP_Port.BOOT0_CTL_Pin);		//BOOT0拉高
+		GPIO_ResetBits(BSP_Conf->BSP_Port.RESET_CTL_PORT,BSP_Conf->BSP_Port.RESET_CTL_Pin);		//RESET脚拉低
+	}
+	else if((BSP_Conf->BSPM_Info.BSP_MASTER_STATUS==BSP_MSTATUS_ResetDevice)&&(BSP_Conf->BSP_DATA.TimeCount++>=10000))
+	{
+		BSP_Conf->BSP_DATA.TimeCount=0;
+		BSP_Conf->BSPM_Info.BSP_MASTER_STATUS=BSP_MSTATUS_WriteConnect;		//复位完成准备连接---发连接命令0x7F;		
+		
+		GPIO_SetBits(BSP_Conf->BSP_Port.BOOT0_CTL_PORT,BSP_Conf->BSP_Port.BOOT0_CTL_Pin);			//BOOT0拉高
+		GPIO_SetBits(BSP_Conf->BSP_Port.RESET_CTL_PORT,BSP_Conf->BSP_Port.RESET_CTL_Pin);			//RESET脚拉高
+	}
+	else if((BSP_Conf->BSPM_Info.BSP_MASTER_STATUS==BSP_MSTATUS_ResetDevice2)&&(BSP_Conf->BSP_DATA.TimeCount++<10000))
+	{
+		GPIO_ResetBits(BSP_Conf->BSP_Port.BOOT0_CTL_PORT,BSP_Conf->BSP_Port.BOOT0_CTL_Pin);		//BOOT0拉低
+		GPIO_ResetBits(BSP_Conf->BSP_Port.RESET_CTL_PORT,BSP_Conf->BSP_Port.RESET_CTL_Pin);		//RESET脚拉低
+	}
+	else if((BSP_Conf->BSPM_Info.BSP_MASTER_STATUS==BSP_MSTATUS_ResetDevice2)&&(BSP_Conf->BSP_DATA.TimeCount++>=10000))
+	{
+		BSP_Conf->BSP_DATA.TimeCount=0;
+		BSP_Conf->BSPM_Info.BSP_MASTER_STATUS=BSP_MSTATUS_WaitDeliver;												//等待释放从机
+		
+		GPIO_ResetBits(BSP_Conf->BSP_Port.BOOT0_CTL_PORT,BSP_Conf->BSP_Port.BOOT0_CTL_Pin);		//BOOT0拉低
+		GPIO_SetBits	(BSP_Conf->BSP_Port.RESET_CTL_PORT,BSP_Conf->BSP_Port.RESET_CTL_Pin);		//RESET脚拉高
+	}
+}
+/*******************************************************************************
+*函数名			:	USM_BSP_ResetDevice
+*功能描述		:	复位从机设备--使从机进行ISP模式
+*输入				: 
+*返回值			:	无
+*******************************************************************************/
+void USM_BSP_ResetDevice(BSP_Conf_TypeDef *BSP_Conf)			//复位从机设备--使从机进行ISP模式
+{
+	GPIO_SetBits	(BSP_Conf->BSP_Port.BOOT0_CTL_PORT,BSP_Conf->BSP_Port.BOOT0_CTL_Pin);		//BOOT0拉高
+	GPIO_ResetBits(BSP_Conf->BSP_Port.RESET_CTL_PORT,BSP_Conf->BSP_Port.RESET_CTL_Pin);		//RESET脚拉低
+}
+/*******************************************************************************
+*函数名			:	USM_BSP_SetDevice
+*功能描述		:	启动从机接收BOOT0使从机进行下载状态
+*输入				: 
+*返回值			:	无
+*******************************************************************************/
+void USM_BSP_SetDevice(BSP_Conf_TypeDef *BSP_Conf)			//启动从机接收BOOT0使从机进行下载状态
+{
+	GPIO_SetBits(BSP_Conf->BSP_Port.BOOT0_CTL_PORT,BSP_Conf->BSP_Port.BOOT0_CTL_Pin);			//BOOT0拉高
+	GPIO_SetBits(BSP_Conf->BSP_Port.RESET_CTL_PORT,BSP_Conf->BSP_Port.RESET_CTL_Pin);			//RESET脚拉高
+}
+/*******************************************************************************
+*函数名			:	USM_BSP_RunDevice
+*功能描述		:	启动从机设备使从机正常运行
+*输入				: 
+*返回值			:	无
+*******************************************************************************/
+void USM_BSP_RunDevice(BSP_Conf_TypeDef *BSP_Conf)			//启动从机设备使从机正常运行
+{
+	GPIO_ResetBits(BSP_Conf->BSP_Port.BOOT0_CTL_PORT,BSP_Conf->BSP_Port.BOOT0_CTL_Pin);		//BOOT0拉低
+	GPIO_SetBits	(BSP_Conf->BSP_Port.RESET_CTL_PORT,BSP_Conf->BSP_Port.RESET_CTL_Pin);		//RESET脚拉高
+}
+/*******************************************************************************
+*函数名			:	USM_BSP_Get
+*功能描述		:	获取当前自举程序版本及允许使用的命令
+*输入				: 
+*返回值			:	无
+*******************************************************************************/
+void USM_BSP_Get(BSP_Conf_TypeDef *BSP_Conf)		//获取当前自举程序版本及允许使用的命令
+{
+
+}
+/*******************************************************************************
+*函数名			:	Get Version & Read Protection Status
+*功能描述		:	获取自举程序版本及 Flash 的读保护状态
+*输入				: 
+*返回值			:	无
+*******************************************************************************/
+void USM_BSP_GetVR(BSP_Conf_TypeDef *BSP_Conf)		//获取自举程序版本及 Flash 的读保护状态
+{
+
+}
+/*******************************************************************************
+*函数名			:	USM_BSP_GetId
+*功能描述		:	获取芯片 ID
+*输入				: 
+*返回值			:	无
+*******************************************************************************/
+void USM_BSP_GetId(BSP_Conf_TypeDef *BSP_Conf)			//获取芯片 ID
+{
+
+}
+/*******************************************************************************
+*函数名			:	USM_BSP_ReadMemory
+*功能描述		:	从应用程序指定的地址开始读取最多 256 个字节的存储器空间
+*输入				: 
+*返回值			:	无
+*******************************************************************************/
+void USM_BSP_ReadMemory(BSP_Conf_TypeDef *BSP_Conf)		//从应用程序指定的地址开始读取最多 256 个字节的存储器空间
+{
+
+}
+/*******************************************************************************
+*函数名			:	USM_BSP_Go
+*功能描述		:	跳转到内部 Flash 或 SRAM 内的应用程序代码
+*输入				: 
+*返回值			:	无
+*******************************************************************************/
+void USM_BSP_Go(BSP_Conf_TypeDef *BSP_Conf)		//跳转到内部 Flash 或 SRAM 内的应用程序代码
+{
+
+}
+/*******************************************************************************
+*函数名			:	USM_BSP_EraseMemory
+*功能描述		:	从应用程序指定的地址开始将最多 256 个字节的数据写入 RAM 或 Flash
+*输入				: 
+*返回值			:	无
+*******************************************************************************/
+void USM_BSP_WriteMemory(BSP_Conf_TypeDef *BSP_Conf)		//从应用程序指定的地址开始将最多 256 个字节的数据写入 RAM 或 Flash
+{
+
+}
+/*******************************************************************************
+*函数名			:	USM_BSP_EraseMemory
+*功能描述		:	擦除一个到全部 Flash 页面
+*输入				: 
+*返回值			:	无
+*******************************************************************************/
+void USM_BSP_EraseMemory(BSP_Conf_TypeDef *BSP_Conf)		//擦除一个到全部 Flash 页面
+{
+
+}
+/*******************************************************************************
+*函数名			:	USM_BSP_EEraseMemory
+*功能描述		:	使用双字节寻址模式擦除一个到全部 Flash 页面（仅用于v3.0 usart 自举程序版本及以上版本）
+*输入				: 
+*返回值			:	无
+*******************************************************************************/
+void USM_BSP_EEraseMemory(BSP_Conf_TypeDef *BSP_Conf)		//使用双字节寻址模式擦除一个到全部 Flash 页面（仅用于v3.0 usart 自举程序版本及以上版本）
+{
+
+}
+/*******************************************************************************
+*函数名			:	USM_BSP_WriteProtect
+*功能描述		:	使能某些扇区的写保护
+*输入				: 
+*返回值			:	无
+*******************************************************************************/
+void USM_BSP_WriteProtect(BSP_Conf_TypeDef *BSP_Conf)		//使能某些扇区的写保护
+{
+
+}
+/*******************************************************************************
+*函数名			:	USM_BSP_WriteUnProtect
+*功能描述		:	禁止所有 Flash 扇区的写保护
+*输入				: 
+*返回值			:	无
+*******************************************************************************/
+void USM_BSP_WriteUnProtect(BSP_Conf_TypeDef *BSP_Conf)		//禁止所有 Flash 扇区的写保护
+{
+
+}
+/*******************************************************************************
+*函数名			:	USM_BSP_ReadProtect
+*功能描述		:	使能读保护
+*输入				: 
+*返回值			:	无
+*******************************************************************************/
+void USM_BSP_ReadProtect(BSP_Conf_TypeDef *BSP_Conf)		//使能读保护
+{
+
+}
+/*******************************************************************************
+*函数名			:	USM_BSP_ReadUnProtect
+*功能描述		:	禁止读保护
+*输入				: 
+*返回值			:	无
+*******************************************************************************/
+void USM_BSP_ReadUnProtect(BSP_Conf_TypeDef *BSP_Conf)		//禁止读保护
+{
+
+}
+/*******************************************************************************
+*函数名			:	USM_BSP_GetAck
+*功能描述		:	获取从机应答
+*输入				: 
+*返回值			:	无
+*******************************************************************************/
+void USM_BSP_GetAck(BSP_Conf_TypeDef *BSP_Conf)		//获取从机应答
+{
+
+}
+/*******************************************************************************
+* 函数名			:	Usart_MISP_CommandSend
+* 功能描述		:	串口编程发送命令程序
+* 输入			: void
+* 返回值			: void
+*******************************************************************************/
+void USM_BSP_SendCommand(BSP_Conf_TypeDef *BSP_Conf,unsigned char Command)	//串口编程发送命令程序
+{
+	BSP_Conf->BSP_DATA.Command[0]=Command;
+	BSP_Conf->BSP_DATA.Command[1]=Command^0XFF;
+	USART_DMASend(BSP_Conf->BSP_Port.USARTx,(u32*)BSP_Conf->BSP_DATA.Command,2);	//串口DMA发送程序
+}
+/*******************************************************************************
+*函数名			:	function
+*功能描述		:	发送函数包括从机发送应答、发送地址、发送命令、发送数据
+*输入				: 
+*返回值			:	无
+*******************************************************************************/
+void USM_BSP_SendBuffer(BSP_Conf_TypeDef *BSP_Conf)						//发送函数包括从机发送应答、发送地址、发送命令、发送数据
+{
+	if(BSP_Conf->BSP_DATA.USARTSendLen)
+	{
+		memcpy(BSP_Conf->BSP_DATA.BSP_TxBuffer, BSP_Conf->BSP_DATA.BSP_TvBuffer,BSP_Conf->BSP_DATA.USARTSendLen);		//复制数据
+		memset(BSP_Conf->BSP_DATA.BSP_TvBuffer,0xFF, BSP_BufferSize);	//接收缓冲区
+		USART_DMASend(BSP_Conf->BSP_Port.USARTx,(u32*)BSP_Conf->BSP_DATA.BSP_TxBuffer,BSP_Conf->BSP_DATA.USARTSendLen);			//串口DMA发送程序
+		BSP_Conf->BSP_DATA.USARTSendLen=0;
+	}
+}
+
+
+
+
+
+//---------------------从机专用函数
+/*******************************************************************************
+*函数名			:	USS_BSP_PROCESS
+*功能描述		:	函数功能说明
+*输入				: 
+*返回值			:	无
+*******************************************************************************/
+void USS_BSP_PROCESS(BSP_Conf_TypeDef *BSP_Conf)
+{
+
+}
+/*******************************************************************************
+*函数名			:	function
+*功能描述		:	函数功能说明
+*输入				: 
+*返回值			:	无
+*******************************************************************************/
+void USS_BSP_RESET(BSP_Conf_TypeDef *BSP_Conf)
+{
+
+}
+/*******************************************************************************
+*函数名			:	USS_BSP_Get
+*功能描述		:	获取当前自举程序版本及允许使用的命令
+*输入				: 
+*返回值			:	无
+*******************************************************************************/
+void USS_BSP_Get(BSP_Conf_TypeDef *BSP_Conf)		//获取当前自举程序版本及允许使用的命令
+{
+
+}
+/*******************************************************************************
+*函数名			:	Get Version & Read Protection Status
+*功能描述		:	获取自举程序版本及 Flash 的读保护状态
+*输入				: 
+*返回值			:	无
+*******************************************************************************/
+void USS_BSP_GetVR(BSP_Conf_TypeDef *BSP_Conf)		//获取自举程序版本及 Flash 的读保护状态
+{
+
+}
+/*******************************************************************************
+*函数名			:	USS_BSP_GetId
+*功能描述		:	获取芯片 ID
+*输入				: 
+*返回值			:	无
+*******************************************************************************/
+void USS_BSP_GetId(BSP_Conf_TypeDef *BSP_Conf)			//获取芯片 ID
+{
+
+}
+/*******************************************************************************
+*函数名			:	USS_BSP_ReadMemory
+*功能描述		:	从应用程序指定的地址开始读取最多 256 个字节的存储器空间
+*输入				: 
+*返回值			:	无
+*******************************************************************************/
+void USS_BSP_ReadMemory(BSP_Conf_TypeDef *BSP_Conf)		//从应用程序指定的地址开始读取最多 256 个字节的存储器空间
+{
+
+}
+/*******************************************************************************
+*函数名			:	USS_BSP_Go
+*功能描述		:	跳转到内部 Flash 或 SRAM 内的应用程序代码
+*输入				: 
+*返回值			:	无
+*******************************************************************************/
+void USS_BSP_Go(BSP_Conf_TypeDef *BSP_Conf)		//跳转到内部 Flash 或 SRAM 内的应用程序代码
+{
+
+}
+/*******************************************************************************
+*函数名			:	USS_BSP_WriteMemory
+*功能描述		:	从应用程序指定的地址开始将最多 256 个字节的数据写入 RAM 或 Flash
+*输入				: 
+*返回值			:	无
+*******************************************************************************/
+void USS_BSP_WriteMemory(BSP_Conf_TypeDef *BSP_Conf)		//从应用程序指定的地址开始将最多 256 个字节的数据写入 RAM 或 Flash
+{
+
+}
+/*******************************************************************************
+*函数名			:	USS_BSP_EraseMemory
+*功能描述		:	擦除一个到全部 Flash 页面
+*输入				: 
+*返回值			:	无
+*******************************************************************************/
+void USS_BSP_EraseMemory(BSP_Conf_TypeDef *BSP_Conf)		//擦除一个到全部 Flash 页面
+{
+
+}
+/*******************************************************************************
+*函数名			:	USS_BSP_EEraseMemory
+*功能描述		:	使用双字节寻址模式擦除一个到全部 Flash 页面（仅用于v3.0 usart 自举程序版本及以上版本）
+*输入				: 
+*返回值			:	无
+*******************************************************************************/
+void USS_BSP_EEraseMemory(BSP_Conf_TypeDef *BSP_Conf)		//使用双字节寻址模式擦除一个到全部 Flash 页面（仅用于v3.0 usart 自举程序版本及以上版本）
+{
+
+}
+/*******************************************************************************
+*函数名			:	USS_BSP_WriteProtect
+*功能描述		:	使能某些扇区的写保护
+*输入				: 
+*返回值			:	无
+*******************************************************************************/
+void USS_BSP_WriteProtect(BSP_Conf_TypeDef *BSP_Conf)		//使能某些扇区的写保护
+{
+
+}
+/*******************************************************************************
+*函数名			:	USS_BSP_WriteUnProtect
+*功能描述		:	禁止所有 Flash 扇区的写保护
+*输入				: 
+*返回值			:	无
+*******************************************************************************/
+void USS_BSP_WriteUnProtect(BSP_Conf_TypeDef *BSP_Conf)		//禁止所有 Flash 扇区的写保护
+{
+
+}
+/*******************************************************************************
+*函数名			:	USS_BSP_ReadProtect
+*功能描述		:	使能读保护
+*输入				: 
+*返回值			:	无
+*******************************************************************************/
+void USS_BSP_ReadProtect(BSP_Conf_TypeDef *BSP_Conf)		//使能读保护
+{
+
+}
+/*******************************************************************************
+*函数名			:	USS_BSP_ReadUnProtect
+*功能描述		:	禁止读保护
+*输入				: 
+*返回值			:	无
+*******************************************************************************/
+void USS_BSP_ReadUnProtect(BSP_Conf_TypeDef *BSP_Conf)		//禁止读保护
+{
+
+}
+/*******************************************************************************
+*函数名			:	USS_BSP_ACK
+*功能描述		:	向主机发送应答(0x79)
+*输入				: 
+*返回值			:	无
+*******************************************************************************/
+void USS_BSP_ACK(BSP_Conf_TypeDef *BSP_Conf)		//向主机发送应答(0x79)
+{
+
+}
+/*******************************************************************************
+*函数名			:	USS_BSP_NACK
+*功能描述		:	向主机发送非应答(0x1F)
+*输入				: 
+*返回值			:	无
+*******************************************************************************/
+void USS_BSP_NACK(BSP_Conf_TypeDef *BSP_Conf)		//向主机发送非应答(0x1F)
+{
+
+}
 
 

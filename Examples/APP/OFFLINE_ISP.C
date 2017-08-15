@@ -22,6 +22,7 @@ Page£º
 
 #include "SPI_FLASH.H"
 #include "USART_ISP.H"
+#include "STM32_TOOLS.H"
 
 #include "STM32_PWM.H"
 #include "STM32_SYS.H"
@@ -215,7 +216,7 @@ void OFFLINE_ISP_StatusProcess(void)		//×´Ì¬´¦Àí
 		}
 		else if(OFFLINE_Cof.SPI_FLASH.SPI_FLASH_Info.SPI_FLASH_Steps==Step_WRITE)
 		{
-			u32 timedelay=0;
+//			u32 timedelay=0;
 			OFFLINE_Cof.SPI_FLASH.SPI_FLASH_Info.SPI_FLASH_Steps=Step_IDLE;
 			OFFLINE_Cof.SPI_FLASH.SPI_FLASH_Info.SPI_FLASH_Request=SPI_FLASH_qIDLE;
 			OFFLINE_Cof.SPI_FLASH.SPI_FLASH_Info.SPI_FLASH_Staus=SPI_FLASH_IDLE;

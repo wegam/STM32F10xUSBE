@@ -216,7 +216,7 @@ void SPI_FLASH_Conf(SPI_FLASH_TypeDef *SPI_Conf)
 {
 //	#define USB_TEST_BD				//USB_TEST板
 //	#define CMSIS_CDC_BD			//CMSIS-CDC板
-	GPIO_InitTypeDef GPIO_InitStructure;
+//	GPIO_InitTypeDef GPIO_InitStructure;
 	
 	#ifdef	USB_TEST_BD
 	SPI_Conf->SPIx=SPI2;
@@ -1360,7 +1360,7 @@ u8 SPI_USER_SendData(SPI_FLASH_TypeDef *SPI_Conf,u8 byte)			//自定义写单字节数据
 //	void GPIO_ResetBits(GPIO_TypeDef* GPIOx, u16 GPIO_Pin);
 //	u8 GPIO_ReadInputDataBit(GPIO_TypeDef* GPIOx, u16 GPIO_Pin);
 	
-	u8 timedl=0;
+//	u8 timedl=0;
 	u8 i=0;
 	u8 Redata=0;
 
