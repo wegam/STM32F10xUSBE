@@ -8,6 +8,10 @@ void PC004V21_Server(void);
 void PC004V21_PinSet(void);
 
 
+void PC004V21_KEYData(void);		//按键发药处理函数
+	
+
+
 u8 PC004V10_485_TR(void);				//485收发
 void PC004V10_CAN_RX(void);			//主要接收数码管板地址，
 void PC004V10_CAN_TX(void);			//CAN发送数据，地址，命令类型，数据

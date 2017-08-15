@@ -1,6 +1,7 @@
 #ifndef __PD014V15_H
 #define __PD014V15_H
 
+#include "stm32f10x_gpio.h"
 
 //发药电磁铁控制
 #define	ct_pmos1	PA7
@@ -41,6 +42,14 @@
 
 //数据格式:B0-SWITCHID，B1-CMD，B2~B9:数据，B10:前面所有数据异或校验
 
+
+typedef	enum _PD014_DefaultData		//PD014命令(状态查询、读发药头、发药、上报发药结果、设置电磁铁吸合时间、重置）
+{
+	RelayOnTime		=	100,		//继电器吸合时间		
+	RelayOutTime	=	1000,	//继电器单次工作时间
+	MinSensTime		=	20,		//传感器最小感应时长----增加抗干扰
+	TryTimes			=	5			//重试次数
+}PD014_DefaultData_TypeDef;
 
 typedef	enum _PD014_COMMAND		//PD014命令(状态查询、读发药头、发药、上报发药结果、设置电磁铁吸合时间、重置）
 {
@@ -105,6 +114,7 @@ typedef	struct _PD014_DATA	//USART 应答
 	
 	unsigned short 	RELAYTIME[8];		//继电器需要吸合时间---默认100ms
 	unsigned short 	RELAYCOUNT[8];	//继电器已经吸合时间---达到RELAYTIME后释放
+	unsigned short 	TRYTIME[8];			//未感应到药品时的重试次数	
 	
 	unsigned short 	SENSTIME[8];		//传感器感应时间----与NOISETIME配置使用计算传感器感应时间，主要过滤干扰信号
 	unsigned short 	NOISETIME[8];		//传感器感噪声过滤时间	
@@ -114,10 +124,11 @@ typedef	struct _PD014_DATA	//USART 应答
 	unsigned char RevBuffe[RS485BufferSize];
 	unsigned char TxdBuffe[RS485BufferSize];
 	unsigned char TevBuffe[RS485BufferSize];
-
+	
 	
 	PD014_CMD_TypeDef Command;						//命令
 	PD014_STATUS_TypeDef	STATUS[8];			//状态
+	PD014_DefaultData_TypeDef	DDATA;			//初始化配置数据
 	
 }PD014_DATA_TypeDef;
 
@@ -126,6 +137,13 @@ typedef	struct _PD014_INF				//
 {
 	PD014_MODE_TypeDef MODE;			//工作模式：NORMEL正常工作模式，TEST测试模式
 	PD014_DATA_TypeDef PD014_DATA;
+	
+	GPIO_TypeDef* GPmos[8];
+	unsigned short PPmos[8];
+	
+	GPIO_TypeDef* GSens[8];
+	unsigned short Psens[8];
+	
 }PD014_INF_TypeDef;
 
 
@@ -142,6 +160,7 @@ void PD014V14_GetOnlieDevice(void);			//获取在线发药头
 void PD014V14_ACK(void);
 void PD014V14_NACK(void);
 void PD014V14_SendM(void);							//发药
+void PD014V14_Module(unsigned char Num);	//发药头模块---控制，传感器，超时
 void PD014V14_ResetData(void);					//复位数据
 
 

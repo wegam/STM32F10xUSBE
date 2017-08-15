@@ -34,6 +34,7 @@
 #include "stm32f10x_dma.h"
 
 
+	
 
 
 u16	DelayTime=0;
@@ -56,19 +57,20 @@ void PD014V14_Configuration(void)
 	
 	GPIO_DeInitAll();							//将所有的GPIO关闭----V20170605
 	
-//	PD014V14_PinSet();
-//	
-//	RS485_DMA_ConfigurationNR	(&PD014R485,19200,(u32*)PD014_Conf.PD014_DATA.RxdBuffe,RS485BufferSize);	//USART_DMA配置--查询方式，不开中断,配置完默认为接收状态
-//	
-//	IWDG_Configuration(5000);			//独立看门狗配置---参数单位ms	
-//	
+	PD014V14_PinSet();
+	
+	RS485_DMA_ConfigurationNR	(&PD014R485,19200,(u32*)PD014_Conf.PD014_DATA.RxdBuffe,RS485BufferSize);	//USART_DMA配置--查询方式，不开中断,配置完默认为接收状态
+	
+	IWDG_Configuration(5000);			//独立看门狗配置---参数单位ms	
+	
 	PWM_OUT(TIM2,PWM_OUTChannel1,1,500);						//PWM设定-20161127版本--SYS-LED
-//	
-//	PD014V14_GetSwitchID();				//获取拨码开关地址
-//	
-//	PD014V14_GetOnlieDevice();			//获取在线发药头
-//	
-//	SysTick_Configuration(1000);	//系统嘀嗒时钟配置72MHz,单位为uS--1ms
+	
+	PD014V14_GetSwitchID();				//获取拨码开关地址
+	
+	PD014V14_GetOnlieDevice();			//获取在线发药头
+	
+	SysTick_Configuration(1000);	//系统嘀嗒时钟配置72MHz,单位为uS--1ms
+	
 }
 /*******************************************************************************
 * 函数名		:	
@@ -87,25 +89,25 @@ void PD014V14_Server(void)
 	
 
 	//数据格式:B0-SWITCHID，B1-CMD，B2~B9:数据，B10:前面所有数据异或校验
-//	RxNum=RS485_ReadBufferIDLE(&PD014R485,(u32*)PD014_Conf.PD014_DATA.RevBuffe,(u32*)PD014_Conf.PD014_DATA.RxdBuffe);	//串口空闲模式读串口接收缓冲区，如果有数据，将数据拷贝到RevBuffer,并返回接收到的数据个数，然后重新将接收缓冲区地址指向RxdBuffer
-//	if(RxNum)		//如果拨码地址相同，则进入Process
-//	{
-//		unsigned char Bcc=BCC8(PD014_Conf.PD014_DATA.RevBuffe,10);		//异或校验;
-//		if(Bcc==PD014_Conf.PD014_DATA.RevBuffe[10])			//异或校验通过
-//		{
-//			PD014V14_Process();		//PD014V14所有板内处理数理函数
-//		}
-//		else
-//		{
-//			PD014_Conf.PD014_DATA.TxdBuffe[0]=PD014_NACK;
-//			PD014_Conf.PD014_DATA.TxdBuffe[1]=PD014_BccError;
-//			PD014_Conf.PD014_DATA.TxdBuffe[2]=PD014_NACK^PD014_BccError;
-//			PD014V14_NACK();			//数据校验不通过，NACK应答主机
-//		}
-//	}
+	RxNum=RS485_ReadBufferIDLE(&PD014R485,(u32*)PD014_Conf.PD014_DATA.RevBuffe,(u32*)PD014_Conf.PD014_DATA.RxdBuffe);	//串口空闲模式读串口接收缓冲区，如果有数据，将数据拷贝到RevBuffer,并返回接收到的数据个数，然后重新将接收缓冲区地址指向RxdBuffer
+	if(RxNum)		//如果拨码地址相同，则进入Process
+	{
+		unsigned char Bcc=BCC8(PD014_Conf.PD014_DATA.RevBuffe,10);		//异或校验;
+		if(Bcc==PD014_Conf.PD014_DATA.RevBuffe[10])			//异或校验通过
+		{
+			PD014V14_Process();		//PD014V14所有板内处理数理函数
+		}
+		else
+		{
+			PD014_Conf.PD014_DATA.TxdBuffe[0]=PD014_NACK;
+			PD014_Conf.PD014_DATA.TxdBuffe[1]=PD014_BccError;
+			PD014_Conf.PD014_DATA.TxdBuffe[2]=PD014_NACK^PD014_BccError;
+			PD014V14_NACK();			//数据校验不通过，NACK应答主机
+		}
+	}
 
-//	PD014V14_SendM();			//发药
-	Lock_Toggle();			//双向电子锁控制
+	PD014V14_SendM();			//发药
+//	Lock_Toggle();			//双向电子锁控制
 }
 /*******************************************************************************
 * 函数名			:	PD014V14_Process
@@ -141,10 +143,12 @@ void PD014V14_Process(void)		//PD014V14所有板内处理数理函数
 		{
 			if(PD014_Conf.PD014_DATA.WSD[i])
 			{
-				PD014_Conf.PD014_DATA.STATUS[i]=PD014_STA_SEND;
-				PD014_Conf.PD014_DATA.RELAYTIME[i]=0;
-				PD014_Conf.PD014_DATA.RELAYCOUNT[i]=0;
-				PD014_Conf.PD014_DATA.SENSTIME[i]=0;
+				PD014_Conf.PD014_DATA.SED[i]=0;									//已发药计数器清零
+				PD014_Conf.PD014_DATA.STATUS[i]=PD014_STA_SEND;	//发药头状态改为发药状态
+				PD014_Conf.PD014_DATA.RELAYTIME[i]=0;						//电磁铁吸合控制时间清零
+				PD014_Conf.PD014_DATA.RELAYCOUNT[i]=0;					//
+				PD014_Conf.PD014_DATA.TRYTIME[i]=0;							//重试次数清零
+				PD014_Conf.PD014_DATA.SENSTIME[i]=0;						//传感器感应时间清零
 				PD014_Conf.PD014_DATA.NOISETIME[i]=0;
 			}
 			else
@@ -201,9 +205,31 @@ void PD014V14_PinSet(void)
 	
 	PD014R485.USARTx=USART2;
 	PD014R485.RS485_CTL_PORT=GPIOA;
-	PD014R485.RS485_CTL_Pin=GPIO_Pin_1;
+	PD014R485.RS485_CTL_Pin=GPIO_Pin_1;	
 	
 	P_Sens=1;			//传感器供电开关--开
+	
+	//Pmos控制电磁铁
+	PD014_Conf.GPmos[0]=GPIOA;	PD014_Conf.PPmos[0]=GPIO_Pin_7;		//PD1
+	PD014_Conf.GPmos[1]=GPIOC;	PD014_Conf.PPmos[1]=GPIO_Pin_5;
+	PD014_Conf.GPmos[2]=GPIOB;	PD014_Conf.PPmos[2]=GPIO_Pin_1;
+	PD014_Conf.GPmos[3]=GPIOB;	PD014_Conf.PPmos[3]=GPIO_Pin_11;
+	PD014_Conf.GPmos[4]=GPIOB;	PD014_Conf.PPmos[4]=GPIO_Pin_13;
+	PD014_Conf.GPmos[5]=GPIOB;	PD014_Conf.PPmos[5]=GPIO_Pin_15;
+	PD014_Conf.GPmos[6]=GPIOC;	PD014_Conf.PPmos[6]=GPIO_Pin_7;
+	PD014_Conf.GPmos[7]=GPIOC;	PD014_Conf.PPmos[7]=GPIO_Pin_9;
+	
+	//传感器
+	PD014_Conf.GSens[0]=GPIOA;	PD014_Conf.Psens[0]=GPIO_Pin_6;	//SENSOR1
+	PD014_Conf.GSens[1]=GPIOC;	PD014_Conf.Psens[1]=GPIO_Pin_4;
+	PD014_Conf.GSens[2]=GPIOB;	PD014_Conf.Psens[2]=GPIO_Pin_0;
+	PD014_Conf.GSens[3]=GPIOB;	PD014_Conf.Psens[3]=GPIO_Pin_10;
+	PD014_Conf.GSens[4]=GPIOB;	PD014_Conf.Psens[4]=GPIO_Pin_12;
+	PD014_Conf.GSens[5]=GPIOB;	PD014_Conf.Psens[5]=GPIO_Pin_14;
+	PD014_Conf.GSens[6]=GPIOC;	PD014_Conf.Psens[6]=GPIO_Pin_6;
+	PD014_Conf.GSens[7]=GPIOC;	PD014_Conf.Psens[7]=GPIO_Pin_8;
+	
+	
 }
 /*******************************************************************************
 * 函数名			:	function
@@ -380,288 +406,95 @@ void PD014V14_NACK(void)		//NACK返回3字节，NACK标识、错误内容、BCC校验码
 *******************************************************************************/
 void PD014V14_SendM(void)		//发药
 {
-	unsigned char i=0;
+	unsigned char i=0;	
 	for(i=0;i<8;i++)
 	{
-		if(PD014_Conf.PD014_DATA.STATUS[i]==PD014_STA_SEND)
+		PD014V14_Module(i);	//发药头模块---控制，传感器，超时
+	}	
+}
+/*******************************************************************************
+* 函数名			:	PD014V14_Module
+* 功能描述		:	发药头模块---控制，传感器，超时
+* 输入			: void
+* 返回值			: void
+*******************************************************************************/
+void PD014V14_Module(unsigned char Num)	//发药头模块---控制，传感器，超时
+{	
+	if(PD014_Conf.PD014_DATA.STATUS[Num]==PD014_STA_SEND)			//发药状态
+	{	
+		//------时间控制
+		if(PD014_Conf.PD014_DATA.RELAYTIME[Num]++>=RelayOutTime)
 		{
-			if(i==0)
+			PD014_Conf.PD014_DATA.RELAYTIME[Num]=0;			//一个周期计时满----传感器未检测到物体			
+			//判断传感器计时值
+			if(PD014_Conf.PD014_DATA.SENSTIME[Num]==0)
 			{
-								
-				if(PD014_Conf.PD014_DATA.RELAYTIME[i]++<10000)
+				PD014_Conf.PD014_DATA.TRYTIME[Num]++;
+				if(PD014_Conf.PD014_DATA.TRYTIME[Num]>=TryTimes)		//超过最大重试次数----判定为缺药
 				{
-					ct_pmos1=1;
-				}
-				else if(PD014_Conf.PD014_DATA.RELAYTIME[i]++>=20000)
-				{
-					PD014_Conf.PD014_DATA.RELAYTIME[i]=0;
-				}
-				else
-				{
-					ct_pmos1=0;
-				}
-				if(Sens_In1)
-				{
-					PD014_Conf.PD014_DATA.SENSTIME[i]++;
-				}
-				else
-				{
-					if(PD014_Conf.PD014_DATA.SENSTIME[i]>=1000)
-					{
-						PD014_Conf.PD014_DATA.SED[i]+=1;
-						if(PD014_Conf.PD014_DATA.SED[i]>=PD014_Conf.PD014_DATA.WSD[i])
-						{
-							PD014_Conf.PD014_DATA.STATUS[i]=PD014_STA_SENDED;
-						}
-					}
-					PD014_Conf.PD014_DATA.SENSTIME[i]=0;
+					PD014_Conf.PD014_DATA.STATUS[Num]=PD014_STA_SHORTAGE;	//缺药
 				}
 			}
-			else if(i==1)
+			else if(PD014_Conf.PD014_DATA.SENSTIME[Num]>=RelayOutTime)
 			{
-								
-				if(PD014_Conf.PD014_DATA.RELAYTIME[i]++<10000)
+				PD014_Conf.PD014_DATA.TRYTIME[Num]++;
+				if(PD014_Conf.PD014_DATA.TRYTIME[Num]>=TryTimes)		//超过最大重试次数----判定为缺药
 				{
-					ct_pmos2=1;
-				}
-				else if(PD014_Conf.PD014_DATA.RELAYTIME[i]++>=20000)
-				{
-					PD014_Conf.PD014_DATA.RELAYTIME[i]=0;
-				}
-				else
-				{
-					ct_pmos2=0;
-				}
-				if(Sens_In2)
-				{
-					PD014_Conf.PD014_DATA.SENSTIME[i]++;
-				}
-				else
-				{
-					if(PD014_Conf.PD014_DATA.SENSTIME[i]>=1000)
-					{
-						PD014_Conf.PD014_DATA.SED[i]+=1;
-						if(PD014_Conf.PD014_DATA.SED[i]>=PD014_Conf.PD014_DATA.WSD[i])
-						{
-							PD014_Conf.PD014_DATA.STATUS[i]=PD014_STA_SENDED;
-						}
-					}
-					PD014_Conf.PD014_DATA.SENSTIME[i]=0;
+					PD014_Conf.PD014_DATA.STATUS[Num]=PD014_STA_CLOGGED;	//缺药
 				}
 			}
-			else if(i==2)
-			{
-								
-				if(PD014_Conf.PD014_DATA.RELAYTIME[i]++<10000)
-				{
-					ct_pmos3=1;
-				}
-				else if(PD014_Conf.PD014_DATA.RELAYTIME[i]++>=20000)
-				{
-					PD014_Conf.PD014_DATA.RELAYTIME[i]=0;
-				}
-				else
-				{
-					ct_pmos3=0;
-				}
-				if(Sens_In3)
-				{
-					PD014_Conf.PD014_DATA.SENSTIME[i]++;
-				}
-				else
-				{
-					if(PD014_Conf.PD014_DATA.SENSTIME[i]>=1000)
-					{
-						PD014_Conf.PD014_DATA.SED[i]+=1;
-						if(PD014_Conf.PD014_DATA.SED[i]>=PD014_Conf.PD014_DATA.WSD[i])
-						{
-							PD014_Conf.PD014_DATA.STATUS[i]=PD014_STA_SENDED;
-						}
-					}
-					PD014_Conf.PD014_DATA.SENSTIME[i]=0;
-				}
-			}
-			else if(i==3)
-			{
-								
-				if(PD014_Conf.PD014_DATA.RELAYTIME[i]++<10000)
-				{
-					ct_pmos4=1;
-				}
-				else if(PD014_Conf.PD014_DATA.RELAYTIME[i]++>=20000)
-				{
-					PD014_Conf.PD014_DATA.RELAYTIME[i]=0;
-				}
-				else
-				{
-					ct_pmos4=0;
-				}
-				if(Sens_In4)
-				{
-					PD014_Conf.PD014_DATA.SENSTIME[i]++;
-				}
-				else
-				{
-					if(PD014_Conf.PD014_DATA.SENSTIME[i]>=1000)
-					{
-						PD014_Conf.PD014_DATA.SED[i]+=1;
-						if(PD014_Conf.PD014_DATA.SED[i]>=PD014_Conf.PD014_DATA.WSD[i])
-						{
-							PD014_Conf.PD014_DATA.STATUS[i]=PD014_STA_SENDED;
-						}
-					}
-					PD014_Conf.PD014_DATA.SENSTIME[i]=0;
-				}
-			}
-			else if(i==4)
-			{
-								
-				if(PD014_Conf.PD014_DATA.RELAYTIME[i]++<10000)
-				{
-					ct_pmos5=1;
-				}
-				else if(PD014_Conf.PD014_DATA.RELAYTIME[i]++>=20000)
-				{
-					PD014_Conf.PD014_DATA.RELAYTIME[i]=0;
-				}
-				else
-				{
-					ct_pmos5=0;
-				}
-				if(Sens_In5)
-				{
-					PD014_Conf.PD014_DATA.SENSTIME[i]++;
-				}
-				else
-				{
-					if(PD014_Conf.PD014_DATA.SENSTIME[i]>=1000)
-					{
-						PD014_Conf.PD014_DATA.SED[i]+=1;
-						if(PD014_Conf.PD014_DATA.SED[i]>=PD014_Conf.PD014_DATA.WSD[i])
-						{
-							PD014_Conf.PD014_DATA.STATUS[i]=PD014_STA_SENDED;
-						}
-					}
-					PD014_Conf.PD014_DATA.SENSTIME[i]=0;
-				}
-			}
-			else if(i==5)
-			{
-								
-				if(PD014_Conf.PD014_DATA.RELAYTIME[i]++<10000)
-				{
-					ct_pmos6=1;
-				}
-				else if(PD014_Conf.PD014_DATA.RELAYTIME[i]++>=20000)
-				{
-					PD014_Conf.PD014_DATA.RELAYTIME[i]=0;
-				}
-				else
-				{
-					ct_pmos6=0;
-				}
-				if(Sens_In6)
-				{
-					PD014_Conf.PD014_DATA.SENSTIME[i]++;
-				}
-				else
-				{
-					if(PD014_Conf.PD014_DATA.SENSTIME[i]>=1000)
-					{
-						PD014_Conf.PD014_DATA.SED[i]+=1;
-						if(PD014_Conf.PD014_DATA.SED[i]>=PD014_Conf.PD014_DATA.WSD[i])
-						{
-							PD014_Conf.PD014_DATA.STATUS[i]=PD014_STA_SENDED;
-						}
-					}
-					PD014_Conf.PD014_DATA.SENSTIME[i]=0;
-				}
-			}
-			else if(i==6)
-			{
-								
-				if(PD014_Conf.PD014_DATA.RELAYTIME[i]++<10000)
-				{
-					ct_pmos7=1;
-				}
-				else if(PD014_Conf.PD014_DATA.RELAYTIME[i]++>=20000)
-				{
-					PD014_Conf.PD014_DATA.RELAYTIME[i]=0;
-				}
-				else
-				{
-					ct_pmos7=0;
-				}
-				if(Sens_In7)
-				{
-					PD014_Conf.PD014_DATA.SENSTIME[i]++;
-				}
-				else
-				{
-					if(PD014_Conf.PD014_DATA.SENSTIME[i]>=1000)
-					{
-						PD014_Conf.PD014_DATA.SED[i]+=1;
-						if(PD014_Conf.PD014_DATA.SED[i]>=PD014_Conf.PD014_DATA.WSD[i])
-						{
-							PD014_Conf.PD014_DATA.STATUS[i]=PD014_STA_SENDED;
-						}
-					}
-					PD014_Conf.PD014_DATA.SENSTIME[i]=0;
-				}
-			}
-			else if(i==7)
-			{
-								
-				if(PD014_Conf.PD014_DATA.RELAYTIME[i]++<10000)
-				{
-					ct_pmos8=1;
-				}
-				else if(PD014_Conf.PD014_DATA.RELAYTIME[i]++>=20000)
-				{
-					PD014_Conf.PD014_DATA.RELAYTIME[i]=0;
-				}
-				else
-				{
-					ct_pmos8=0;
-				}
-				if(Sens_In8)
-				{
-					PD014_Conf.PD014_DATA.SENSTIME[i]++;
-				}
-				else
-				{
-					if(PD014_Conf.PD014_DATA.SENSTIME[i]>=1000)
-					{
-						PD014_Conf.PD014_DATA.SED[i]+=1;
-						if(PD014_Conf.PD014_DATA.SED[i]>=PD014_Conf.PD014_DATA.WSD[i])
-						{
-							PD014_Conf.PD014_DATA.STATUS[i]=PD014_STA_SENDED;
-						}
-					}
-					PD014_Conf.PD014_DATA.SENSTIME[i]=0;
-				}
-			}
-			//----------传感器计时
-
+		}
+		//------电磁铁吸合时间控制
+		if((PD014_Conf.PD014_DATA.RELAYTIME[Num]>(RelayOutTime-RelayOnTime))&&(PD014_Conf.PD014_DATA.RELAYTIME[Num]<RelayOutTime))
+		{
+			GPIO_SetBits(PD014_Conf.GPmos[Num],PD014_Conf.PPmos[Num]);
 		}
 		else
 		{
-			if(i==1)
-				ct_pmos1=0;
-			else if(i==2)
-				ct_pmos2=0;
-			else if(i==3)
-				ct_pmos3=0;
-			else if(i==4)
-				ct_pmos4=0;
-			else if(i==5)
-				ct_pmos5=0;
-			else if(i==6)
-				ct_pmos6=0;
-			else if(i==7)
-				ct_pmos7=0;
-			else if(i==8)
-				ct_pmos8=0;
+			GPIO_ResetBits(PD014_Conf.GPmos[Num],PD014_Conf.PPmos[Num]);
+		}
+		//------传感器信号处理
+		if(GPIO_ReadInputDataBit(PD014_Conf.GSens[Num],PD014_Conf.Psens[Num]))		//信号高电平---传感器有感应到物体(与无传感器时电平相同)
+		{
+			PD014_Conf.PD014_DATA.SENSTIME[Num]++;										//传感器感应计时---过滤干扰
+			if((PD014_Conf.PD014_DATA.SENSTIME[Num]>RelayOutTime)&&(PD014_Conf.PD014_DATA.TRYTIME[Num]<TryTimes))			//传感器一直感应状态----传感器阻挡,重试5次弹跳
+			{
+				PD014_Conf.PD014_DATA.STATUS[Num]=PD014_STA_SEND;				//继续弹跳发药
+			}
+		}
+		else					//信号低电平----（传感器空闲并且有传感器)
+		{
+			if(PD014_Conf.PD014_DATA.SENSTIME[Num]>=MinSensTime)			//传感器感应时长超过最小有效时长表示已经检测到物体
+			{
+				PD014_Conf.PD014_DATA.SED[Num]+=1;											//已发药品数量增加一个
+				if(PD014_Conf.PD014_DATA.SED[Num]>=PD014_Conf.PD014_DATA.WSD[Num])	//已达到发药数量
+				{
+					PD014_Conf.PD014_DATA.STATUS[Num]=PD014_STA_SENDED;		//状态更新----发药完成
+				}
+				PD014_Conf.PD014_DATA.RELAYTIME[Num]=0;									//电磁铁控制计时清零
+			}
+			PD014_Conf.PD014_DATA.SENSTIME[Num]=0;										//传感器计时清零，准备下一个发药
+		}
+	}
+	else			//非发药情况下的传感器感应以及需要断开电磁铁
+	{
+		GPIO_ResetBits(PD014_Conf.GPmos[Num],PD014_Conf.PPmos[Num]);							//断开电磁铁
+		if(GPIO_ReadInputDataBit(PD014_Conf.GSens[Num],PD014_Conf.Psens[Num]))		//信号高电平---传感器有感应到物体(与无传感器时电平相同)
+		{
+			PD014_Conf.PD014_DATA.SENSTIME[Num]++;										//传感器感应计时---过滤干扰
+		}
+		else		//信号低电平----（传感器空闲并且有传感器)
+		{
+			if(PD014_Conf.PD014_DATA.SENSTIME[Num]>=MinSensTime)			//传感器感应时长超过最小有效时长表示已经检测到物体
+			{
+				PD014_Conf.PD014_DATA.SED[Num]+=1;											//已发药品数量增加一个
+				if(PD014_Conf.PD014_DATA.SED[Num]>=PD014_Conf.PD014_DATA.WSD[Num])	//已达到发药数量
+				{
+					PD014_Conf.PD014_DATA.STATUS[Num]=PD014_STA_SENDED;		//状态更新----发药完成
+				}
+				PD014_Conf.PD014_DATA.TRYTIME[Num]=0;										//能够发药的情况下，将重试次数清零
+			}
+			PD014_Conf.PD014_DATA.SENSTIME[Num]=0;										//传感器计时清零
 		}
 	}
 }

@@ -184,8 +184,8 @@ void PC004V21_Configuration(void)
 	PC004V10_TBuffer[7]=0x00;
 	PC004V10_TBuffer[8]=0x00;
 	PC004V10_TBuffer[9]=0x00;
-	PC004V10_TBuffer[10]=0x05;
-//	SysTick_Configuration(1000);							//系统嘀嗒时钟配置72MHz,单位为uS
+	
+	PC004V10_TBuffer[10]=BCC8(PC004V10_TBuffer,10);		//异或校验
 }
 /*******************************************************************************
 * 函数名		:	
@@ -207,9 +207,11 @@ void PC004V21_Server(void)
 	{
 		SYSTime=0;
 		num++;
-		if(num>255)
+		if(num>5)
+		{
 			num=0;
-		RS485_DMASend(&RS485_Conf,(u32*)PC004V10_TBuffer,11);	//RS485-DMA发送程序
+//			RS485_DMASend(&RS485_Conf,(u32*)PC004V10_TBuffer,11);	//RS485-DMA发送程序
+		}
 //		GPIO_Toggle	(GPIOB,GPIO_Pin_0);		//将GPIO相应管脚输出翻转----V20170605//锁接口
 //		TxMessage.Data[3]=num;
 //		PC004V10_CAN_COMMAD();					//CAN发送命令函数，地址，命令类型，数据--时间同步--发送获取D命令
@@ -217,35 +219,38 @@ void PC004V21_Server(void)
 //		CAN_StdTX_DATA(0X15,1,PC004V10_Num);			//CAN使用标准帧发送数据
 //		CAN_ExtTX_DATA(0X15,1,PC004V10_Num);			//CAN使用扩展帧发送数据
 	}
-	if(PB1in)
-	{
+	if(PB1in)		//无按键
+	{	
+		if(KeyTime>=10)
+		{			
+			if(PB1Flg==0)
+					PB1Flg=1;
+		}
 		KeyTime=0;
 	}
 	else
 	{
-		if(KeyTime++==10)
+		if(KeyTime++>=10)
 		{
-			if(PB1Flg==0)
-				PB1Flg=1;
+			KeyTime=20;
+//			PB1Flg=0;
 		}
-//		if(PB1Flg==0)
-//			PWM_OUT(TIM3,PWM_OUTChannel3,0.5,10);						//PWM设定-20161127版本
-//		else
-//			PWM_OUT(TIM3,PWM_OUTChannel3,1,500);						//PWM设定-20161127版本
 	}
 	if(PB1Flg==1)
 	{
+//		RS485_DMASend(&RS485_Conf,(u32*)PC004V10_TBuffer,11);	//RS485-DMA发送程序
+		PC004V21_KEYData();		//按键发药处理函数
 		if(PW1Flg==0)
 		{
 			PW1Flg=1;
-			PB1Flg=0;
+			PB1Flg=0;				
 			PWM_OUT(TIM3,PWM_OUTChannel3,0.5,10);						//PWM设定-20161127版本
 		}
 		else
 		{
 			PW1Flg=0;
 			PB1Flg=0;
-			PWM_OUT(TIM3,PWM_OUTChannel3,2,500);						//PWM设定-20161127版本
+			PWM_OUT(TIM3,PWM_OUTChannel3,5,500);						//PWM设定-20161127版本
 		}
 	}
 	//**************检查通讯标志位，查看是否为通讯中断，如果是，则此次时间增量无效
@@ -301,6 +306,36 @@ void PC004V21_PinSet(void)
 	RS485_Conf.RS485_CTL_Pin=GPIO_Pin_12;
 
 
+}
+/*******************************************************************************
+* 函数名			:	PC004V21_KEYData
+* 功能描述		:	按键发药处理函数 
+* 输入			: void
+* 返回值			: void
+*******************************************************************************/
+void PC004V21_KEYData(void)		//按键发药处理函数
+{
+	unsigned char SW=PC004V21_GetSwitchID();				//获取当前设备ID//机柜号(高位当发药头号，低位当发药数量）
+
+	
+	PC004V10_TBuffer[0]=0x00;
+	PC004V10_TBuffer[1]=0x05;
+//	PC004V10_TBuffer[2]=0x03;
+//	PC004V10_TBuffer[3]=0x03;
+//	PC004V10_TBuffer[4]=0x00;
+//	PC004V10_TBuffer[5]=0x00;
+//	PC004V10_TBuffer[6]=0x00;
+//	PC004V10_TBuffer[7]=0x00;
+//	PC004V10_TBuffer[8]=0x00;
+//	PC004V10_TBuffer[9]=0x00;
+	
+	memset(&PC004V10_TBuffer[2],0x00,8);		//所有发药头发药数量设置为0
+	
+	PC004V10_TBuffer[2+(SW>>4)]=SW&0x0F;
+	
+	PC004V10_TBuffer[10]=BCC8(PC004V10_TBuffer,10);		//异或校验
+	
+	RS485_DMASend(&RS485_Conf,(u32*)PC004V10_TBuffer,11);	//RS485-DMA发送程序
 }
 /*******************************************************************************
 * 函数名		:
