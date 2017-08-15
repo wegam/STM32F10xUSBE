@@ -56,19 +56,19 @@ void PD014V14_Configuration(void)
 	
 	GPIO_DeInitAll();							//将所有的GPIO关闭----V20170605
 	
-	PD014V14_PinSet();
-	
-	RS485_DMA_ConfigurationNR	(&PD014R485,19200,(u32*)PD014_Conf.PD014_DATA.RxdBuffe,RS485BufferSize);	//USART_DMA配置--查询方式，不开中断,配置完默认为接收状态
-	
-	IWDG_Configuration(5000);			//独立看门狗配置---参数单位ms	
+//	PD014V14_PinSet();
+//	
+//	RS485_DMA_ConfigurationNR	(&PD014R485,19200,(u32*)PD014_Conf.PD014_DATA.RxdBuffe,RS485BufferSize);	//USART_DMA配置--查询方式，不开中断,配置完默认为接收状态
+//	
+//	IWDG_Configuration(5000);			//独立看门狗配置---参数单位ms	
 //	
 	PWM_OUT(TIM2,PWM_OUTChannel1,1,500);						//PWM设定-20161127版本--SYS-LED
 //	
-	PD014V14_GetSwitchID();				//获取拨码开关地址
-	
-	PD014V14_GetOnlieDevice();			//获取在线发药头
-	
-	SysTick_Configuration(1000);	//系统嘀嗒时钟配置72MHz,单位为uS--1ms
+//	PD014V14_GetSwitchID();				//获取拨码开关地址
+//	
+//	PD014V14_GetOnlieDevice();			//获取在线发药头
+//	
+//	SysTick_Configuration(1000);	//系统嘀嗒时钟配置72MHz,单位为uS--1ms
 }
 /*******************************************************************************
 * 函数名		:	

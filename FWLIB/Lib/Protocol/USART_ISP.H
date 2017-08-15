@@ -58,7 +58,8 @@ typedef	enum _ISP_FUN	//USART 应答
 {
 	ISP_IDLE			=0xA0,	//ISP状态为空闲，根据RESET接口状态和BOOT0接口状态可以切换为MASTER或者SLAVE
 	ISP_SLAVE,						//ISP作为从机
-	ISP_MASTER						//ISP作为主机--更新自身程序
+	ISP_MASTER,						//ISP作为主机--更新自身程序
+	ISP_WaitDeliver				//等待释放从机
 }ISP_FUN_TypeDef;
 
 //typedef	enum _ISP_STEPS			//ISP执行步骤
@@ -135,6 +136,7 @@ typedef enum _ISP_MASTER_STATUS		//ISP状态标志---工作在主机状态时
 	ISP_MSTATUS_WriteGo,				//ISP主机发送Go命令---执行完Go全部命令后重启从机运行
 	ISP_MSTATUS_WriteGoAddr,		//写运行地址
 	ISP_MSTATUS_ResetDevice2,		//ISP主机往从机写完全部数据后对从机进行复位重启
+	ISP_MSTATUS_WaitDeliver			//等待释放从机
 }ISP_MASTER_STATUS_TypeDef;
 
 typedef	struct _ISP_Version				//USART 自举程序版本---主机通过复位从机后获取
