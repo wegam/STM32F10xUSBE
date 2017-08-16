@@ -253,12 +253,12 @@ void Usart_MISP_CommandSend(ISP_Conf_TypeDef *ISP_Conf,unsigned char Command);	/
 bool Usart_MISP_ReadAck(ISP_Conf_TypeDef *ISP_Conf);						//主机读取从机应答:有应答返回TRUE，否则返回FALSE
 
 
-
-
-
 //------------------------------------公共函数
 void Usart_ISP_Send(ISP_Conf_TypeDef *ISP_Conf);						//发送函数包括从机发送应答、发送地址、发送命令、发送数据
 void Usart_ISP_Reset(ISP_Conf_TypeDef *ISP_Conf);						//重置编程器---恢复所有参数为默认值
+
+
+
 
 
 
@@ -325,9 +325,27 @@ typedef	enum _BSP_FUN	//USART 应答
 	BSP_MASTER,						//ISP作为主机--更新自身程序
 	BSP_WaitDeliver				//等待释放从机
 }BSP_FUN_TypeDef;
+typedef enum _WORK_STEEPS			//ISP状态标志---工作在从机状态时
+{
+	WORK_STEEPS_IDLE=0x00,		//ISP空闲状态，可以读写
+	WORK_STEEPS_RESET,				//复位
+	WORK_STEEPS_VS,						//自举程序版本（0 < 版本 < 255），示例：0x10 = 版本 1.0
+	WORK_STEEPS_GET,					//Get:获取当前自举程序版本及允许使用的命令
+	WORK_STEEPS_GETVS,				//Get Version & Read Protection Status:获取自举程序版本及 Flash 的读保护状态
+	WORK_STEEPS_GETID,				//Get ID:获取芯片 ID
+	WORK_STEEPS_RM,						//Read Memory:从应用程序指定的地址开始读取最多 256 个字节的存储器空间	
+	WORK_STEEPS_WM,						//Write Memory:从应用程序指定的地址开始将最多 256 个字节的数据写入 RAM 或 Flash
+	WORK_STEEPS_ERASE,				//Erase:擦除一个到全部 Flash 页面
+	WORK_STEEPS_EERASE,				//使用双字节寻址模式擦除一个到全部 Flash 页面（仅用于v3.0 usart 自举程序版本及以上版本）
+	WORK_STEEPS_WP,						//Write Protect:使能某些扇区的写保护
+	WORK_STEEPS_WU,						//Write Unprotect:禁止所有 Flash 扇区的写保护
+	WORK_STEEPS_RP,						//Readout Protect:使能读保护
+	WORK_STEEPS_RU,						//Readout Unprotect:禁止读保护
+	WORK_STEEPS_GO						//Go:跳转到内部 Flash 或 SRAM 内的应用程序代码
+}WORK_STEEPS_TypeDef;
 typedef enum _BSPS_STATUS			//ISP状态标志---工作在从机状态时
 {
-	BSP_STATUS_IDLE=0x00,				//ISP空闲状态，可以读写
+	BSP_STATUS_IDLE=0x3E,				//ISP空闲状态，可以读写
 	BSP_STATUS_UnConnect,				//ISP未连接（作为从机)
 	BSP_STATUS_WaitConnect,			//ISP等待连接（作为从机)
 	BSP_STATUS_Connectting,			//ISP正在连接（作为从机)---执行格式化
@@ -350,7 +368,7 @@ typedef enum _BSPS_STATUS			//ISP状态标志---工作在从机状态时
 }BSPS_STATUS_TypeDef;
 typedef enum _BSP_MASTER_STATUS		//BSP状态标志---工作在主机状态时
 {
-	BSP_MSTATUS_IDLE=0x1E,			//BSP主机空闲状态----开始写前或者写完成后状态
+	BSP_MSTATUS_IDLE=0x5E,			//BSP主机空闲状态----开始写前或者写完成后状态
 	BSP_MSTATUS_ResetDevice,		//BSP主机准备连接----复位从机
 	BSP_MSTATUS_WriteConnect,		//BSP主机准备连接----复位后检测从机
 	BSP_MSTATUS_Connectted,			//BSP主机与从机已经连接完成
@@ -443,6 +461,8 @@ typedef	struct _BSP_Conf					//USART 在线编程配置文件
 	BSPM_Public_TypeDef	BSP_DATA			;			//作为主机或者从机时的公共数据结构体
 	
 	BSP_FUN_TypeDef			BSP_FUN				;			//ISP模块工作状态（主机-烧录/从机-更新自身程序)
+	
+	WORK_STEEPS_TypeDef	STEEPS				;			//执行阶段
 
 }BSP_Conf_TypeDef;
 
@@ -472,6 +492,8 @@ void USM_BSP_GetId(BSP_Conf_TypeDef *BSP_Conf);						//获取芯片 ID
 void USM_BSP_ReadMemory(BSP_Conf_TypeDef *BSP_Conf);			//从应用程序指定的地址开始读取最多 256 个字节的存储器空间
 void USM_BSP_Go(BSP_Conf_TypeDef *BSP_Conf);							//跳转到内部 Flash 或 SRAM 内的应用程序代码
 void USM_BSP_WriteMemory(BSP_Conf_TypeDef *BSP_Conf);			//从应用程序指定的地址开始将最多 256 个字节的数据写入 RAM 或 Flash
+void USM_BSP_WriteAddr(BSP_Conf_TypeDef *BSP_Conf);				//写地址----包含地址自动增加及完成判断
+void USM_BSP_WriteData(BSP_Conf_TypeDef *BSP_Conf);				//数据----数组打包(长度，BCC校验）
 void USM_BSP_EraseMemory(BSP_Conf_TypeDef *BSP_Conf);			//擦除一个到全部 Flash 页面
 void USM_BSP_EEraseMemory(BSP_Conf_TypeDef *BSP_Conf);		//使用双字节寻址模式擦除一个到全部 Flash 页面（仅用于v3.0 usart 自举程序版本及以上版本）
 void USM_BSP_WriteProtect(BSP_Conf_TypeDef *BSP_Conf);		//使能某些扇区的写保护

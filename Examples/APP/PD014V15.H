@@ -57,13 +57,12 @@ typedef	enum _PD014_COMMAND		//PD014ÃüÁî(×´Ì¬²éÑ¯¡¢¶Á·¢Ò©Í·¡¢·¢Ò©¡¢ÉÏ±¨·¢Ò©½á¹û¡
 //1)·¢Ò©¿ØÖÆ°å¹¤×÷ÔÚ´Ó»úÄ£Ê½£¬ËùÓĞµÄ¶¯×÷¶¼ÓÉÉÏ²ã¿ØÖÆ£¬°üÀ¨ÃüÁîÏÂ·¢ºÍ½á¹ûÉÏ±¨¶¼Í¨¹ıÃüÁîÀ´Ö´ĞĞ
 //2)Ğ­ÒéÖ´ĞĞ³ÌĞò£¬½ÓÊÕµ½ÉÏÎ»»úµÄÃüÁî£¬
 //3)
-	PD014_CMD_IDLE=0x00,				//¿ÕÃüÁî--ÎŞĞèÒªÖ´ĞĞµÄ¶¯×÷
-	PD014_CMD_GetDevice,	//»ñÈ¡ÔÚÏß·¢Ò©Í·£¨¿É´ø²ÎÊı£¬Èç¹û´ø²ÎÊı£¬²ÎÊıÎªÄ£Ê½£©
-	PD014_CMD_GetStatus,	//»ñÈ¡×´Ì¬
-	PD014_CMD_GetSED,			//»ñÈ¡ÒÑ·¢Ò©ÊıÁ¿
-	
-	PD014_CMD_SetStatus,	//ÉèÖÃ×´Ì¬
-	PD014_CMD_SetWSD,			//ÉèÖÃ·¢Ò©ÊıÁ¿ÃüÁî
+	PD014_CMD_IDLE=0x00,			//¿ÕÃüÁî--ÎŞĞèÒªÖ´ĞĞµÄ¶¯×÷
+	PD014_CMD_GetOnlieDevice,	//»ñÈ¡ÔÚÏß·¢Ò©Í·£¨¿É´ø²ÎÊı£¬Èç¹û´ø²ÎÊı£¬²ÎÊıÎªÄ£Ê½£©
+	PD014_CMD_GetStatus,			//»ñÈ¡×´Ì¬ÃüÁî
+	PD014_CMD_SetWSD,					//ÉèÖÃ·¢Ò©ÊıÁ¿ÃüÁî
+	PD014_CMD_GetSED,					//»ñÈ¡ÒÑ·¢Ò©ÊıÁ¿	
+	PD014_CMD_SetStatus,			//ÉèÖÃ×´Ì¬	
 }PD014_CMD_TypeDef;
 
 typedef	enum _PD014_STATUS		//PD014×´Ì¬(¿ÕÏĞ¡¢Ã¦¡¢ÕıÔÚ·¢Ò©¡¢·¢Ò©Íê³É¡¢È±Ò©¡¢ÉèÖÃ²ÎÊı¡¢ÉÏ±¨Êı¾İ¡¢ÉÏ±¨Íê³É£©
@@ -81,6 +80,7 @@ typedef	enum _PD014_STATUS		//PD014×´Ì¬(¿ÕÏĞ¡¢Ã¦¡¢ÕıÔÚ·¢Ò©¡¢·¢Ò©Íê³É¡¢È±Ò©¡¢ÉèÖÃ
 	PD014_STA_SHORTAGE,		//È±Ò©
 	PD014_STA_CLOGGED,		//¶ÂÒ©/¿¨Ò©
 	PD014_STA_CONF,				//ÅäÖÃ²ÎÊı
+	PD014_STA_OffLine,		//ÀëÏß×´Ì¬
 	PD014_STA_CONFING,		//ÕıÔÚÅäÖÃ²ÎÊı
 	PD014_STA_WaitAck			//ÕıÔÚÅäÖÃ²ÎÊı
 }PD014_STATUS_TypeDef;
@@ -104,10 +104,10 @@ typedef	struct _PD014_DATA	//USART Ó¦´ğ
 {	
 	unsigned char 	CANFLG;					//CAN¿ª¹Ø---CANFLG==1£¬Ê¹ÓÃCAN--ÎªÓëÉÏ²ãÁ¬½ÓµÄ°å
 	unsigned char 	SWITCHID;				//²¦Âë¿ª¹Ø
-	unsigned char 	DeviceOnlie;		//·¢Ò©Í·±êÖ¾---´æ´¢ÊÇ·ñ½ÓÈë·¢Ò©Í·£¬ÓĞ£¬µ±Ç°Î»Îª1£¬·ñÔòÎª0	//1(×î×ó±ßÎª×î¸ßÎ»)
+	unsigned char 	OnlieDevice;		//·¢Ò©Í·±êÖ¾---´æ´¢ÊÇ·ñ½ÓÈë·¢Ò©Í·£¬ÓĞ£¬µ±Ç°Î»Îª1£¬·ñÔòÎª0	//1(×î×ó±ßÎª×î¸ßÎ»)
 	
-	unsigned int TimeCount;					//ÔËĞĞ´ÎÊı¼ÆÊ±Æ÷
-	unsigned int TimeOut;						//Ö§ĞĞ³¬Ê±¼ÆÊ±Æ÷
+	unsigned int 		TimeCount;			//ÔËĞĞ´ÎÊı¼ÆÊ±Æ÷
+	unsigned int 		TimeOut;				//Ö§ĞĞ³¬Ê±¼ÆÊ±Æ÷
 	
 	unsigned char 	WSD[8];					//´ı·¢Ò©ÊıÁ¿
 	unsigned char 	SED[8];					//ÒÑ·¢Ò©ÊıÁ¿	
@@ -149,14 +149,18 @@ typedef	struct _PD014_INF				//
 
 void PD014V14_Configuration(void);
 void PD014V14_Server(void);
-void PD014V14_Process(void);		//PD014V14ËùÓĞ°åÄÚ´¦ÀíÊıÀíº¯Êı
-
+void PD014V14_Process(void);												//PD014V14ËùÓĞ°åÄÚ´¦ÀíÊıÀíº¯Êı
+PD014_CMD_TypeDef PD014V14_CommandProcess(void);		//PD014V14ÃüÁî´¦Àíº¯Êı
 
 void PD014V14_PinSet(void);
 void Lock_Toggle(void);			//Ë«Ïòµç×ÓËø¿ØÖÆ
 
 void PD014V14_GetSwitchID(void);				//»ñÈ¡²¦Âë¿ª¹ØµØÖ·
 void PD014V14_GetOnlieDevice(void);			//»ñÈ¡ÔÚÏß·¢Ò©Í·
+void PD014V14_GetOnlieStatus(void);			//»ñÈ¡×´Ì¬
+
+void PD014V14_SetWSD(void);							//ÉèÖÃ´ı·¢Ò©ÊıÁ¿
+
 void PD014V14_ACK(void);
 void PD014V14_NACK(void);
 void PD014V14_SendM(void);							//·¢Ò©

@@ -17,8 +17,8 @@
 
 #include "PD014V15.H"
 
-#include "DRV8801.H"
-#include "A3987.H"
+//#include "DRV8801.H"
+//#include "A3987.H"
 
 #include "STM32F10x_BitBand.H"
 #include "STM32_GPIO.H"
@@ -80,33 +80,14 @@ void PD014V14_Configuration(void)
 * 返回 		:
 *******************************************************************************/
 void PD014V14_Server(void)
-{	
-	u8 RxNum=0;
-	
+{
 //	P_Sens=1;			//传感器供电开关--开
-	
-	IWDG_Feed();								//独立看门狗喂狗
-	
-
 	//数据格式:B0-SWITCHID，B1-CMD，B2~B9:数据，B10:前面所有数据异或校验
-	RxNum=RS485_ReadBufferIDLE(&PD014R485,(u32*)PD014_Conf.PD014_DATA.RevBuffe,(u32*)PD014_Conf.PD014_DATA.RxdBuffe);	//串口空闲模式读串口接收缓冲区，如果有数据，将数据拷贝到RevBuffer,并返回接收到的数据个数，然后重新将接收缓冲区地址指向RxdBuffer
-	if(RxNum)		//如果拨码地址相同，则进入Process
-	{
-		unsigned char Bcc=BCC8(PD014_Conf.PD014_DATA.RevBuffe,10);		//异或校验;
-		if(Bcc==PD014_Conf.PD014_DATA.RevBuffe[10])			//异或校验通过
-		{
-			PD014V14_Process();		//PD014V14所有板内处理数理函数
-		}
-		else
-		{
-			PD014_Conf.PD014_DATA.TxdBuffe[0]=PD014_NACK;
-			PD014_Conf.PD014_DATA.TxdBuffe[1]=PD014_BccError;
-			PD014_Conf.PD014_DATA.TxdBuffe[2]=PD014_NACK^PD014_BccError;
-			PD014V14_NACK();			//数据校验不通过，NACK应答主机
-		}
-	}
-
-	PD014V14_SendM();			//发药
+	
+	IWDG_Feed();								//独立看门狗喂狗		
+	
+	PD014V14_Process();		//PD014V14所有板内处理数理函数
+	
 //	Lock_Toggle();			//双向电子锁控制
 }
 /*******************************************************************************
@@ -118,47 +99,75 @@ void PD014V14_Server(void)
 void PD014V14_Process(void)		//PD014V14所有板内处理数理函数
 {
 	//判断数据命令类型;数据格式:B0-SWITCHID，B1-CMD，B2~B9:数据，B10:前面所有数据异或校验
-	PD014_CMD_TypeDef CMD_Temp=PD014_CMD_IDLE;		//临时命令变量
-	CMD_Temp=(PD014_CMD_TypeDef)PD014_Conf.PD014_DATA.RevBuffe[1];		//获取数据命令
-	if(CMD_Temp==PD014_CMD_GetStatus)
+	
+	PD014_CMD_TypeDef CMD_Temp	=	PD014_CMD_IDLE;		//PD014V14命令处理函数
+
+	CMD_Temp=PD014V14_CommandProcess();		//PD014V14命令处理函数		
+	
+	if(CMD_Temp==PD014_CMD_GetOnlieDevice)
 	{
-		PD014_Conf.PD014_DATA.TxdBuffe[0]=PD014_CMD_GetStatus;
-		PD014_Conf.PD014_DATA.TxdBuffe[1]=PD014_Conf.PD014_DATA.SWITCHID;
-		memcpy(&(PD014_Conf.PD014_DATA.TxdBuffe[2]),PD014_Conf.PD014_DATA.STATUS,8);
-		PD014_Conf.PD014_DATA.TxdBuffe[10]=BCC8(PD014_Conf.PD014_DATA.TxdBuffe,10);		//异或校验;
-		RS485_DMASend(&PD014R485,(u32*)PD014_Conf.PD014_DATA.TxdBuffe,11);						//RS485-DMA发送程序
+		PD014V14_GetOnlieDevice();			//获取在线发药头
 	}
-	else if(memchr(PD014_Conf.PD014_DATA.STATUS,PD014_STA_IDLE,8)==NULL)		//非空闲状态
+	else if(CMD_Temp==PD014_CMD_GetStatus)
+	{		
+		PD014V14_GetOnlieStatus();			//获取状态
+	}	
+	else if(CMD_Temp==PD014_CMD_SetWSD)		//发药命令---传入需要发药的数量
+	{		
+		PD014V14_SetWSD();							//设置待发药数量
+	}
+	else	//CMD_Temp	=	PD014_CMD_IDLE  无命令请求
+	{
+		PD014V14_SendM();				//发药
+	}
+}
+/*******************************************************************************
+* 函数名			:	PD014V14_CommandProcess
+* 功能描述		:	函数功能说明 
+* 输入			: void
+* 返回值			: void
+*******************************************************************************/
+PD014_CMD_TypeDef PD014V14_CommandProcess(void)		//PD014V14命令处理函数
+{
+	PD014_CMD_TypeDef 	CMD_Temp	=	PD014_CMD_IDLE;		//临时命令变量
+	
+	unsigned char Bcc=0;		//BCC校验
+		
+	u8 RxNum=0;		//串口接收到的数据个数
+	
+	RxNum=RS485_ReadBufferIDLE(&PD014R485,(u32*)PD014_Conf.PD014_DATA.RevBuffe,(u32*)PD014_Conf.PD014_DATA.RxdBuffe);	//串口空闲模式读串口接收缓冲区，如果有数据，将数据拷贝到RevBuffer,并返回接收到的数据个数，然后重新将接收缓冲区地址指向RxdBuffer
+	
+	if(RxNum==0)
+	{
+		return	PD014_CMD_IDLE;
+	}
+	
+	Bcc=BCC8(PD014_Conf.PD014_DATA.RevBuffe,10);					//异或校验;	
+	
+	CMD_Temp=(PD014_CMD_TypeDef)PD014_Conf.PD014_DATA.RevBuffe[1];		//获取数据命令	
+	
+	if((Bcc!=PD014_Conf.PD014_DATA.RevBuffe[10])||(PD014_Conf.PD014_DATA.SWITCHID!=PD014_Conf.PD014_DATA.RevBuffe[0]))			//接收到数据但是地址或异或校验不通过
+	{
+		if(PD014_Conf.PD014_DATA.SWITCHID==PD014_Conf.PD014_DATA.RevBuffe[0])
+		{
+			PD014_Conf.PD014_DATA.TxdBuffe[0]=PD014_NACK;
+			PD014_Conf.PD014_DATA.TxdBuffe[1]=PD014_BccError;
+			PD014_Conf.PD014_DATA.TxdBuffe[2]=PD014_NACK^PD014_BccError;
+			PD014V14_NACK();			//数据校验不通过，NACK应答主机
+		}
+		return PD014_CMD_IDLE;
+	}
+	
+	if(memchr(PD014_Conf.PD014_DATA.STATUS,PD014_STA_IDLE,8)==NULL)		//非空闲状态
 	{
 		PD014_Conf.PD014_DATA.TxdBuffe[0]=PD014_NACK;
 		PD014_Conf.PD014_DATA.TxdBuffe[1]=PD014_BUSY;
 		PD014_Conf.PD014_DATA.TxdBuffe[2]=PD014_NACK^PD014_BUSY;
-		PD014V14_NACK();		//NACK返回3字节，NACK标识、错误内容、BCC校验码		
+		PD014V14_NACK();		//NACK返回3字节，NACK标识、错误内容、BCC校验码
+		return PD014_CMD_IDLE;
 	}
-	else if(CMD_Temp==PD014_CMD_SetWSD)		//发药命令---传入需要发药的数量
-	{
-		unsigned char i=0;
-		memcpy(&(PD014_Conf.PD014_DATA.WSD),&(PD014_Conf.PD014_DATA.RevBuffe[2]),8);
-		for(i=0;i<8;i++)
-		{
-			if(PD014_Conf.PD014_DATA.WSD[i])
-			{
-				PD014_Conf.PD014_DATA.SED[i]=0;									//已发药计数器清零
-				PD014_Conf.PD014_DATA.STATUS[i]=PD014_STA_SEND;	//发药头状态改为发药状态
-				PD014_Conf.PD014_DATA.RELAYTIME[i]=0;						//电磁铁吸合控制时间清零
-				PD014_Conf.PD014_DATA.RELAYCOUNT[i]=0;					//
-				PD014_Conf.PD014_DATA.TRYTIME[i]=0;							//重试次数清零
-				PD014_Conf.PD014_DATA.SENSTIME[i]=0;						//传感器感应时间清零
-				PD014_Conf.PD014_DATA.NOISETIME[i]=0;
-			}
-			else
-			{
-				PD014_Conf.PD014_DATA.STATUS[i]=PD014_STA_IDLE;
-			}
-		}
-	}		
+	return CMD_Temp;
 }
-
 /*******************************************************************************
 * 函数名		:	
 * 功能描述	:	 
@@ -347,6 +356,7 @@ void PD014V14_GetSwitchID(void)				//获取拨码开关地址
 void PD014V14_GetOnlieDevice(void)			//获取在线发药头
 {
 	u8 OnLD=0;		//DeviceOnlie
+	u8 i=0;
 	if(Sens_In1)
 		OnLD+=1;
 	OnLD<<=1;
@@ -371,9 +381,74 @@ void PD014V14_GetOnlieDevice(void)			//获取在线发药头
 	if(Sens_In8)
 		OnLD+=1;
 	OnLD=OnLD^0xFF;
-	PD014_Conf.PD014_DATA.DeviceOnlie=OnLD;
+	
+	for(i=0;i<8;i++)
+	{
+		if(GPIO_ReadInputDataBit(PD014_Conf.GSens[i],PD014_Conf.Psens[i]))		//高电平---无发药头
+		{
+		}
+		else		//有发药头
+		{
+		}
+	}
+	
+	PD014_Conf.PD014_DATA.OnlieDevice=OnLD;
+	
+	
+	
+	PD014_Conf.PD014_DATA.STATUS[0]=PD014_STA_OffLine;	//离线---无发药头
+	PD014_Conf.PD014_DATA.STATUS[0]=PD014_STA_IDLE;			//在线---进入空闲状态
+	
+	PD014_Conf.PD014_DATA.TxdBuffe[0]=PD014_CMD_GetOnlieDevice;										//获取在线发药头（可带参数，如果带参数，参数为模式）
+	PD014_Conf.PD014_DATA.TxdBuffe[1]=PD014_Conf.PD014_DATA.SWITCHID;							//拨码开关地址
+	PD014_Conf.PD014_DATA.TxdBuffe[2]=PD014_Conf.PD014_DATA.OnlieDevice;					//在线发药头数据
+	PD014_Conf.PD014_DATA.TxdBuffe[3]=BCC8(PD014_Conf.PD014_DATA.TxdBuffe,3);			//异或校验;
+	RS485_DMASend(&PD014R485,(u32*)PD014_Conf.PD014_DATA.TxdBuffe,4);
 }
-
+/*******************************************************************************
+* 函数名			:	PD014V14_GetOnlieStatus
+* 功能描述		:	获取状态 
+* 输入			: void
+* 返回值			: void
+*******************************************************************************/
+void PD014V14_GetOnlieStatus(void)			//获取状态
+{
+	PD014_Conf.PD014_DATA.TxdBuffe[0]=PD014_CMD_GetStatus;												//获取状态命令
+	PD014_Conf.PD014_DATA.TxdBuffe[1]=PD014_Conf.PD014_DATA.SWITCHID;							//拨码开关地址
+	memcpy(&(PD014_Conf.PD014_DATA.TxdBuffe[2]),PD014_Conf.PD014_DATA.STATUS,8);	//设备状态
+	PD014_Conf.PD014_DATA.TxdBuffe[10]=BCC8(PD014_Conf.PD014_DATA.TxdBuffe,10);		//异或校验;
+	RS485_DMASend(&PD014R485,(u32*)PD014_Conf.PD014_DATA.TxdBuffe,11);						//RS485-DMA发送程序
+}
+/*******************************************************************************
+* 函数名			:	PD014V14_SetWSD
+* 功能描述		:	设置待发药数量 
+* 输入			: void
+* 返回值			: void
+*******************************************************************************/
+void PD014V14_SetWSD(void)							//设置待发药数量
+{
+	unsigned char i=0;
+	memcpy(&(PD014_Conf.PD014_DATA.WSD),&(PD014_Conf.PD014_DATA.RevBuffe[2]),8);
+	for(i=0;i<8;i++)
+	{
+		if(PD014_Conf.PD014_DATA.WSD[i])		//有数据
+		{
+			PD014_Conf.PD014_DATA.SED[i]=0;									//已发药计数器清零
+			PD014_Conf.PD014_DATA.STATUS[i]=PD014_STA_SEND;	//发药头状态改为发药状态
+			PD014_Conf.PD014_DATA.RELAYTIME[i]=0;						//电磁铁吸合控制时间清零
+			PD014_Conf.PD014_DATA.RELAYCOUNT[i]=0;					//
+			PD014_Conf.PD014_DATA.TRYTIME[i]=0;							//重试次数清零
+			PD014_Conf.PD014_DATA.SENSTIME[i]=0;						//传感器感应时间清零
+			PD014_Conf.PD014_DATA.NOISETIME[i]=0;
+		}
+		else
+		{
+			PD014_Conf.PD014_DATA.STATUS[i]=PD014_STA_IDLE;
+		}
+	}
+	
+	PD014V14_ACK();
+}
 /*******************************************************************************
 * 函数名			:	function
 * 功能描述		:	函数功能说明 
@@ -508,7 +583,7 @@ void PD014V14_ResetData(void)					//复位数据
 {
 	PD014_Conf.PD014_DATA.CANFLG=0;				//CAN开关---CANFLG==1，使用CAN--为与上层连接的板
 	PD014_Conf.PD014_DATA.SWITCHID=0;			//拨码开关
-	PD014_Conf.PD014_DATA.DeviceOnlie=0;	//发药头标志---存储是否接入发药头，有，当前位为1，否则为0	//1(最左边为最高位)
+	PD014_Conf.PD014_DATA.OnlieDevice=0;	//发药头标志---存储是否接入发药头，有，当前位为1，否则为0	//1(最左边为最高位)
 	
 	PD014_Conf.PD014_DATA.TimeCount=0;		//运行次数计时器
 	PD014_Conf.PD014_DATA.TimeOut=0;			//支行超时计时器

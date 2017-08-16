@@ -116,6 +116,7 @@
 u8 PC004V10_Buffer[PC004V10_BufferSize]={0};								//RS485缓存
 u8 PC004V10_TBuffer[PC004V10_BufferSize]={0};								//RS485缓存
 u8 PC004V10_Num[13]={0};																		//接收到的数据
+u8 PC004V10_CANBuffer[8]={0};																		//接收到的数据
 
 u8 ID_ARR[8][8]={0,0};			//存储已连接数码管ID列表
 u8 ON_line[8][8]={0,0};			//对应ID列表标志位，0--无此ID，1--有对应ID
@@ -161,9 +162,9 @@ void PC004V21_Configuration(void)
 	
 	RS485_DMA_ConfigurationNR	(&RS485_Conf,19200,(u32*)PC004V10_Buffer,PC004V10_BufferSize);	//USART_DMA配置--查询方式，不开中断,配置完默认为接收状态
 	
-//	CAN_Configuration_NR(10000);										//CAN配置---标志位查询方式，不开中断
-//	
-//	CAN_FilterInitConfiguration_StdData(0,0X000,0X000);			//CAN滤波器配置
+	CAN_Configuration_NR(100000);										//CAN配置---标志位查询方式，不开中断
+	
+	CAN_FilterInitConfiguration_StdData(0,0X000,0X000);			//CAN滤波器配置
 //	
 //	USART_DMA_Configuration(USART2,9600,1,1,(u32*)PC004V10_Buffer,(u32*)PC004V10_Buffer,PC004V10_BufferSize);	//USART_DMA配置
 
@@ -238,8 +239,12 @@ void PC004V21_Server(void)
 	}
 	if(PB1Flg==1)
 	{
-//		RS485_DMASend(&RS485_Conf,(u32*)PC004V10_TBuffer,11);	//RS485-DMA发送程序
 		PC004V21_KEYData();		//按键发药处理函数
+		PC004V10_CANBuffer[0]=0x02;		//命令
+		PC004V10_CANBuffer[1]=0x10;		//槽号
+		PC004V10_CANBuffer[2]=0x02;		//数量
+		
+		CAN_StdTX_DATA(0x06,0x08,PC004V10_CANBuffer);			//CAN使用标准帧发送数据
 		if(PW1Flg==0)
 		{
 			PW1Flg=1;
@@ -318,8 +323,8 @@ void PC004V21_KEYData(void)		//按键发药处理函数
 	unsigned char SW=PC004V21_GetSwitchID();				//获取当前设备ID//机柜号(高位当发药头号，低位当发药数量）
 
 	
-	PC004V10_TBuffer[0]=0x00;
-	PC004V10_TBuffer[1]=0x05;
+	PC004V10_TBuffer[0]=0x00;			//B0-SWITCHID
+	PC004V10_TBuffer[1]=0x03;			//B1-CMD命令
 //	PC004V10_TBuffer[2]=0x03;
 //	PC004V10_TBuffer[3]=0x03;
 //	PC004V10_TBuffer[4]=0x00;
@@ -331,7 +336,7 @@ void PC004V21_KEYData(void)		//按键发药处理函数
 	
 	memset(&PC004V10_TBuffer[2],0x00,8);		//所有发药头发药数量设置为0
 	
-	PC004V10_TBuffer[2+(SW>>4)]=SW&0x0F;
+	PC004V10_TBuffer[2+(SW>>4)]=SW&0x0F;		//传入数据
 	
 	PC004V10_TBuffer[10]=BCC8(PC004V10_TBuffer,10);		//异或校验
 	
@@ -490,7 +495,6 @@ void PC004V10_CAN_TX(void)					//CAN发送数据，地址，命令类型，数据
 	{
 		i++;
 	}
-
 }
 /*******************************************************************************
 * 函数名		:
