@@ -681,8 +681,6 @@ void Usart_ISP_SetSlaveStatus(ISP_Conf_TypeDef *ISP_Conf,ISP_SLAVE_STATUS_TypeDe
 
 
 
-
-
 //------------------------------------Ö÷»ú×¨ÓÐº¯Êý
 /*******************************************************************************
 *º¯ÊýÃû			:	Usart_MISP_StatusProcess
@@ -1132,95 +1130,7 @@ void Usart_ISP_Reset(ISP_Conf_TypeDef *ISP_Conf)	//ÖØÖÃ±à³ÌÆ÷---»Ö¸´ËùÓÐ²ÎÊýÎªÄ¬
 	memset(ISP_Conf->ISP_DATA.ISP_TvBuffer,0xFF, ISP_BufferSize);	//·¢ËÍ»º³åÇø--±¸·ÝÇø
 }
 
-
-
-
-
-//
-
 //---------------------¹«¹²º¯Êý
-/*******************************************************************************
-*º¯ÊýÃû			:	BSP_Conf
-*¹¦ÄÜÃèÊö		:	ÅäÖÃº¯Êý
-*ÊäÈë				: 
-*·µ»ØÖµ			:	ÎÞ
-*******************************************************************************/
-void BSP_Conf(BSP_Conf_TypeDef *BSP_Conf)		//ÅäÖÃº¯Êý
-{
-	USART_DMA_ConfigurationEV	(BSP_Conf->BSP_Port.USARTx,115200,(u32*)BSP_Conf->BSP_DATA.BSP_RxBuffer,ISP_BufferSize);	//USART_DMAÅäÖÃ--²éÑ¯·½Ê½£¬²»¿ªÖÐ¶Ï
-	GPIO_Configuration_OPP50	(BSP_Conf->BSP_Port.RESET_CTL_PORT,BSP_Conf->BSP_Port.RESET_CTL_Pin);			//½«GPIOÏàÓ¦¹Ü½ÅÅäÖÃÎªPP(ÍÆÍì)Êä³öÄ£Ê½£¬×î´óËÙ¶È50MHz----V20170605
-	GPIO_Configuration_OPP50	(BSP_Conf->BSP_Port.BOOT0_CTL_PORT,BSP_Conf->BSP_Port.BOOT0_CTL_Pin);			//½«GPIOÏàÓ¦¹Ü½ÅÅäÖÃÎªPP(ÍÆÍì)Êä³öÄ£Ê½£¬×î´óËÙ¶È50MHz----V20170605
-	BSP_Reset(BSP_Conf);																																								//ÖØÖÃ±à³ÌÆ÷---»Ö¸´ËùÓÐ²ÎÊýÎªÄ¬ÈÏÖµ
-//	ISP_Conf->ISP_FUN=ISP_SLAVE;			//²âÊÔ---½«Ä£¿éÉèÖÃÎª´Ó»ú
-}
-/*******************************************************************************
-*º¯ÊýÃû			:	BSP_Process
-*¹¦ÄÜÃèÊö		:	ÊÂ¼þ´¦Àíº¯Êý
-*ÊäÈë				: 
-*·µ»ØÖµ			:	ÎÞ
-*******************************************************************************/
-void BSP_Process(BSP_Conf_TypeDef *BSP_Conf)			//ÊÂ¼þ´¦Àíº¯Êý
-{
-	USM_BSP_PROCESS(BSP_Conf);					//Ö÷»úÊÂ¼þ´¦Àíº¯Êý
-	USS_BSP_PROCESS(BSP_Conf);					//´Ó»úÊÂ¼þ´¦Àíº¯Êý
-	
-}
-void BSP_SendBuffer(BSP_Conf_TypeDef *BSP_Conf)						//Í¨¹ý´®¿Ú·¢ËÍÊý¾Ý£¬µ±¼ì²âµ½USARTSendLen²»Îª0Ê±×Ô¶¯·¢ËÍ
-{
-	if(BSP_Conf->BSP_DATA.USARTSendLen!=0)
-	{
-		memcpy(BSP_Conf->BSP_DATA.BSP_TxBuffer,BSP_Conf->BSP_DATA.BSP_TvBuffer,BSP_Conf->BSP_DATA.USARTSendLen);					//´ÓTvBuffer¿½±´Êý¾Ýµ½TxBuffer		
-		USART_DMASend(BSP_Conf->BSP_Port.USARTx,(u32*)BSP_Conf->BSP_DATA.BSP_TxBuffer,BSP_Conf->BSP_DATA.USARTSendLen);		//´®¿ÚDMA·¢ËÍ³ÌÐò
-		memset(BSP_Conf->BSP_DATA.BSP_TvBuffer,0xFF, BSP_Conf->BSP_DATA.USARTSendLen);																		//Çå¿Õ·¢ËÍ±¸·ÝÇø
-		BSP_Conf->BSP_DATA.USARTSendLen=0;			//Çå¿Õ·¢ËÍÇø
-	}
-}
-/*******************************************************************************
-* º¯ÊýÃû			:	BSP_Reset
-* ¹¦ÄÜÃèÊö		:	ÖØÖÃ±à³ÌÆ÷---»Ö¸´ËùÓÐ²ÎÊýÎªÄ¬ÈÏÖµ
-* ÊäÈë			: void
-* ·µ»ØÖµ			: void
-*******************************************************************************/
-void BSP_Reset(BSP_Conf_TypeDef *BSP_Conf)	//ÖØÖÃ±à³ÌÆ÷---»Ö¸´ËùÓÐ²ÎÊýÎªÄ¬ÈÏÖµ
-{	
-	//----------BSPM_Info_TypeDef		BSPM_Info
-	BSP_Conf->BSPM_Info.BSP_MASTER_STATUS	=	BSP_MSTATUS_IDLE;		//BSPÖ÷»ú¿ÕÏÐ×´Ì¬----¿ªÊ¼Ð´Ç°»òÕßÐ´Íê³Éºó×´Ì¬
-	BSP_Conf->BSPM_Info.MasterLastStatus	=	BSP_MSTATUS_IDLE;		//BSPÖ÷»ú¿ÕÏÐ×´Ì¬----¿ªÊ¼Ð´Ç°»òÕßÐ´Íê³Éºó×´Ì¬
-	BSP_Conf->BSPM_Info.ACK								=	BSP_NACK;						//Ä¬ÈÏÎÞÓ¦´ð×´Ì¬
-	BSP_Conf->BSPM_Info.ACK2							=	BSP_NACK;						//Ä¬ÈÏÎÞÓ¦´ð×´Ì¬
-	//----------BSPM_Info_TypeDef		BSPM_Info
-	BSP_Conf->BSPS_Info.BSP_SLAVE_STATUS	=	BSP_STATUS_IDLE;		//ISP¿ÕÏÐ×´Ì¬£¬¿ÉÒÔ¶ÁÐ´
-	BSP_Conf->BSPS_Info.SlaveLastStatus		=	BSP_STATUS_IDLE;		//ISP¿ÕÏÐ×´Ì¬£¬¿ÉÒÔ¶ÁÐ´
-	//----------BSPM_Info_TypeDef		BSPM_Info
-	BSP_Conf->BSP_DATA.OverRunTime=0;			//³¬Ê±Ê±¼ä
-	BSP_Conf->BSP_DATA.TimeCount=0;				//¼ÆÊ±Ê±¼ä
-	BSP_Conf->BSP_DATA.Connected=0;				//Á¬½Ó×´Ì¬--´Ó»ú¸üÐÂ¹Ì¼þÊ±Ê¹ÓÃ£¬Èç¹ûConnected==0£¬±íÊ¾Î´Á¬½Ó£¬ÐèÒª¸ñÊ½»¯£¬Èç¹ûConnected==1£¬±íÊ¾ÒÑ¾­Á¬½Ó
-	BSP_Conf->BSP_DATA.OffsetAddr=0;			//Ð´´Ó»úÊ±µÄµØÖ·Æ«ÒÆ
-	BSP_Conf->BSP_DATA.StartAddr=0;				//ÆðÊ¼µØÖ·
-	BSP_Conf->BSP_DATA.GoAddr=0;					//¸´Î»ÔËÐÐÆðÊ¼µØÖ·
-	BSP_Conf->BSP_DATA.FirmwareLen=0;			//¹Ì¼þ³¤¶È---ÐèÒªISPÏÂÔØµÄ×ÜÊý¾Ý
-	BSP_Conf->BSP_DATA.FLASHNumToSave=0;	//ÐèÒªÍùFLASHÀï±£´æµÄÊý¾Ý¸öÊý---µ±´Ë²»Îª0Ê±SPI-FLASH×Ô¶¯´æ´¢Êý¾Ý
-	BSP_Conf->BSP_DATA.FLASHNumToRead=0;	//ÐèÒª´ÓFLASHÀï¶ÁÈ¡µÄÊý¾Ý¸öÊý---µ±´Ë²»Îª0Ê±£¬SPI-FLASH×Ô¶¯Í¨¹ýWriteAddrµØÖ·´ÓSPI-FLASH¶ÁÈ¡Êý¾Ý
-	BSP_Conf->BSP_DATA.ReadAddr=0;				//¶ÁÊý¾ÝÆðÊ¼µØÖ·
-	BSP_Conf->BSP_DATA.ReadLen=0;					//ÐèÒª¶ÁÈ¡µÄ³¤¶È
-	BSP_Conf->BSP_DATA.WriteAddr=0;				//ÒªÐ´ÈëFlashµÄÊý¾ÝÆðÊ¼µØÖ·--ISP½Ó¿Ú
-	BSP_Conf->BSP_DATA.WriteLen=0;				//ÒªÐ´ÈëFlashµÄÊý¾Ý³¤¶È£¨×Ö½ÚÊý)--ISP½Ó¿Ú
-	BSP_Conf->BSP_DATA.ReceivedLen=0;			//´®¿Ú½ÓÊÕµÄÊý¾Ý¸öÊý
-	BSP_Conf->BSP_DATA.USARTSendLen=0;		//ÐèÒªÍù´®¿Ú·¢ËÍµÄÊý¾Ý¸öÊý---//µ±¼ì²âµ½SendLen²»Îª0Ê±×Ô¶¯·¢ËÍÊý¾Ý
-	BSP_Conf->BSP_DATA.SumHaveReceived=0;	//×÷Îª´Ó»úÊ±×Ü¹²½ÓÊÕµ½µÄÊý¾Ý¸öÊý
-	BSP_Conf->BSP_DATA.SumHaveWritten=0;	//Ö÷»ú×Ü¹²Íù´Ó»úÐ´ÈëµÄÊý¾Ý¸öÊý
-	BSP_Conf->BSP_DATA.Command[0]=0;			//×Ô¾Ù³ÌÐòÃüÁî¼°Òì»òÐ£ÑéÂë
-	BSP_Conf->BSP_DATA.Command[1]=0;
-	
-
-	memset(BSP_Conf->BSP_DATA.BSP_RxBuffer,0xFF, BSP_BufferSize);	//½ÓÊÕ»º³åÇø
-	memset(BSP_Conf->BSP_DATA.BSP_RvBuffer,0xFF, BSP_BufferSize);	//½ÓÊÕ»º³åÇø--±¸·ÝÇø
-	memset(BSP_Conf->BSP_DATA.BSP_TxBuffer,0xFF, BSP_BufferSize);	//·¢ËÍ»º³åÇø
-	memset(BSP_Conf->BSP_DATA.BSP_TvBuffer,0xFF, BSP_BufferSize);	//·¢ËÍ»º³åÇø--±¸·ÝÇø
-	
-}
-
-
 
 
 
@@ -1238,21 +1148,12 @@ void USM_BSP_PROCESS(BSP_Conf_TypeDef *BSP_Conf)
 	if(BSP_Conf->BSPM_Info.BSP_MASTER_STATUS==BSP_MSTATUS_IDLE)
 	{
 		BSP_Conf->BSPM_Info.BSP_MASTER_STATUS=BSP_MSTATUS_ResetDevice;
-	}	
-
-	USM_BSP_GetAck(BSP_Conf);				//»ñÈ¡´Ó»úÓ¦´ð	
-	
-	
-	USM_BSP_RESET(BSP_Conf);			//¸´Î»´Ó»ú
-	USM_BSP_Connect(BSP_Conf);		//Á¬½Ó´Ó»ú---¼ä¸ô5msÁ¬½Ó·¢ËÍ0x7F£¬ÈÃ´Ó»úÊ¶±ð²¨ÌØÂÊ
-	
-	USM_BSP_Get(BSP_Conf);				//»ñÈ¡µ±Ç°×Ô¾Ù³ÌÐò°æ±¾¼°ÔÊÐíÊ¹ÓÃµÄÃüÁî
-	USM_BSP_GetVR(BSP_Conf);			//»ñÈ¡×Ô¾Ù³ÌÐò°æ±¾¼° Flash µÄ¶Á±£»¤×´Ì¬
-	USM_BSP_GetId(BSP_Conf);			//»ñÈ¡Ð¾Æ¬ ID
-	USM_BSP_EraseMemory(BSP_Conf);			//²Á³ýÒ»¸öµ½È«²¿ Flash Ò³Ãæ
-	
-	
-	BSP_SendBuffer(BSP_Conf);				//Í¨¹ý´®¿Ú·¢ËÍÊý¾Ý£¬µ±¼ì²âµ½USARTSendLen²»Îª0Ê±×Ô¶¯·¢ËÍ
+		USM_BSP_RESET(BSP_Conf);			//¸´Î»´Ó»ú
+	}
+	else if(BSP_Conf->BSPM_Info.BSP_MASTER_STATUS==BSP_MSTATUS_ResetDevice)
+	{
+		USM_BSP_RESET(BSP_Conf);			//¸´Î»´Ó»ú
+	}
 }
 /*******************************************************************************
 *º¯ÊýÃû			:	USM_BSP_RESET
@@ -1263,10 +1164,33 @@ void USM_BSP_PROCESS(BSP_Conf_TypeDef *BSP_Conf)
 *·µ»ØÖµ			:	ÎÞ
 *******************************************************************************/
 void USM_BSP_RESET(BSP_Conf_TypeDef *BSP_Conf)		//¸´Î»´Ó»ú
-{
-	USM_BSP_ResetToBSP(BSP_Conf);			//¸´Î»´Ó»úÉè±¸--Ê¹´Ó»ú½øÐÐISPÄ£Ê½		
-
-	USM_BSP_ResetToRUN(BSP_Conf);			//Æô¶¯´Ó»ú½ÓÊÕBOOT0Ê¹´Ó»úÕý³£ÔËÐÐ
+{	
+	if((BSP_Conf->BSPM_Info.BSP_MASTER_STATUS==BSP_MSTATUS_ResetDevice)&&(BSP_Conf->BSP_DATA.TimeCount++<10000))
+	{
+		GPIO_SetBits	(BSP_Conf->BSP_Port.BOOT0_CTL_PORT,BSP_Conf->BSP_Port.BOOT0_CTL_Pin);		//BOOT0À­¸ß
+		GPIO_ResetBits(BSP_Conf->BSP_Port.RESET_CTL_PORT,BSP_Conf->BSP_Port.RESET_CTL_Pin);		//RESET½ÅÀ­µÍ
+	}
+	else if((BSP_Conf->BSPM_Info.BSP_MASTER_STATUS==BSP_MSTATUS_ResetDevice)&&(BSP_Conf->BSP_DATA.TimeCount++>=10000))
+	{
+		BSP_Conf->BSP_DATA.TimeCount=0;
+		BSP_Conf->BSPM_Info.BSP_MASTER_STATUS=BSP_MSTATUS_WriteConnect;		//¸´Î»Íê³É×¼±¸Á¬½Ó---·¢Á¬½ÓÃüÁî0x7F;		
+		
+		GPIO_SetBits(BSP_Conf->BSP_Port.BOOT0_CTL_PORT,BSP_Conf->BSP_Port.BOOT0_CTL_Pin);			//BOOT0À­¸ß
+		GPIO_SetBits(BSP_Conf->BSP_Port.RESET_CTL_PORT,BSP_Conf->BSP_Port.RESET_CTL_Pin);			//RESET½ÅÀ­¸ß
+	}
+	else if((BSP_Conf->BSPM_Info.BSP_MASTER_STATUS==BSP_MSTATUS_ResetDevice2)&&(BSP_Conf->BSP_DATA.TimeCount++<10000))
+	{
+		GPIO_ResetBits(BSP_Conf->BSP_Port.BOOT0_CTL_PORT,BSP_Conf->BSP_Port.BOOT0_CTL_Pin);		//BOOT0À­µÍ
+		GPIO_ResetBits(BSP_Conf->BSP_Port.RESET_CTL_PORT,BSP_Conf->BSP_Port.RESET_CTL_Pin);		//RESET½ÅÀ­µÍ
+	}
+	else if((BSP_Conf->BSPM_Info.BSP_MASTER_STATUS==BSP_MSTATUS_ResetDevice2)&&(BSP_Conf->BSP_DATA.TimeCount++>=10000))
+	{
+		BSP_Conf->BSP_DATA.TimeCount=0;
+		BSP_Conf->BSPM_Info.BSP_MASTER_STATUS=BSP_MSTATUS_WaitDeliver;												//µÈ´ýÊÍ·Å´Ó»ú
+		
+		GPIO_ResetBits(BSP_Conf->BSP_Port.BOOT0_CTL_PORT,BSP_Conf->BSP_Port.BOOT0_CTL_Pin);		//BOOT0À­µÍ
+		GPIO_SetBits	(BSP_Conf->BSP_Port.RESET_CTL_PORT,BSP_Conf->BSP_Port.RESET_CTL_Pin);		//RESET½ÅÀ­¸ß
+	}
 }
 /*******************************************************************************
 *º¯ÊýÃû			:	USM_BSP_ResetDevice
@@ -1274,32 +1198,10 @@ void USM_BSP_RESET(BSP_Conf_TypeDef *BSP_Conf)		//¸´Î»´Ó»ú
 *ÊäÈë				: 
 *·µ»ØÖµ			:	ÎÞ
 *******************************************************************************/
-void USM_BSP_ResetToBSP(BSP_Conf_TypeDef *BSP_Conf)			//¸´Î»´Ó»úÉè±¸--Ê¹´Ó»ú½øÐÐISPÄ£Ê½
+void USM_BSP_ResetDevice(BSP_Conf_TypeDef *BSP_Conf)			//¸´Î»´Ó»úÉè±¸--Ê¹´Ó»ú½øÐÐISPÄ£Ê½
 {
-	if(USM_BSP_GetStatus(BSP_Conf)==BSP_MSTATUS_ResetDevice)		//BSPÖ÷»ú×¼±¸Á¬½Ó----¸´Î»´Ó»ú
-	{
-		BSP_Conf->BSP_DATA.TimeCount++;
-	}
-	else
-	{
-		return;
-	}
-	if(BSP_Conf->BSP_DATA.TimeCount<=100)	//À­¸ßÔ¼1ms
-	{	
-		GPIO_SetBits	(BSP_Conf->BSP_Port.BOOT0_CTL_PORT,BSP_Conf->BSP_Port.BOOT0_CTL_Pin);		//BOOT0½ÅÀ­¸ß
-		GPIO_SetBits	(BSP_Conf->BSP_Port.RESET_CTL_PORT,BSP_Conf->BSP_Port.RESET_CTL_Pin);		//RESET½ÅÀ­µÍ				
-	}
-	else if(BSP_Conf->BSP_DATA.TimeCount>100&&BSP_Conf->BSP_DATA.TimeCount<=10000)	//À­¸ßÔ¼50ms		//½øÈëBSPÄ£Ê½			//½øÈëBSPÄ£Ê½
-	{
-		GPIO_SetBits	(BSP_Conf->BSP_Port.BOOT0_CTL_PORT,BSP_Conf->BSP_Port.BOOT0_CTL_Pin);		//BOOT0½ÅÀ­¸ß
-		GPIO_ResetBits	(BSP_Conf->BSP_Port.RESET_CTL_PORT,BSP_Conf->BSP_Port.RESET_CTL_Pin);		//RESET½ÅÀ­¸ß£¬½øÈëBSPÄ£Ê½		
-	}
-	else
-	{
-		GPIO_SetBits	(BSP_Conf->BSP_Port.RESET_CTL_PORT,BSP_Conf->BSP_Port.RESET_CTL_Pin);		//RESET½ÅÀ­¸ß£¬½øÈëBSPÄ£Ê½
-		USM_BSP_SetStatus(BSP_Conf,BSP_MSTATUS_WriteConnect);		//¸üÐÂ×´Ì¬---BSPÖ÷»ú×¼±¸Á¬½Ó----¸´Î»ºó¼ì²â´Ó»ú
-		BSP_Conf->BSP_DATA.TimeCount=0;		//Çå³ý¼ÆÊý
-	}
+	GPIO_SetBits	(BSP_Conf->BSP_Port.BOOT0_CTL_PORT,BSP_Conf->BSP_Port.BOOT0_CTL_Pin);		//BOOT0À­¸ß
+	GPIO_ResetBits(BSP_Conf->BSP_Port.RESET_CTL_PORT,BSP_Conf->BSP_Port.RESET_CTL_Pin);		//RESET½ÅÀ­µÍ
 }
 /*******************************************************************************
 *º¯ÊýÃû			:	USM_BSP_SetDevice
@@ -1307,92 +1209,21 @@ void USM_BSP_ResetToBSP(BSP_Conf_TypeDef *BSP_Conf)			//¸´Î»´Ó»úÉè±¸--Ê¹´Ó»ú½øÐÐ
 *ÊäÈë				: 
 *·µ»ØÖµ			:	ÎÞ
 *******************************************************************************/
-void USM_BSP_ResetToRUN(BSP_Conf_TypeDef *BSP_Conf)			//Æô¶¯´Ó»ú½ÓÊÕBOOT0Ê¹´Ó»ú½øÐÐÏÂÔØ×´Ì¬
+void USM_BSP_SetDevice(BSP_Conf_TypeDef *BSP_Conf)			//Æô¶¯´Ó»ú½ÓÊÕBOOT0Ê¹´Ó»ú½øÐÐÏÂÔØ×´Ì¬
 {
-	if(USM_BSP_GetStatus(BSP_Conf)==BSP_MSTATUS_StartDevice)
-	{
-		BSP_Conf->BSP_DATA.TimeCount++;
-	}
-	else
-	{
-		return;
-	}
-	if(BSP_Conf->BSP_DATA.TimeCount<=5000)	//À­µ×Ô¼50ms
-	{
-		GPIO_ResetBits(BSP_Conf->BSP_Port.BOOT0_CTL_PORT,BSP_Conf->BSP_Port.BOOT0_CTL_Pin);		//BOOT0½ÅÀ­µÍ
-		GPIO_ResetBits(BSP_Conf->BSP_Port.RESET_CTL_PORT,BSP_Conf->BSP_Port.RESET_CTL_Pin);		//RESET½ÅÀ­µÍ
-	}
-	else if(BSP_Conf->BSP_DATA.TimeCount>5000&&BSP_Conf->BSP_DATA.TimeCount<10000)	//À­¸ßÔ¼50ms		//½øÈëBSPÄ£Ê½
-	{
-		GPIO_SetBits	(BSP_Conf->BSP_Port.RESET_CTL_PORT,BSP_Conf->BSP_Port.RESET_CTL_Pin);		//RESET½ÅÀ­¸ß£¬½øÈëBSPÄ£Ê½		
-	}
-	else
-	{
-		USM_BSP_SetStatus(BSP_Conf,BSP_MSTATUS_WriteConnect);		//¸üÐÂ×´Ì¬---µÈ´ýÊÍ·Å´Ó»ú
-		BSP_Conf->BSP_DATA.TimeCount=0;		//Çå³ý¼ÆÊý
-	}
+	GPIO_SetBits(BSP_Conf->BSP_Port.BOOT0_CTL_PORT,BSP_Conf->BSP_Port.BOOT0_CTL_Pin);			//BOOT0À­¸ß
+	GPIO_SetBits(BSP_Conf->BSP_Port.RESET_CTL_PORT,BSP_Conf->BSP_Port.RESET_CTL_Pin);			//RESET½ÅÀ­¸ß
 }
 /*******************************************************************************
-*º¯ÊýÃû			:	USM_BSP_SetStatus
-*¹¦ÄÜÃèÊö		:	¸üÐÂ/ÉèÖÃÖ÷»ú×´Ì¬
+*º¯ÊýÃû			:	USM_BSP_RunDevice
+*¹¦ÄÜÃèÊö		:	Æô¶¯´Ó»úÉè±¸Ê¹´Ó»úÕý³£ÔËÐÐ
 *ÊäÈë				: 
 *·µ»ØÖµ			:	ÎÞ
 *******************************************************************************/
-void USM_BSP_SetStatus(BSP_Conf_TypeDef *BSP_Conf,BSPM_STATUS_TypeDef BSPM_STATUS)		//¸üÐÂ/ÉèÖÃÖ÷»ú×´Ì¬
+void USM_BSP_RunDevice(BSP_Conf_TypeDef *BSP_Conf)			//Æô¶¯´Ó»úÉè±¸Ê¹´Ó»úÕý³£ÔËÐÐ
 {
-	BSP_Conf->BSPM_Info.BSP_MASTER_STATUS	=	BSPM_STATUS;				//ÐÂ×´Ì¬Öµ
-}
-/*******************************************************************************
-*º¯ÊýÃû			:	USM_BSP_SetStatus
-*¹¦ÄÜÃèÊö		:	»ñÈ¡Ö÷»ú×´Ì¬
-*ÊäÈë				: 
-*·µ»ØÖµ			:	ÎÞ
-*******************************************************************************/
-BSPM_STATUS_TypeDef USM_BSP_GetStatus(BSP_Conf_TypeDef *BSP_Conf)		//»ñÈ¡Ö÷»ú×´Ì¬
-{
-	return BSP_Conf->BSPM_Info.BSP_MASTER_STATUS;				//Ö÷»ú×´Ì¬Öµ
-}
-/*******************************************************************************
-*º¯ÊýÃû			:	USM_BSP_Connect
-*¹¦ÄÜÃèÊö		:	Á¬½Ó´Ó»ú---¼ä¸ô5msÁ¬½Ó·¢ËÍ0x7F£¬ÈÃ´Ó»úÊ¶±ð²¨ÌØÂÊ
-*ÊäÈë				: 
-*·µ»ØÖµ			:	ÎÞ
-*******************************************************************************/
-void USM_BSP_Connect(BSP_Conf_TypeDef *BSP_Conf)		//Á¬½Ó´Ó»ú---¼ä¸ô5msÁ¬½Ó·¢ËÍ0x7F£¬ÈÃ´Ó»úÊ¶±ð²¨ÌØÂÊ
-{
-	if(USM_BSP_GetStatus(BSP_Conf)==BSP_MSTATUS_WriteConnect)
-	{
-		BSP_Conf->BSP_DATA.TimeCount++;
-	}
-	else
-	{
-		return;
-	}
-	
-	if(BSP_Conf->BSP_DATA.TimeCount==100)				//Ç°1ms·¢ËÍ0x7F£¬ºó9ms¼ì²âÓ¦´ð£¬ÈÃ´Ó»úÊ¶±ð²¨ÌØÂÊ
-	{
-		BSP_Conf->BSP_DATA.BSP_TvBuffer[0]=0x7F;
-		BSP_Conf->BSP_DATA.USARTSendLen=1;				//·¢ËÍÒ»¸ö×Ö½Ú
-	}
-	else if(BSP_Conf->BSP_DATA.TimeCount>1000)	//Ê£ÏÂ5ms¼ì²âÓ¦´ð
-	{
-		BSP_Conf->BSP_DATA.RetryTimes++;	//ÖØÊÔ´ÎÊý²»³¬¹ý50´Î£¬·ñÔòÅÐ¶¨ÎªÊ§°Ü
-		if(BSP_Conf->BSP_DATA.RetryTimes>50)//ÖØÊÔ´ÎÊý²»³¬¹ý50´Î£¬·ñÔòÅÐ¶¨ÎªÊ§°Ü
-		{
-			USM_BSP_SetStatus(BSP_Conf,BSP_MSTATUS_ERROR);		//¸üÐÂ×´Ì¬---µÈ´ýÊÍ·Å´Ó»ú
-		}
-		BSP_Conf->BSP_DATA.TimeCount=0;		//Çå³ý¼ÆÊý		
-	}
-	else
-	{
-		if(BSP_Conf->BSPM_Info.ACK==BSP_ACK)
-		{
-			USM_BSP_SetStatus(BSP_Conf,BSP_MSTATUS_WriteGet);		//¸üÐÂ×´Ì¬---µÈ´ýÊÍ·Å´Ó»ú
-			BSP_Conf->BSP_DATA.TimeCount=0;		//Çå³ý¼ÆÊý
-			BSP_Conf->BSP_DATA.RetryTimes=0;	//ÖØÊÔ¼ÆÊýÇåÁã
-			BSP_Conf->BSPM_Info.ACK=BSP_NACK;	//Çå³ýÓ¦´ð±êÖ¾
-		}		
-	}
+	GPIO_ResetBits(BSP_Conf->BSP_Port.BOOT0_CTL_PORT,BSP_Conf->BSP_Port.BOOT0_CTL_Pin);		//BOOT0À­µÍ
+	GPIO_SetBits	(BSP_Conf->BSP_Port.RESET_CTL_PORT,BSP_Conf->BSP_Port.RESET_CTL_Pin);		//RESET½ÅÀ­¸ß
 }
 /*******************************************************************************
 *º¯ÊýÃû			:	USM_BSP_Get
@@ -1402,50 +1233,7 @@ void USM_BSP_Connect(BSP_Conf_TypeDef *BSP_Conf)		//Á¬½Ó´Ó»ú---¼ä¸ô5msÁ¬½Ó·¢ËÍ0x
 *******************************************************************************/
 void USM_BSP_Get(BSP_Conf_TypeDef *BSP_Conf)		//»ñÈ¡µ±Ç°×Ô¾Ù³ÌÐò°æ±¾¼°ÔÊÐíÊ¹ÓÃµÄÃüÁî
 {
-	if(USM_BSP_GetStatus(BSP_Conf)==BSP_MSTATUS_WriteGet)
-	{
-		BSP_Conf->BSP_DATA.TimeCount++;
-	}
-	else
-	{
-		return;
-	}
-	if(BSP_Conf->BSP_DATA.TimeCount==100)				//Ç°1ms·¢ËÍ0x7F£¬ºó9ms¼ì²âÓ¦´ð£¬ÈÃ´Ó»úÊ¶±ð²¨ÌØÂÊ
-	{
-		USM_BSP_SendCommand(BSP_Conf,BSP_COMMAND_Get);	//´®¿Ú±à³Ì·¢ËÍÃüÁî³ÌÐò
-	}
-	else if(BSP_Conf->BSP_DATA.TimeCount>1000)	//Ê£ÏÂ5ms¼ì²âÓ¦´ð
-	{
-		BSP_Conf->BSP_DATA.RetryTimes++;	//ÖØÊÔ´ÎÊý²»³¬¹ý50´Î£¬·ñÔòÅÐ¶¨ÎªÊ§°Ü
-		if(BSP_Conf->BSP_DATA.RetryTimes>50)//ÖØÊÔ´ÎÊý²»³¬¹ý50´Î£¬·ñÔòÅÐ¶¨ÎªÊ§°Ü
-		{
-			USM_BSP_SetStatus(BSP_Conf,BSP_MSTATUS_ERROR);		//¸üÐÂ×´Ì¬---µÈ´ýÊÍ·Å´Ó»ú
-		}
-		BSP_Conf->BSP_DATA.TimeCount=0;		//Çå³ý¼ÆÊý		
-	}
-	else
-	{
-		if(BSP_Conf->BSPM_Info.ACK==BSP_ACK)
-		{
-			BSP_Conf->BSPM_Info.SlaveVersion.BSP_VS					=	BSP_Conf->BSP_DATA.BSP_RvBuffer[2];		//×Ô¾Ù³ÌÐò°æ±¾£¨0 < °æ±¾ < 255£©£¬Ê¾Àý£º0x10 = °æ±¾ 1.0
-			BSP_Conf->BSPM_Info.SlaveVersion.BSP_VS_Get			=	BSP_Conf->BSP_DATA.BSP_RvBuffer[3];		//Get:»ñÈ¡µ±Ç°×Ô¾Ù³ÌÐò°æ±¾¼°ÔÊÐíÊ¹ÓÃµÄÃüÁî
-			BSP_Conf->BSPM_Info.SlaveVersion.BSP_VS_GetVS		=	BSP_Conf->BSP_DATA.BSP_RvBuffer[4];		//Get Version & Read Protection Status:»ñÈ¡×Ô¾Ù³ÌÐò°æ±¾¼° Flash µÄ¶Á±£»¤×´Ì¬
-			BSP_Conf->BSPM_Info.SlaveVersion.BSP_VS_GetID		=	BSP_Conf->BSP_DATA.BSP_RvBuffer[5];		//Get ID:»ñÈ¡Ð¾Æ¬ ID
-			BSP_Conf->BSPM_Info.SlaveVersion.BSP_VS_RM			=	BSP_Conf->BSP_DATA.BSP_RvBuffer[6];		//Read Memory:´ÓÓ¦ÓÃ³ÌÐòÖ¸¶¨µÄµØÖ·¿ªÊ¼¶ÁÈ¡×î¶à 256 ¸ö×Ö½ÚµÄ´æ´¢Æ÷¿Õ¼ä
-			BSP_Conf->BSPM_Info.SlaveVersion.BSP_VS_Go			=	BSP_Conf->BSP_DATA.BSP_RvBuffer[7];		//Go:Ìø×ªµ½ÄÚ²¿ Flash »ò SRAM ÄÚµÄÓ¦ÓÃ³ÌÐò´úÂë
-			BSP_Conf->BSPM_Info.SlaveVersion.BSP_VS_WM			=	BSP_Conf->BSP_DATA.BSP_RvBuffer[8];		//Write Memory:´ÓÓ¦ÓÃ³ÌÐòÖ¸¶¨µÄµØÖ·¿ªÊ¼½«×î¶à 256 ¸ö×Ö½ÚµÄÊý¾ÝÐ´Èë RAM »ò Flash
-			BSP_Conf->BSPM_Info.SlaveVersion.BSP_VS_Erase		=	BSP_Conf->BSP_DATA.BSP_RvBuffer[9];		//Erase:²Á³ýÒ»¸öµ½È«²¿ Flash Ò³Ãæ
-			BSP_Conf->BSPM_Info.SlaveVersion.BSP_VS_WP			=	BSP_Conf->BSP_DATA.BSP_RvBuffer[10];	//Write Protect:Ê¹ÄÜÄ³Ð©ÉÈÇøµÄÐ´±£»¤
-			BSP_Conf->BSPM_Info.SlaveVersion.BSP_VS_WU			=	BSP_Conf->BSP_DATA.BSP_RvBuffer[11];	//Write Unprotect:½ûÖ¹ËùÓÐ Flash ÉÈÇøµÄÐ´±£»¤
-			BSP_Conf->BSPM_Info.SlaveVersion.BSP_VS_RP			=	BSP_Conf->BSP_DATA.BSP_RvBuffer[12];	//Readout Protect:Ê¹ÄÜ¶Á±£»¤
-			BSP_Conf->BSPM_Info.SlaveVersion.BSP_VS_RU			=	BSP_Conf->BSP_DATA.BSP_RvBuffer[13];	//Readout Unprotect:½ûÖ¹¶Á±£»¤
-			
-			USM_BSP_SetStatus(BSP_Conf,BSP_MSTATUS_WriteGetVR);		//¸üÐÂ×´Ì¬---µÈ´ýÊÍ·Å´Ó»ú
-			BSP_Conf->BSP_DATA.TimeCount=0;		//Çå³ý¼ÆÊý
-			BSP_Conf->BSP_DATA.RetryTimes=0;	//ÖØÊÔ¼ÆÊýÇåÁã
-			BSP_Conf->BSPM_Info.ACK=BSP_NACK;	//Çå³ýÓ¦´ð±êÖ¾
-		}		
-	}
+
 }
 /*******************************************************************************
 *º¯ÊýÃû			:	Get Version & Read Protection Status
@@ -1455,38 +1243,7 @@ void USM_BSP_Get(BSP_Conf_TypeDef *BSP_Conf)		//»ñÈ¡µ±Ç°×Ô¾Ù³ÌÐò°æ±¾¼°ÔÊÐíÊ¹ÓÃµÄ
 *******************************************************************************/
 void USM_BSP_GetVR(BSP_Conf_TypeDef *BSP_Conf)		//»ñÈ¡×Ô¾Ù³ÌÐò°æ±¾¼° Flash µÄ¶Á±£»¤×´Ì¬
 {
-	if(USM_BSP_GetStatus(BSP_Conf)==BSP_MSTATUS_WriteGetVR)
-	{
-		BSP_Conf->BSP_DATA.TimeCount++;
-	}
-	else
-	{
-		return;
-	}
-	if(BSP_Conf->BSP_DATA.TimeCount==100)				//Ç°1ms·¢ËÍ0x7F£¬ºó9ms¼ì²âÓ¦´ð£¬ÈÃ´Ó»úÊ¶±ð²¨ÌØÂÊ
-	{
-		USM_BSP_SendCommand(BSP_Conf,BSP_COMMAND_GetVR);	//´®¿Ú±à³Ì·¢ËÍÃüÁî³ÌÐò
-	}
-	else if(BSP_Conf->BSP_DATA.TimeCount>1000)	//Ê£ÏÂ5ms¼ì²âÓ¦´ð
-	{
-		BSP_Conf->BSP_DATA.RetryTimes++;	//ÖØÊÔ´ÎÊý²»³¬¹ý50´Î£¬·ñÔòÅÐ¶¨ÎªÊ§°Ü
-		if(BSP_Conf->BSP_DATA.RetryTimes>50)//ÖØÊÔ´ÎÊý²»³¬¹ý50´Î£¬·ñÔòÅÐ¶¨ÎªÊ§°Ü
-		{
-			USM_BSP_SetStatus(BSP_Conf,BSP_MSTATUS_ERROR);		//¸üÐÂ×´Ì¬---µÈ´ýÊÍ·Å´Ó»ú
-		}	
-		BSP_Conf->BSP_DATA.TimeCount=0;		//Çå³ý¼ÆÊý		
-	}
-	else
-	{
-		if(BSP_Conf->BSPM_Info.ACK==BSP_ACK)
-		{
-			
-			USM_BSP_SetStatus(BSP_Conf,BSP_MSTATUS_WriteGetID);		//¸üÐÂ×´Ì¬---µÈ´ýÊÍ·Å´Ó»ú
-			BSP_Conf->BSP_DATA.TimeCount=0;		//Çå³ý¼ÆÊý
-			BSP_Conf->BSP_DATA.RetryTimes=0;	//ÖØÊÔ¼ÆÊýÇåÁã
-			BSP_Conf->BSPM_Info.ACK=BSP_NACK;	//Çå³ýÓ¦´ð±êÖ¾
-		}		
-	}
+
 }
 /*******************************************************************************
 *º¯ÊýÃû			:	USM_BSP_GetId
@@ -1496,38 +1253,7 @@ void USM_BSP_GetVR(BSP_Conf_TypeDef *BSP_Conf)		//»ñÈ¡×Ô¾Ù³ÌÐò°æ±¾¼° Flash µÄ¶Á±
 *******************************************************************************/
 void USM_BSP_GetId(BSP_Conf_TypeDef *BSP_Conf)			//»ñÈ¡Ð¾Æ¬ ID
 {
-	if(USM_BSP_GetStatus(BSP_Conf)==BSP_MSTATUS_WriteGetID)
-	{
-		BSP_Conf->BSP_DATA.TimeCount++;
-	}
-	else
-	{
-		return;
-	}
-	if(BSP_Conf->BSP_DATA.TimeCount==100)				//Ç°1ms·¢ËÍ0x7F£¬ºó9ms¼ì²âÓ¦´ð£¬ÈÃ´Ó»úÊ¶±ð²¨ÌØÂÊ
-	{
-		USM_BSP_SendCommand(BSP_Conf,BSP_COMMAND_GetID);	//´®¿Ú±à³Ì·¢ËÍÃüÁî³ÌÐò
-	}
-	else if(BSP_Conf->BSP_DATA.TimeCount>1000)	//Ê£ÏÂ5ms¼ì²âÓ¦´ð
-	{
-		BSP_Conf->BSP_DATA.RetryTimes++;	//ÖØÊÔ´ÎÊý²»³¬¹ý50´Î£¬·ñÔòÅÐ¶¨ÎªÊ§°Ü
-		if(BSP_Conf->BSP_DATA.RetryTimes>50)//ÖØÊÔ´ÎÊý²»³¬¹ý50´Î£¬·ñÔòÅÐ¶¨ÎªÊ§°Ü
-		{
-			USM_BSP_SetStatus(BSP_Conf,BSP_MSTATUS_ERROR);		//¸üÐÂ×´Ì¬---µÈ´ýÊÍ·Å´Ó»ú
-		}	
-		BSP_Conf->BSP_DATA.TimeCount=0;		//Çå³ý¼ÆÊý		
-	}
-	else
-	{
-		if(BSP_Conf->BSPM_Info.ACK==BSP_ACK)
-		{
-			
-			USM_BSP_SetStatus(BSP_Conf,BSP_MSTATUS_WriteErase);		//¸üÐÂ×´Ì¬---µÈ´ýÊÍ·Å´Ó»ú
-			BSP_Conf->BSP_DATA.TimeCount=0;		//Çå³ý¼ÆÊý
-			BSP_Conf->BSP_DATA.RetryTimes=0;	//ÖØÊÔ¼ÆÊýÇåÁã
-			BSP_Conf->BSPM_Info.ACK=BSP_NACK;	//Çå³ýÓ¦´ð±êÖ¾
-		}		
-	}
+
 }
 /*******************************************************************************
 *º¯ÊýÃû			:	USM_BSP_ReadMemory
@@ -1587,57 +1313,7 @@ void USM_BSP_WriteData(BSP_Conf_TypeDef *BSP_Conf)		//Êý¾Ý----Êý×é´ò°ü(³¤¶È£¬BCC
 *******************************************************************************/
 void USM_BSP_EraseMemory(BSP_Conf_TypeDef *BSP_Conf)		//²Á³ýÒ»¸öµ½È«²¿ Flash Ò³Ãæ
 {
-	if(USM_BSP_GetStatus(BSP_Conf)==BSP_MSTATUS_WriteErase)
-	{
-		BSP_Conf->BSP_DATA.TimeCount++;
-	}
-	else
-	{
-		return;
-	}
-	if(BSP_Conf->BSP_DATA.TimeCount==100)				//Ç°1ms·¢ËÍ0x7F£¬ºó9ms¼ì²âÓ¦´ð£¬ÈÃ´Ó»úÊ¶±ð²¨ÌØÂÊ
-	{
-		if(BSP_Conf->BSPM_Info.ACK2!=BSP_ACK)
-		{
-			USM_BSP_SendCommand(BSP_Conf,BSP_COMMAND_Erase);	//´®¿Ú±à³Ì·¢ËÍÃüÁî³ÌÐò
-		}
-		else
-		{
-			BSP_Conf->BSP_DATA.BSP_TvBuffer[0]=0xFF;
-			BSP_Conf->BSP_DATA.BSP_TvBuffer[1]=0x00;
-			BSP_Conf->BSP_DATA.USARTSendLen=2;				//·¢ËÍÒ»¸ö×Ö½Ú
-		}
-	}
-	else if(BSP_Conf->BSP_DATA.TimeCount>1000)	//Ê£ÏÂ5ms¼ì²âÓ¦´ð
-	{
-		BSP_Conf->BSP_DATA.RetryTimes++;			//ÖØÊÔ´ÎÊý²»³¬¹ý50´Î£¬·ñÔòÅÐ¶¨ÎªÊ§°Ü
-		if(BSP_Conf->BSP_DATA.RetryTimes>50)	//ÖØÊÔ´ÎÊý²»³¬¹ý50´Î£¬·ñÔòÅÐ¶¨ÎªÊ§°Ü
-		{
-			USM_BSP_SetStatus(BSP_Conf,BSP_MSTATUS_ERROR);		//¸üÐÂ×´Ì¬---µÈ´ýÊÍ·Å´Ó»ú
-		}	
-		BSP_Conf->BSP_DATA.TimeCount=0;				//Çå³ý¼ÆÊý		
-	}
-	else
-	{
-		if(BSP_Conf->BSPM_Info.ACK==BSP_ACK)
-		{	
-			if(BSP_Conf->BSPM_Info.ACK2!=BSP_ACK)
-			{
-				BSP_Conf->BSP_DATA.TimeCount=0;		//Çå³ý¼ÆÊý
-				BSP_Conf->BSP_DATA.RetryTimes=0;	//ÖØÊÔ¼ÆÊýÇåÁã
-				BSP_Conf->BSPM_Info.ACK=BSP_NACK;	//Çå³ýÓ¦´ð±êÖ¾
-				BSP_Conf->BSPM_Info.ACK2=BSP_ACK;	//
-			}
-			else
-			{
-				USM_BSP_SetStatus(BSP_Conf,BSP_MSTATUS_WriteWM);		//¸üÐÂ×´Ì¬---µÈ´ýÊÍ·Å´Ó»ú
-				BSP_Conf->BSP_DATA.TimeCount=0;		//Çå³ý¼ÆÊý
-				BSP_Conf->BSP_DATA.RetryTimes=0;	//ÖØÊÔ¼ÆÊýÇåÁã
-				BSP_Conf->BSPM_Info.ACK=BSP_NACK;	//Çå³ýÓ¦´ð±êÖ¾
-				BSP_Conf->BSPM_Info.ACK2=BSP_NACK;	//Çå³ýÓ¦´ð±êÖ¾
-			}			
-		}		
-	}
+
 }
 /*******************************************************************************
 *º¯ÊýÃû			:	USM_BSP_EEraseMemory
@@ -1697,13 +1373,7 @@ void USM_BSP_ReadUnProtect(BSP_Conf_TypeDef *BSP_Conf)		//½ûÖ¹¶Á±£»¤
 *******************************************************************************/
 void USM_BSP_GetAck(BSP_Conf_TypeDef *BSP_Conf)		//»ñÈ¡´Ó»úÓ¦´ð
 {
-	unsigned char RxNum=0;
-	RxNum=USART_ReadBufferIDLE(BSP_Conf->BSP_Port.USARTx,(u32*)BSP_Conf->BSP_DATA.BSP_RvBuffer,(u32*)BSP_Conf->BSP_DATA.BSP_RxBuffer);	//´®¿Ú¿ÕÏÐÄ£Ê½¶Á´®¿Ú½ÓÊÕ»º³åÇø£¬Èç¹ûÓÐÊý¾Ý£¬½«Êý¾Ý¿½±´µ½RevBuffer,²¢·µ»Ø½ÓÊÕµ½µÄ
-	if((RxNum!=0)&&(BSP_Conf->BSP_DATA.BSP_RvBuffer[0]==BSP_ACK))
-	{
-		BSP_Conf->BSP_DATA.BSP_RvBuffer[0]=0xFF;		//Çå³ýÓ¦´ð±êÊ¶
-		BSP_Conf->BSPM_Info.ACK=BSP_ACK;		//Ó¦´ð
-	}
+
 }
 /*******************************************************************************
 * º¯ÊýÃû			:	Usart_MISP_CommandSend
@@ -1711,7 +1381,7 @@ void USM_BSP_GetAck(BSP_Conf_TypeDef *BSP_Conf)		//»ñÈ¡´Ó»úÓ¦´ð
 * ÊäÈë			: void
 * ·µ»ØÖµ			: void
 *******************************************************************************/
-void USM_BSP_SendCommand(BSP_Conf_TypeDef *BSP_Conf,BSP_COMMAND_TypeDef Command)	//´®¿Ú±à³Ì·¢ËÍÃüÁî³ÌÐò
+void USM_BSP_SendCommand(BSP_Conf_TypeDef *BSP_Conf,unsigned char Command)	//´®¿Ú±à³Ì·¢ËÍÃüÁî³ÌÐò
 {
 	BSP_Conf->BSP_DATA.Command[0]=Command;
 	BSP_Conf->BSP_DATA.Command[1]=Command^0XFF;

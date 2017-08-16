@@ -280,7 +280,7 @@ typedef	struct _BSP_Port					//USART端口结构体
 typedef	enum _BSP_COMMAND			//USART 自举程序命令
 {
 	BSP_COMMAND_Get		=0x00,		//Get:获取当前自举程序版本及允许使用的命令
-	BSP_COMMAND_GetVR	=0x01,		//Get Version & Read Protection Status:获取自举程序版本及 Flash 的读保护状态
+	BSP_COMMAND_GetVS	=0x01,		//Get Version & Read Protection Status:获取自举程序版本及 Flash 的读保护状态
 	BSP_COMMAND_GetID	=0x02,		//Get ID:获取芯片 ID
 	BSP_COMMAND_RM		=0x11,		//Read Memory:从应用程序指定的地址开始读取最多 256 个字节的存储器空间
 	BSP_COMMAND_Go		=0x21,		//Go:跳转到内部 Flash 或 SRAM 内的应用程序代码
@@ -315,8 +315,8 @@ typedef	struct _BSP_Version				//USART 自举程序版本---主机通过复位从机后获取
 
 typedef	enum _BSP_Answer	//USART 应答
 {
-	BSP_ACK		=0x79,		//ACK 应答(被接受）
-	BSP_NACK		=0x1F			//NACK 应答（不接受或者不识别--丢弃)
+	BSP_ANSWER_ACK		=0x79,		//ACK 应答(被接受）
+	BSP_ANSWER_NACK		=0x1F			//NACK 应答（不接受或者不识别--丢弃)
 }BSP_ANSWER_TypeDef;
 typedef	enum _BSP_FUN	//USART 应答
 {
@@ -371,12 +371,6 @@ typedef enum _BSP_MASTER_STATUS		//BSP状态标志---工作在主机状态时
 	BSP_MSTATUS_IDLE=0x5E,			//BSP主机空闲状态----开始写前或者写完成后状态
 	BSP_MSTATUS_ResetDevice,		//BSP主机准备连接----复位从机
 	BSP_MSTATUS_WriteConnect,		//BSP主机准备连接----复位后检测从机
-	BSP_MSTATUS_WriteGet,				//Get命令,获取当前自举程序版本及允许使用的命令
-	BSP_MSTATUS_WriteGetVR,			//Get Version & Read Protection Status:获取自举程序版本及 Flash 的读保护状态
-	BSP_MSTATUS_WriteGetID,			//Get ID:获取芯片 ID
-	BSP_MSTATUS_WriteRM,				//BSP主机发送读命令--主要为校验写入的数据，Read Memory:从应用程序指定的地址开始读取最多 256 个字节的存储器空间
-	BSP_MSTATUS_WriteErase,			//BSP主机写擦除命令---需要应答
-	BSP_MSTATUS_WriteWM,					//BSP主机发送写命令，Write Memory:从应用程序指定的地址开始将最多 256 个字节的数据写入 RAM 或 Flash---需要应答
 	BSP_MSTATUS_Connectted,			//BSP主机与从机已经连接完成
 	BSP_MSTATUS_WriteUnprotect,	//禁止所有Flash扇区的写保护
 	BSP_MSTATUS_WaitUnprotect,	//等待禁用Flash扇区写保护操作完成
@@ -384,20 +378,23 @@ typedef enum _BSP_MASTER_STATUS		//BSP状态标志---工作在主机状态时
 	BSP_MSTATUS_GetFirmwareInf,	//获取固件信息
 	BSP_MSTATUS_WaitFirmwareInf,	//等待固件信息
 	BSP_MSTATUS_GetedFirmwareInf,	//已获取固件信息
-	BSP_MSTATUS_WaitAck,					//BSP主机等待从机应答
-	BSP_MSTATUS_WriteEraseConf,		//BSP主机写擦除参数---整片擦除(0xFF 0x00)或者选择地址擦除，然后等待擦除完成，完成后从机返回一个ACK应答
-	BSP_MSTATUS_EraseDone,				//BSP主机写擦除参数---整片擦除(0xFF 0x00)或者选择地址擦除，然后等待擦除完成，完成后从机返回一个ACK应答
-	BSP_MSTATUS_ReadFirmware,			//读固件
-	BSP_MSTATUS_WaitFirmware,			//等待固件
-	BSP_MSTATUS_GettedFirmware,		//已经获取固件	
-	BSP_MSTATUS_WriteAddr,				//BSP主机发送要写入数据的起始地址---需要应答
-	BSP_MSTATUS_WriteData,				//BSP主机正在执行擦除工作
-	BSP_MSTATUS_WriteRMLengh,			//BSP主机发送需要读取的数据长度
+	BSP_MSTATUS_WriteGet,				//BSP主机获取从机设备信息---主要为协议信息
+	BSP_MSTATUS_WaitAck,				//BSP主机等待从机应答
+	BSP_MSTATUS_WriteEraseCMD,	//BSP主机写擦除命令---需要应答
+	BSP_MSTATUS_WriteEraseConf,	//BSP主机写擦除参数---整片擦除(0xFF 0x00)或者选择地址擦除，然后等待擦除完成，完成后从机返回一个ACK应答
+	BSP_MSTATUS_EraseDone,	//BSP主机写擦除参数---整片擦除(0xFF 0x00)或者选择地址擦除，然后等待擦除完成，完成后从机返回一个ACK应答
+	BSP_MSTATUS_ReadFirmware,		//读固件
+	BSP_MSTATUS_WaitFirmware,		//等待固件
+	BSP_MSTATUS_GettedFirmware,	//已经获取固件
+	BSP_MSTATUS_WriteWM,				//BSP主机发送写命令，Write Memory:从应用程序指定的地址开始将最多 256 个字节的数据写入 RAM 或 Flash---需要应答
+	BSP_MSTATUS_WriteAddr,			//BSP主机发送要写入数据的起始地址---需要应答
+	BSP_MSTATUS_WriteData,			//BSP主机正在执行擦除工作
+	BSP_MSTATUS_WriteRM,				//BSP主机发送读命令--主要为校验写入的数据，Read Memory:从应用程序指定的地址开始读取最多 256 个字节的存储器空间
+	BSP_MSTATUS_WriteRMLengh,		//BSP主机发送需要读取的数据长度
 	BSP_MSTATUS_Verify,					//数据校验，主机写完从机后校验数据
 	BSP_MSTATUS_WriteGo,				//BSP主机发送Go命令---执行完Go全部命令后重启从机运行
 	BSP_MSTATUS_WriteGoAddr,		//写运行地址
-	BSP_MSTATUS_StartDevice,		//BSP主机往从机写完全部数据后对从机进行复位重启
-	BSP_MSTATUS_ERROR,					//错误---后面再添加错误消息
+	BSP_MSTATUS_ResetDevice2,		//BSP主机往从机写完全部数据后对从机进行复位重启
 	BSP_MSTATUS_WaitDeliver			//等待释放从机
 }BSPM_STATUS_TypeDef;
 
@@ -408,12 +405,7 @@ typedef	struct _BSPM_Info
 	BSPM_STATUS_TypeDef		BSP_MASTER_STATUS		;		//ISP状态标志---工作在主机状态时
 	BSPM_STATUS_TypeDef		MasterLastStatus		;		//存储主机上一个状态，根据上一个状态等到从机应答时进行下一步操作
 	
-	BSP_VERSION_TypeDef		SlaveVersion				;		//从机自举程序版本信息
-	
-	WORK_STEEPS_TypeDef		WORK_STEEPS					;
-	
-	BSP_ANSWER_TypeDef		ACK;										//从机的应答状态	BSP_ACK-0x79,BSP_NACK-0x1F
-	BSP_ANSWER_TypeDef		ACK2;										//从机的应答状态2	BSP_ACK-0x79,BSP_NACK-0x1F
+	BSP_VERSION_TypeDef				SlaveVersion				;		//从机自举程序版本信息
 	
 }BSPM_Info_TypeDef;
 //------------------模块作为从机时的信息结构体
@@ -427,7 +419,6 @@ typedef	struct _BSPM_Public
 {
 	unsigned int 	OverRunTime				;		//超时时间
 	unsigned int 	TimeCount					;		//计时时间
-	unsigned int	RetryTimes				;		//重试次数
 	unsigned char Connected					;		//连接状态--从机更新固件时使用，如果Connected==0，表示未连接，需要格式化，如果Connected==1，表示已经连接
 	
 	unsigned int 	OffsetAddr				;		//写从机时的地址偏移
@@ -485,21 +476,16 @@ typedef	struct _BSP_Conf					//USART 在线编程配置文件
 
 
 //---------------------公共函数
-void BSP_Conf(BSP_Conf_TypeDef *BSP_Conf);									//配置函数
-void BSP_Process(BSP_Conf_TypeDef *BSP_Conf);								//事件处理函数
-void BSP_Reset(BSP_Conf_TypeDef *BSP_Conf);									//重置编程器---恢复所有参数为默认值
-void BSP_SendBuffer(BSP_Conf_TypeDef *BSP_Conf);						//通过串口发送数据，当检测到USARTSendLen不为0时自动从BSP_TvBuffer拷贝USARTSendLen长度数据到BSP_TxBuffer并发送
+
 
 
 
 //---------------------主机专用函数
-void USM_BSP_PROCESS(BSP_Conf_TypeDef *BSP_Conf);					//主机事件处理函数
-void USM_BSP_RESET(BSP_Conf_TypeDef *BSP_Conf);						//复位从机
-void USM_BSP_ResetToBSP(BSP_Conf_TypeDef *BSP_Conf);			//复位从机设备--使从机进行ISP模式
-void USM_BSP_ResetToRUN(BSP_Conf_TypeDef *BSP_Conf);			//启动从机接收BOOT0使从机正常运行
-void USM_BSP_SetStatus(BSP_Conf_TypeDef *BSP_Conf,BSPM_STATUS_TypeDef BSPM_STATUS);		//更新/设置主机状态
-BSPM_STATUS_TypeDef USM_BSP_GetStatus(BSP_Conf_TypeDef *BSP_Conf);		//获取主机当前状态
-void USM_BSP_Connect(BSP_Conf_TypeDef *BSP_Conf);					//连接从机---间隔5ms连接发送0x7F，让从机识别波特率
+void USM_BSP_PROCESS(BSP_Conf_TypeDef *BSP_Conf);
+void USM_BSP_RESET(BSP_Conf_TypeDef *BSP_Conf);
+void USM_BSP_ResetDevice(BSP_Conf_TypeDef *BSP_Conf);			//复位从机设备--使从机进行ISP模式
+void USM_BSP_SetDevice(BSP_Conf_TypeDef *BSP_Conf);				//启动从机接收BOOT0使从机进行下载状态
+void USM_BSP_RunDevice(BSP_Conf_TypeDef *BSP_Conf);				//启动从机设备使从机正常运行
 void USM_BSP_Get(BSP_Conf_TypeDef *BSP_Conf);							//获取当前自举程序版本及允许使用的命令
 void USM_BSP_GetVR(BSP_Conf_TypeDef *BSP_Conf);						//获取自举程序版本及 Flash 的读保护状态
 void USM_BSP_GetId(BSP_Conf_TypeDef *BSP_Conf);						//获取芯片 ID
@@ -515,11 +501,11 @@ void USM_BSP_WriteUnProtect(BSP_Conf_TypeDef *BSP_Conf);	//禁止所有 Flash 扇区的
 void USM_BSP_ReadProtect(BSP_Conf_TypeDef *BSP_Conf);			//使能读保护
 void USM_BSP_ReadUnProtect(BSP_Conf_TypeDef *BSP_Conf);		//禁止读保护
 void USM_BSP_GetAck(BSP_Conf_TypeDef *BSP_Conf);					//获取从机应答
-void USM_BSP_SendCommand(BSP_Conf_TypeDef *BSP_Conf,BSP_COMMAND_TypeDef Command);	//串口编程发送命令程序
+void USM_BSP_SendCommand(BSP_Conf_TypeDef *BSP_Conf,unsigned char Command);	//串口编程发送命令程序
 
 
 //---------------------从机专用函数
-void USS_BSP_PROCESS(BSP_Conf_TypeDef *BSP_Conf);					//从机事件处理函数
+void USS_BSP_PROCESS(BSP_Conf_TypeDef *BSP_Conf);
 void USS_BSP_RESET(BSP_Conf_TypeDef *BSP_Conf);
 void USS_BSP_Get(BSP_Conf_TypeDef *BSP_Conf);							//获取当前自举程序版本及允许使用的命令
 void USS_BSP_GetVR(BSP_Conf_TypeDef *BSP_Conf);						//获取自举程序版本及 Flash 的读保护状态

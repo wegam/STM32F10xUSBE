@@ -51,6 +51,8 @@ u32 timecunt=0;		//空闲计时
 typedef struct
 {
 	ISP_Conf_TypeDef 	ISP_Conf;
+	BSP_Conf_TypeDef	BSP_Conf;
+	
 	SPI_FLASH_TypeDef	SPI_FLASH;
 	
 }OFFLINE_ISP_TypeDef;
@@ -87,22 +89,17 @@ void OFFLINE_ISP_Configuration(void)
 *******************************************************************************/
 void OFFLINE_ISP_Server(void)
 {
-	u16 RxNum=0;
+//	u16 RxNum=0;
 	IWDG_Feed();								//独立看门狗喂狗	
 	timecunt++;		//空闲计时
 	if(timecunt>=0xFFFFFFF5)
 	{
 	}
-//	RxNum=USART_ReadBufferIDLE(USART1,(u32*)RevBuffe,(u32*)RxdBuffe);	//串口空闲模式读串口接收缓冲区，如果有数据，将数据拷贝到RevBuffer,并返回接收到的数据个数，然后重新将接收缓冲区地址指向RxdBuffer
-	if(RxNum)
-	{
-		Usart_ISP_Process(&(OFFLINE_Cof.ISP_Conf));
-		SPI_FLASH_Process(&(OFFLINE_Cof.SPI_FLASH));			//FLASH数据处理：所有的FLASH对外操作接口
-		
-	}
-	OFFLINE_ISP_StatusProcess();		//状态处理
-	Usart_ISP_Process(&(OFFLINE_Cof.ISP_Conf));
-	SPI_FLASH_Process(&(OFFLINE_Cof.SPI_FLASH));			//FLASH数据处理：所有的FLASH对外操作接口
+	BSP_Process(&(OFFLINE_Cof.BSP_Conf));								//事件处理函数
+	
+//	OFFLINE_ISP_StatusProcess();		//状态处理
+//	Usart_ISP_Process(&(OFFLINE_Cof.ISP_Conf));
+//	SPI_FLASH_Process(&(OFFLINE_Cof.SPI_FLASH));			//FLASH数据处理：所有的FLASH对外操作接口
 }
 /*******************************************************************************
 *函数名			:	function
@@ -321,8 +318,16 @@ void OFFLINE_ISP_Conf(void)
 	OFFLINE_Cof.ISP_Conf.BOOT0_CTL_PORT=GPIOA;
 	OFFLINE_Cof.ISP_Conf.BOOT0_CTL_Pin=GPIO_Pin_8;
 	
+	OFFLINE_Cof.BSP_Conf.BSP_Port.USARTx=USART1;
+	OFFLINE_Cof.BSP_Conf.BSP_Port.BOOT0_CTL_PORT=GPIOB;
+	OFFLINE_Cof.BSP_Conf.BSP_Port.BOOT0_CTL_Pin=GPIO_Pin_0;
+	OFFLINE_Cof.BSP_Conf.BSP_Port.RESET_CTL_PORT=GPIOA;
+	OFFLINE_Cof.BSP_Conf.BSP_Port.RESET_CTL_Pin=GPIO_Pin_8;
+	
+	BSP_Conf(&(OFFLINE_Cof.BSP_Conf));									//配置函数
+	
 	SPI_FLASH_Conf(&(OFFLINE_Cof.SPI_FLASH));
-	Usart_ISP_Cof(&(OFFLINE_Cof.ISP_Conf));	
+//	Usart_ISP_Cof(&(OFFLINE_Cof.ISP_Conf));	
 }
 
 

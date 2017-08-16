@@ -54,6 +54,8 @@ void PWM_TEST_Configuration(void)
 	PWM_OUT(TIM2,PWM_OUTChannel1,1,900);		//sys_led
 //	PWM_OUT(TIM1,PWM_OUTChannel1,1200,500);		//PWM设定
 	PWM_OUT2(TIM1,PWM_OUTChannel1,2400,600);		//PWM设定
+	PWM_OUT2(TIM3,PWM_OUTChannel3,2400,600);		//PWM设定
+	PWM_OUT2(TIM4,PWM_OUTChannel2,2400,600);		//PWM设定
 //	TIM1->CCR1 = 40000;
 //	GPIO_Configuration_APP50	(GPIOB,	GPIO_Pin_14);			//将GPIO相应管脚配置为APP(复用推挽)输出模式，最大速度50MHz----V20170605
 	
@@ -61,29 +63,35 @@ void PWM_TEST_Configuration(void)
 	GPIO_Configuration_IPU(GPIOA,	GPIO_Pin_5);			//将GPIO相应管脚配置为上拉输入模式----V20170605--A
 	GPIO_Configuration_IPU(GPIOA,	GPIO_Pin_6);			//将GPIO相应管脚配置为上拉输入模式----V20170605--B
 	
-	EXTI_Configuration(GPIOA,GPIO_Pin_4,EXTI_Mode_Interrupt);
-	EXTI_Configuration(GPIOA,GPIO_Pin_5,EXTI_Mode_Interrupt);
+	GPIO_Configuration_IPU(GPIOB,	GPIO_Pin_12);			//将GPIO相应管脚配置为上拉输入模式----V20170605--BUTTON
+	GPIO_Configuration_IPU(GPIOB,	GPIO_Pin_13);			//将GPIO相应管脚配置为上拉输入模式----V20170605--A
+	GPIO_Configuration_IPU(GPIOB,	GPIO_Pin_14);			//将GPIO相应管脚配置为上拉输入模式----V20170605--B
 	
-	USART_DMA_ConfigurationNR	(USART2,115200,(u32*)RxdBuffer,RxBufferSize);	//USART_DMA配置--查询方式，不开中断
+	EXTI_Configuration(GPIOB,GPIO_Pin_12,EXTI_Mode_Interrupt);
+	EXTI_Configuration(GPIOB,GPIO_Pin_13,EXTI_Mode_Interrupt);
 	
-	USART_DMAPrintf(USART2,"参数设置方法1（十六进制:FE A9 XX XX）\r\n");					//自定义printf串口DMA发送程序,后边的省略号就是可变参数
+	USART_DMA_ConfigurationNR	(USART1,115200,(u32*)RxdBuffer,RxBufferSize);	//USART_DMA配置--查询方式，不开中断
+	
+	USART_DMAPrintf(USART1,"参数设置方法1（十六进制:FE A9 XX XX）\r\n");					//自定义printf串口DMA发送程序,后边的省略号就是可变参数
 	
 	for(ECount=0;ECount<0xFFFF;ECount++)
 	{
 	}
-	USART_DMAPrintf(USART2,"参数设置方法2（SET:xx (xx取值为0~60000,50的比值为1/1200））\r\n");					//自定义printf串口DMA发送程序,后边的省略号就是可变参数
+	USART_DMAPrintf(USART1,"参数设置方法2（SET:xx (xx取值为0~60000,50的比值为1/1200））\r\n");					//自定义printf串口DMA发送程序,后边的省略号就是可变参数
 	for(ECount=0;ECount<0xFFFF;ECount++)
 	{
 	}
-	USART_DMAPrintf(USART2,"D4J1-D4Q3为PWM输出\r\n");					//自定义printf串口DMA发送程序,后边的省略号就是可变参数
+	USART_DMAPrintf(USART1,"D4J1-D4Q3为PWM输出\r\n");					//自定义printf串口DMA发送程序,后边的省略号就是可变参数
 	for(ECount=0;ECount<0xFFFF;ECount++)
 	{
 	}
-	USART_DMAPrintf(USART2,"D4J1为编码器输入，编码器调节步长为1/1200\r\n");					//自定义printf串口DMA发送程序,后边的省略号就是可变参数
+	USART_DMAPrintf(USART1,"D4J1为编码器输入，编码器调节步长为1/1200\r\n");					//自定义printf串口DMA发送程序,后边的省略号就是可变参数
 	for(ECount=0;ECount<0xFFFF;ECount++)
 	{
 	}
 	
+	TIM3->CCR3 =10;
+	TIM4->CCR2 =10;
 	
 	PWonFlg=1;
 	
@@ -116,7 +124,7 @@ void PWM_TEST_Server(void)
 	{
 		TIMECUNT=0;
 	}
-	RxNum=USART_ReadBufferIDLE	(USART2,(u32*)RevBuffer,(u32*)RxdBuffer);	//串口空闲模式读串口接收缓冲区，如果有数据，将数据拷贝到RevBuffer,并返回接收到的数据个数，然后重新将接收缓冲区地址指向RxdBuffer
+	RxNum=USART_ReadBufferIDLE	(USART1,(u32*)RevBuffer,(u32*)RxdBuffer);	//串口空闲模式读串口接收缓冲区，如果有数据，将数据拷贝到RevBuffer,并返回接收到的数据个数，然后重新将接收缓冲区地址指向RxdBuffer
 	if(RxNum)
 	{
 		if(RevBuffer[0]==0xFE&&RevBuffer[1]==0xA9)
@@ -125,8 +133,10 @@ void PWM_TEST_Server(void)
 			
 			if(PWM_Ratio>1200)
 				PWM_Ratio=1200;
-			USART_DMAPrintf(USART2,"当前输出占空比:%4d/1200\r\n",PWM_Ratio);					//自定义printf串口DMA发送程序,后边的省略号就是可变参数
+			USART_DMAPrintf(USART1,"当前输出占空比:%4d/1200\r\n",PWM_Ratio);					//自定义printf串口DMA发送程序,后边的省略号就是可变参数
 			TIM1->CCR1 =PWM_Ratio*50;
+			TIM3->CCR3 =PWM_Ratio*50;
+			TIM4->CCR2 =PWM_Ratio*50;
 		}
 		else if(RevBuffer[0]==0x53&&RevBuffer[1]==0x45&&RevBuffer[2]==0x54&&RevBuffer[3]==0x3A)
 		{
@@ -149,9 +159,11 @@ void PWM_TEST_Server(void)
 				}
 			}
 			TIM1->CCR1 =PWM_Ratio;
+			TIM3->CCR3 =PWM_Ratio;
+			TIM4->CCR2 =PWM_Ratio;
 			Npow=(double)PWM_Ratio/50.0;
 			PWM_Ratio	=(u16)Npow;
-			USART_DMAPrintf(USART2,"当前输出占空比:%4.4f/1200\r\n",Npow);					//自定义printf串口DMA发送程序,后边的省略号就是可变参数
+			USART_DMAPrintf(USART1,"当前输出占空比:%4.4f/1200\r\n",Npow);					//自定义printf串口DMA发送程序,后边的省略号就是可变参数
 		}
 		memset(RevBuffer, 0x00,16);
 	}
@@ -166,7 +178,7 @@ void PWM_TEST_Server(void)
 *******************************************************************************/
 void PWM_ECODE(void)
 {
-	if(EXTI_GetITStatus(EXTI_Line4)==SET)			//EXTI_GetFlagStatus(u32 EXTI_Line);//PA6in==0
+	if(EXTI_GetITStatus(EXTI_Line12)==SET)			//EXTI_GetFlagStatus(u32 EXTI_Line);//PA6in==0
 	{
 		KeyCount=0;
 		while(KeyCount++<0xFFFF);
@@ -178,12 +190,14 @@ void PWM_ECODE(void)
 		{
 			PWM_Ratio=0;
 		}
-		USART_DMAPrintf(USART2,"当前输出占空比:%4d/1200\r\n",PWM_Ratio);					//自定义printf串口DMA发送程序,后边的省略号就是可变参数
+		USART_DMAPrintf(USART1,"当前输出占空比:%4d/1200\r\n",PWM_Ratio);					//自定义printf串口DMA发送程序,后边的省略号就是可变参数
 		TIM1->CCR1 =PWM_Ratio*50;
-		EXTI_ClearITPendingBit(EXTI_Line4);
+		TIM3->CCR3 =PWM_Ratio*50;
+		TIM4->CCR2 =PWM_Ratio*50;
+		EXTI_ClearITPendingBit(EXTI_Line12);
 	}
 	
-	if(EXTI_GetITStatus(EXTI_Line5)==SET)			//EXTI_GetFlagStatus(u32 EXTI_Line);//PA6in==0
+	if(EXTI_GetITStatus(EXTI_Line13)==SET)			//EXTI_GetFlagStatus(u32 EXTI_Line);//PA6in==0
 	{
 		TimeOut=0;
 		Bflg=0;
@@ -191,17 +205,17 @@ void PWM_ECODE(void)
 		ECountA=0;
 		ECountB=0;
 		
-		while(((PA5in==0||PA6in==0)||Bflg==0)&&(TimeOut<=0xFFFFFF))
+		while(((PB13in==0||PB14in==0)||Bflg==0)&&(TimeOut<=0xFFFFFF))
 		{
 			TimeOut++;
-			if((PA5in==0&&PA6in==0)&&ECountA==0)
+			if((PB13in==0&&PB14in==0)&&ECountA==0)
 			{
 				ECountA++;
 				ECountB++;
 			}
 			else if(ECountA!=0)
 			{
-				if(PA5in==0)
+				if(PB13in==0)
 				{
 					ECountA++;
 					ECount=0;
@@ -210,7 +224,7 @@ void PWM_ECODE(void)
 				{
 					ECount++;				
 				}
-				if(PA6in==0)
+				if(PB14in==0)
 				{
 					ECountB++;
 					ECount=0;
@@ -237,9 +251,11 @@ void PWM_ECODE(void)
 				PWM_Ratio-=1;
 		}		
 		
-		USART_DMAPrintf(USART2,"当前输出占空比:%4d/1200\r\n",PWM_Ratio);					//自定义printf串口DMA发送程序,后边的省略号就是可变参数
+		USART_DMAPrintf(USART1,"当前输出占空比:%4d/1200\r\n",PWM_Ratio);					//自定义printf串口DMA发送程序,后边的省略号就是可变参数
 		TIM1->CCR1 =PWM_Ratio*50;
-		EXTI_ClearITPendingBit(EXTI_Line5);
+		TIM3->CCR3 =PWM_Ratio*50;
+		TIM4->CCR2 =PWM_Ratio*50;
+		EXTI_ClearITPendingBit(EXTI_Line13);
 	}
 }
 
