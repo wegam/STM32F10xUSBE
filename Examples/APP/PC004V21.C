@@ -240,11 +240,11 @@ void PC004V21_Server(void)
 	if(PB1Flg==1)
 	{
 		PC004V21_KEYData();		//按键发药处理函数
-		PC004V10_CANBuffer[0]=0x02;		//命令
-		PC004V10_CANBuffer[1]=0x10;		//槽号
-		PC004V10_CANBuffer[2]=0x02;		//数量
+		PC004V10_CANBuffer[0]=0x01;		//命令
+		PC004V10_CANBuffer[1]=0x00;		//槽号
+		PC004V10_CANBuffer[2]=0x00;		//数量
 		
-		CAN_StdTX_DATA(0x06,0x08,PC004V10_CANBuffer);			//CAN使用标准帧发送数据
+		CAN_StdTX_DATA(0x01,0x08,PC004V10_CANBuffer);			//CAN使用标准帧发送数据
 		if(PW1Flg==0)
 		{
 			PW1Flg=1;

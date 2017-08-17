@@ -71,6 +71,46 @@ void EXTI_Configuration(GPIO_TypeDef* GPIOx, u16 GPIO_Pin_x,EXTIMode_TypeDef Mod
 	
 }
 /*******************************************************************************
+* 函数名		:	EXTI_Configuration	
+* 功能描述	:	外部中断配置 
+* 输入		:	GPIOx：x为A...G
+						GPIO_Pin为GPIO_Pin_x：x取值为0...15
+						Mode：中断模式，取值为 EXTI_Mode_Interrupt：触发中断
+																	EXTI_Mode_Event：事件中断
+* 输出		:
+* 返回 		:
+*******************************************************************************/
+void EXTI_Configuration2(GPIO_TypeDef* GPIOx, u16 GPIO_Pin_x,EXTIMode_TypeDef Mode)
+{
+	//1)**********定义相关变量	
+//	GPIO_InitTypeDef GPIO_InitStructure;				//GPIO结构体
+	u8 GPIO_PortSource=0;
+	u8 GPIO_PinSource=0;
+	u8 EXTI_IRQChannel=0;
+//	u32 EXTI_Line=(u32)GPIO_Pin_x;
+	
+	//2)**********检查参数
+	/* Check the parameters */
+  assert_param(IS_GPIO_ALL_PERIPH(GPIOx));
+	assert_param(IS_GPIO_PIN(GPIO_Pin_x));
+	//A---------端口选择及打开相关GPIO时钟
+	EXTI_ClockConf(GPIOx,GPIO_Pin_x);				//开启相关GPIO时钟	
+	
+	//---------引脚选择---求指数
+	//	GPIO_PinSource=(u8)log((double)GPIO_Pin)/log((double)2);		//换底公式求对数	
+	GPIO_PinSource=(u8)(log(GPIO_Pin_x)/log(2));		//换底公式求对数		
+	
+	//	GPIO_EXTILineConfig(GPIO_PortSourceGPIOB,GPIO_PinSource3);
+	GPIO_EXTILineConfig(GPIO_PortSource,GPIO_PinSource);
+	
+	
+	EXTI_PortSourceConf(GPIOx,&GPIO_PortSource);									//设置中断线
+	EXTI_PinConf(GPIOx,GPIO_Pin_x,&EXTI_IRQChannel);							//选择相关中断线路
+	EXTI_InitStructure2(GPIOx,GPIO_Pin_x,Mode,EXTI_IRQChannel);		//外部中断初始化
+	//3)**********选择GPIO管脚用作外部中断线路,打开相关GPIO时钟
+	
+}
+/*******************************************************************************
 * 函数名		:	
 * 功能描述	:	 
 * 输入		:	
@@ -271,6 +311,45 @@ void EXTI_InitStructure(GPIO_TypeDef* GPIOx, u16 GPIO_Pin_x,EXTIMode_TypeDef Mod
 	NVIC_InitStructure.NVIC_IRQChannel = EXTI_IRQChannel;					//选择中断通道-中断源
 	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0;			//抢占优先级
 	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;						//响应优先级
+	NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;								//使能
+	NVIC_Init(&NVIC_InitStructure);	
+
+	EXTI_ClearITPendingBit(EXTI_Line);
+
+}
+/*******************************************************************************
+* 函数名		:	
+* 功能描述	:	 
+* 输入		:	
+* 输出		:
+* 返回 		:
+*******************************************************************************/
+void EXTI_InitStructure2(GPIO_TypeDef* GPIOx, u16 GPIO_Pin_x,EXTIMode_TypeDef Mode,u8 EXTI_IRQChannel)		//外部中断初始化
+{
+	GPIO_InitTypeDef GPIO_InitStructure;				//GPIO结构体
+	EXTI_InitTypeDef EXTI_Initstructure;
+	NVIC_InitTypeDef NVIC_InitStructure;
+	
+	u32 EXTI_Line=(u32)GPIO_Pin_x;
+	
+	//4)**********GPIO配置
+	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_x;
+	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IPU;
+	GPIO_Init(GPIOx,&GPIO_InitStructure);
+	
+	EXTI_Initstructure.EXTI_Line=EXTI_Line;												//外部中断线路
+	EXTI_Initstructure.EXTI_Mode=Mode;														//中断模式
+//	EXTI_Initstructure.EXTI_Mode=EXTI_Mode_Interrupt;						//中断模式
+	EXTI_Initstructure.EXTI_Trigger=EXTI_Trigger_Falling;					//触发方式-
+	EXTI_Initstructure.EXTI_LineCmd=ENABLE;												//连接使能
+	EXTI_Init(&EXTI_Initstructure);
+	
+	EXTI_GenerateSWInterrupt(EXTI_Line);													//使能中断
+	
+	//7)**********配置中断
+	NVIC_InitStructure.NVIC_IRQChannel = EXTI_IRQChannel;					//选择中断通道-中断源
+	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0;			//抢占优先级
+	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 1;						//响应优先级
 	NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;								//使能
 	NVIC_Init(&NVIC_InitStructure);	
 

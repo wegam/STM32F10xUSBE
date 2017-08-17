@@ -27,10 +27,12 @@
 //#include "stdio.h"
 
 void EXTI_Configuration(GPIO_TypeDef* GPIOx, u16 GPIO_Pin,EXTIMode_TypeDef Mode);
+void EXTI_Configuration2(GPIO_TypeDef* GPIOx, u16 GPIO_Pin,EXTIMode_TypeDef Mode);
 void EXTI_ClockConf(GPIO_TypeDef* GPIOx, u16 GPIO_Pin_x);						//开启相关GPIO时钟	
 void EXTI_PortSourceConf(GPIO_TypeDef* GPIOx,u8 *GPIO_PortSource);	//设置中断线
 void EXTI_PinConf(GPIO_TypeDef* GPIOx, u16 GPIO_Pin_x,u8 *EXTI_IRQChannel);			//选择相关中断线路
 void EXTI_InitStructure(GPIO_TypeDef* GPIOx, u16 GPIO_Pin_x,EXTIMode_TypeDef Mode,u8 EXTI_IRQChannel);		//外部中断初始化
+void EXTI_InitStructure2(GPIO_TypeDef* GPIOx, u16 GPIO_Pin_x,EXTIMode_TypeDef Mode,u8 EXTI_IRQChannel);	
 void EXTI_Interrupt_Configuration(u32 EXTI_Line);
 void EXTI_Server(void);
 #endif
