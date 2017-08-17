@@ -254,6 +254,10 @@ void WOW_Configuration(void)
 	PC001V22_Configuration();
 #endif
 
+//*********************************PWM_LED*********************************//
+#ifdef PWM_LED
+	PWM_LED_Configuration();
+#endif
 
 
 
@@ -493,7 +497,10 @@ void WOW_Server(void)
 	PC001V22_Server();
 #endif
 
-
+//*********************************PWM_LED*********************************//
+#ifdef PWM_LED
+	PWM_LED_Server();
+#endif
 
 
 
