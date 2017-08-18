@@ -122,6 +122,9 @@ u8 ID_ARR[8][8]={0,0};			//存储已连接数码管ID列表
 u8 ON_line[8][8]={0,0};			//对应ID列表标志位，0--无此ID，1--有对应ID
 
 u8 SwitchID=0;				//拔码开关地址 //单元板ID----从右到左依次为增高，最右边为最低位
+u8 SwitchIDBAC=0xFF;			//ID备份---ID变化时更新
+u8 NumW=0;				//槽号--MS拨码为槽号
+u8 NumF=0;				//发药数量--LS拨码为发药数量
 
 u16	SYSTime=0;							//循环计时变量
 u8 Buzzer_time=0;						//开机蜂鸣器响应次数
@@ -160,7 +163,7 @@ void PC004V21_Configuration(void)
 	PWM_OUT(TIM2,PWM_OUTChannel1,1,900);						//PWM设定-20161127版本
 	PWM_OUT(TIM3,PWM_OUTChannel3,0.5,10);						//PWM设定-20161127版本
 	
-	RS485_DMA_ConfigurationNR	(&RS485_Conf,19200,(u32*)PC004V10_Buffer,PC004V10_BufferSize);	//USART_DMA配置--查询方式，不开中断,配置完默认为接收状态
+	RS485_DMA_ConfigurationNR	(&RS485_Conf,115200,(u32*)PC004V10_Buffer,PC004V10_BufferSize);	//USART_DMA配置--查询方式，不开中断,配置完默认为接收状态
 	
 	CAN_Configuration_NR(100000);										//CAN配置---标志位查询方式，不开中断
 	
@@ -203,7 +206,17 @@ void PC004V21_Server(void)
 	IWDG_Feed();								//独立看门狗喂狗	
 	
 	SYSTime++;
-		
+	
+	SwitchID=PC004V21_GetSwitchID();//获取当前设备ID//机柜号
+	NumW=(SwitchID>>4)&0x0F;		//MS拨码为槽号
+	NumF=SwitchID&0x0F;		//发药数量--LS拨码为发药数量
+//	SwitchIDBAC=0xFF;			//ID备份---ID变化时更新
+	if(SwitchIDBAC!=SwitchID)
+	{		
+		SwitchIDBAC=SwitchID;		//更新备份
+		RS485_DMAPrintf(&RS485_Conf,"请求更新，发药槽号:%d,发药数量：%d",NumW,NumF);					//自定义printf串口DMA发送程序,后边的省略号就是可变参数
+	}
+	
 	if(SYSTime>=1000)
 	{
 		SYSTime=0;
@@ -231,6 +244,8 @@ void PC004V21_Server(void)
 	}
 	else
 	{
+		
+		
 		if(KeyTime++>=10)
 		{
 			KeyTime=20;
@@ -238,12 +253,16 @@ void PC004V21_Server(void)
 		}
 	}
 	if(PB1Flg==1)
-	{
-		PC004V21_KEYData();		//按键发药处理函数
-		PC004V10_CANBuffer[0]=0x01;		//命令
-		PC004V10_CANBuffer[1]=0x00;		//槽号
-		PC004V10_CANBuffer[2]=0x00;		//数量
+	{		
+//		PC004V21_KEYData();		//按键发药处理函数
+		PC004V10_CANBuffer[0]=0x02;		//命令:0x01查询槽位信息，0x02发药命令
+		PC004V10_CANBuffer[1]=NumW;		//槽号
+		PC004V10_CANBuffer[2]=NumF;		//数量
 		
+		PC004V10_TBuffer[0]=NumW;
+		PC004V10_TBuffer[1]=NumF;
+		RS485_DMASend(&RS485_Conf,(u32*)PC004V10_TBuffer,2);	//RS485-DMA发送程序
+//		RS485_DMAPrintf(&RS485_Conf,"%d,%d",NumW,NumF);					//自定义printf串口DMA发送程序,后边的省略号就是可变参数
 		CAN_StdTX_DATA(0x01,0x08,PC004V10_CANBuffer);			//CAN使用标准帧发送数据
 		if(PW1Flg==0)
 		{
@@ -301,6 +320,7 @@ void PC004V21_PinSet(void)
 	GPIO_Configuration_IPU(GPIOC,GPIO_Pin_1);						//将GPIO相应管脚配置为上拉输入模式----V20170605
 	GPIO_Configuration_IPU(GPIOC,GPIO_Pin_2);						//将GPIO相应管脚配置为上拉输入模式----V20170605
 	GPIO_Configuration_IPU(GPIOC,GPIO_Pin_3);						//将GPIO相应管脚配置为上拉输入模式----V20170605
+	
 	GPIO_Configuration_IPU(GPIOC,GPIO_Pin_4);						//将GPIO相应管脚配置为上拉输入模式----V20170605
 	GPIO_Configuration_IPU(GPIOC,GPIO_Pin_5);						//将GPIO相应管脚配置为上拉输入模式----V20170605
 	GPIO_Configuration_IPU(GPIOC,GPIO_Pin_6);						//将GPIO相应管脚配置为上拉输入模式----V20170605
@@ -568,7 +588,7 @@ u8 PC004V21_GetSwitchID(void)
 	SW_ID<<=1;
 	if(!GPIO_ReadInputDataBit(GPIOC,GPIO_Pin_7))		//SWH-4
 	{
-		SW_ID=1;
+		SW_ID|=1;
 	}
 	
 	//2)***************获取L拔码开关地址，从右到左为从低到高
@@ -592,7 +612,7 @@ u8 PC004V21_GetSwitchID(void)
 	{
 		SW_ID|=1;
 	}
-	
+//	SW_ID=~SW_ID;
 	//3)***************返回获取的ID值
 	return (SW_ID);
 

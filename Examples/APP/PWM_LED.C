@@ -18,7 +18,7 @@
 
 #define STep	50	//步长
 
-u16 PWM_Ratio=600;		//占空比
+u32 PWM_Ratio=600;		//占空比
 u16 TIMECUNT=0;		//占空比
 u8 ADDflg=0;
 u8 Ecodata=0;			//0--无变化，1--加，2--减，3--按键
@@ -195,7 +195,8 @@ void PWM_ECODE2(void)
 			if(KeyCount>=500)
 			{
 				Key1Flag=1;
-				PWM_Ratio+=6000;
+//				PWM_Ratio+=6000;		//方法1：原来基础上加10%，
+				PWM_Ratio=(PWM_Ratio/6000)*6000+6000;		//方法2：10%的倍数增加
 				if(PWM_Ratio>60000)		//按键标识
 				{
 					PWM_Ratio=0;

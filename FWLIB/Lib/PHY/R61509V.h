@@ -346,6 +346,15 @@ void R61509V_ShowEn(u16 x,u16 y,u32 num);
 
 
 
+
+
+
+
+
+
+
+
+
 //void R61509V_PowerOn( void );
 //void R61509V_SetDispalyRange(  u16 StartLine, u16 LineNum );
 

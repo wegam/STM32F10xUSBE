@@ -20,13 +20,14 @@
 #include "R61509V.h"
 #include "CS5530.H"
 
-
+#include "GT32L32M0180.H"
 #include "STM32F10x_BitBand.H"
 #include "STM32_GPIO.H"
 #include "STM32_SYS.H"
 #include "STM32_SYSTICK.H"
 #include "STM32_WDG.H"
 #include "STM32_PWM.H"
+#include "STM32_USART.H"
 
 #include "string.h"				//串和内存操作函数头文件
 #include "stm32f10x_dma.h"
@@ -43,9 +44,16 @@ u16 ADC_doty1=0;
 
 R61509V_Pindef R61509V_Pinfo;
 CS5530_Pindef CS5530_Pinfo;
+GT32L32_Init_TypeDef 	GT32L32_Init;
 u32 CS5530_ADC_Value=0xFFFFFFFF;
 t_Point point;
 u8 zimo[720]="R61509V_DrawRectangle(11,11,229,389,0X07FF)";
+
+RS485_TypeDef  RS485_Conf;
+
+u8 RxdBuffe[256]={0};
+u8 RevBuffe[256]={0};
+u16 RxNum=0;
 //t_LcdCfg **pLcdpara;
 
 /*******************************************************************************
@@ -63,11 +71,13 @@ void PL010V13_Configuration(void)
 	
 	PL010V13_PinSet();
 	
+	RS485_DMA_ConfigurationNR	(&RS485_Conf,115200,(u32*)RxdBuffe,256);	//USART_DMA配置--查询方式，不开中断,配置完默认为接收状态
+	
 	SysTick_Configuration(1000);	//系统嘀嗒时钟配置72MHz,单位为uS
 	
-//	IWDG_Configuration(1000);			//独立看门狗配置---参数单位ms	
+	IWDG_Configuration(1000);			//独立看门狗配置---参数单位ms	
 	
-//	PWM_OUT(TIM2,PWM_OUTChannel1,1,200);						//PWM设定-20161127版本
+	PWM_OUT(TIM2,PWM_OUTChannel1,1,200);		//PWM设定-20161127版本
 }
 /*******************************************************************************
 * 函数名		:	
@@ -82,6 +92,16 @@ void PL010V13_Server(void)
 	
 	DelayTime++;
 	
+	RxNum=RS485_ReadBufferIDLE(&RS485_Conf,(u32*)RevBuffe,(u32*)RxdBuffe);	//串口空闲模式读串口接收缓冲区，如果有数据，将数据拷贝到RevBuffer,并返回接收到的数据个数，然后重新将接收缓冲区地址指向RxdBuffer
+	if(RxNum)		//RS485接收到数据
+	{
+		R61509V_Fill(0,16,24,48,R61509V_BLACK);				//在指定区域内填充指定颜色;区域大小:(xend-xsta)*(yend-ysta)
+		
+		R61509V_ShowEn(0,16,RevBuffe[0]);
+		R61509V_ShowEn(0,32,RevBuffe[1]);
+		
+		LCD_PrintfString(0,48,32,"Im LCD");				//后边的省略号就是可变参数
+	}
 	#if 1
 	if(DelayTime>=100)
 	{
@@ -110,7 +130,7 @@ void PL010V13_Server(void)
 //				R61509V_DrawLine(0,150,400,150,0X5458);						//AB 两个坐标画一条直线
 //				R61509V_DrawLine(0,140,400,140,0X5458);						//AB 两个坐标画一条直线
 //				R61509V_DrawLine(0,130,400,130,0X5458);						//AB 两个坐标画一条直线
-				R61509V_DrawLine(0,120,400,120,R61509V_YELLOW);						//AB 两个坐标画一条直线
+//				R61509V_DrawLine(0,120,400,120,R61509V_YELLOW);						//AB 两个坐标画一条直线
 //				R61509V_DrawLine(0,110,400,110,0X5458);						//AB 两个坐标画一条直线
 //				R61509V_DrawLine(0,100,400,100,R61509V_YELLOW);						//AB 两个坐标画一条直线
 //				R61509V_DrawLine(0,90,400,90,0X5458);							//AB 两个坐标画一条直线
@@ -238,6 +258,20 @@ void PL010V13_Server(void)
 void PL010V13_PinSet(void)
 {	
 //	u16 i=0,j=0;
+	
+	RS485_Conf.USARTx=USART1;
+	RS485_Conf.RS485_CTL_PORT=GPIOA;
+	RS485_Conf.RS485_CTL_Pin=GPIO_Pin_11;
+	
+	GT32L32_Init.sSPIx=SPI1;
+	GT32L32_Init.sGT32L32_CS_PORT=GPIOB;
+	GT32L32_Init.sGT32L32_CS_PIN=GPIO_Pin_14;
+	GT32L32_Init.SPI_BaudRatePrescaler_x=SPI_BaudRatePrescaler_128;
+	
+	GT32L32_ConfigurationNR(&GT32L32_Init);				//普通SPI通讯方式配置
+	
+	
+	
 	CS5530_Pinfo.CS5530_CS_PORT=GPIOC;
 	CS5530_Pinfo.CS5530_CS_Pin=GPIO_Pin_3;
 	
@@ -354,6 +388,135 @@ void PL010V13_PinSet(void)
 	
 	R61509V_Clean(R61509V_BLACK);			//清除屏幕函数------
 	
+}
+/*******************************************************************************
+*函数名		:	LCD_ShowString
+*功能描述	:	显示字符串高通字库
+*输入			: x,y:起点坐标
+						*p:字符串起始地址
+						用16字体
+*输出			:	无
+*返回值		:	无
+*例程			:
+*******************************************************************************/
+unsigned int LCD_PrintfString(u16 x,u16 y,u8 font,const char *format,...)				//后边的省略号就是可变参数
+{ 
+		
+//		va_list ap; 										//VA_LIST 是在C语言中解决变参问题的一组宏，所在头文件：#include <stdarg.h>,用于获取不确定个数的参数
+//		static char string[ 256 ];			//定义数组，
+//  	va_start( ap, format );
+//		vsprintf( string , format, ap );    
+//		va_end( ap );
+	
+	char	*Char_Buffer=NULL;		//记录format内码
+	u16 i=0;		//显示
+
+	//1)**********获取数据宽度
+	u16 num=strlen((const char*)format);		//获取数据宽度
+	//2)**********定义缓冲区大小变量
+	unsigned int BufferSize;
+	//3)**********args为定义的一个指向可变参数的变量，va_list以及下边要用到的va_start,va_end都是是在定义，可变参数函数中必须要用到宏， 在stdarg.h头文件中定义
+	va_list args;                                        
+	//4)**********申请动态空间
+	Char_Buffer = (char*)malloc(sizeof(char) * num);
+	if(Char_Buffer==NULL)
+	{
+		Char_Buffer=NULL;
+		return 0;
+	}
+	//5)**********初始化args的函数，使其指向可变参数的第一个参数，format是可变参数的前一个参数
+	va_start(args, format);
+	//6)**********正常情况下返回生成字串的长度(除去\0),错误情况返回负值
+	BufferSize = vsprintf(Char_Buffer, format, args);
+	num=BufferSize;
+	//7)**********结束可变参数的获取
+	va_end(args);                                      		
+	//8)**********将等发送缓冲区大小（数据个数）及缓冲区地址发给DMA开启发送
+//	while(*Char_Buffer!='\0')
+	for(i=0;i<num;i++)
+	{ 
+		unsigned char dst=Char_Buffer[i];
+		u8 GTBuffer[512]={0};		//点阵数据存储空间
+		u32 lengh=0;						//汉字点阵的数据长度		
+		if(dst>0x80)		//双字节--汉字
+		{
+			u16 word=dst<<8;			
+//			Char_Buffer++;
+			dst=Char_Buffer[i+1];
+			word=word|dst;			
+			//显示超限判断
+			if(x>R61509V_W-16)
+			{
+				x=0;
+				y+=32;
+			}
+			if(y>R61509V_H-32)
+			{
+				y=x=0;
+				R61509V_Clean(R61509V_BLACK);
+			}
+			lengh=GT32L32_ReadBuffer(&GT32L32_Init,font,word,GTBuffer);		//从字库中读数据函数
+			//写入屏幕
+			SSD1963_ShowString(x,y,font,lengh,GTBuffer);
+			//显示地址增加	
+			if(font==12)
+			{
+				x+=12;
+			}
+			else if(font==16)
+			{
+				x+=16;
+			}
+			else if(font==24)
+			{
+				x+=24;
+			}
+			else if(font==32)
+			{
+				x+=32;
+			}
+//			Char_Buffer++;
+			i++;		//双字节，减两次
+		}
+		else		//单字节
+		{			
+			if(x>R61509V_W-16)
+			{
+				x=0;
+				y+=32;
+			}
+			if(y>R61509V_H-32)
+			{
+				y=x=0;
+				R61509V_Clean(R61509V_BLACK);
+			}
+			lengh=GT32L32_ReadBuffer(&GT32L32_Init,font,(u16)dst,GTBuffer);		//从字库中读数据函数
+//			//写入屏幕
+			SSD1963_ShowString(x,y,font,lengh,GTBuffer);			
+			//显示地址增加
+			if(font==12)
+			{
+				x+=6;
+			}
+			else if(font==16)
+			{
+				x+=8;
+			}
+			else if(font==24)
+			{
+				x+=12;
+			}
+			else if(font==32)
+			{
+				x+=16;
+			}			
+//			Char_Buffer++;
+//			i++;		//双字节，减两次
+		}
+	}
+	//9)**********DMA发送完成后注意应该释放缓冲区：free(USART_BUFFER);
+	free(Char_Buffer);		//发送完成后注意应该释放缓冲区：free(Char_Buffer); 
+	return BufferSize;
 }
 /*******************************************************************************
 * 函数名		:	

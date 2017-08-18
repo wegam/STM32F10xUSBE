@@ -596,8 +596,6 @@ void R61509V_DrawPixelEx( u16 x, u16 y, u16 color )
 	p.x	= x;
 	p.y	= y;
 //	R61509V_DrawDot(p,color);		//»­µã
-
-
 }
 
 
