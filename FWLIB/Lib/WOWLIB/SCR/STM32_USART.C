@@ -1481,7 +1481,7 @@ u16 USART_DMAPrintf(USART_TypeDef* USARTx,const char *format,...)		//ºó±ßµÄÊ¡ÂÔº
 //	}
 //	u8	*USART_BUFFER;
 	//1)**********»ñÈ¡Êı¾İ¿í¶È
-	u16 num=strlen((const char*)format);		//»ñÈ¡Êı¾İ¿í¶È
+	u32 num=strlen((const char*)format);		//»ñÈ¡Êı¾İ¿í¶È
 	//2)**********¶¨Òå»º³åÇø´óĞ¡±äÁ¿
 	unsigned int BufferSize=0;
 	//3)**********argsÎª¶¨ÒåµÄÒ»¸öÖ¸Ïò¿É±ä²ÎÊıµÄ±äÁ¿£¬va_listÒÔ¼°ÏÂ±ßÒªÓÃµ½µÄva_start,va_end¶¼ÊÇÊÇÔÚ¶¨Òå£¬¿É±ä²ÎÊıº¯ÊıÖĞ±ØĞëÒªÓÃµ½ºê£¬ ÔÚstdarg.hÍ·ÎÄ¼şÖĞ¶¨Òå
@@ -1967,7 +1967,7 @@ u16	RS485_DMAPrintf(RS485_TypeDef *RS485_Info,const char *format,...)						//×Ô¶
 //	}
 //	u8	*USART_BUFFER;
 	//1)**********»ñÈ¡Êı¾İ¿í¶È
-	u16 num=strlen((const char*)format);		//»ñÈ¡Êı¾İ¿í¶È
+	u32 num=strlen((const char*)format);		//»ñÈ¡Êı¾İ¿í¶È
 	//2)**********¶¨Òå»º³åÇø´óĞ¡±äÁ¿
 	unsigned int BufferSize;
 	//3)**********argsÎª¶¨ÒåµÄÒ»¸öÖ¸Ïò¿É±ä²ÎÊıµÄ±äÁ¿£¬va_listÒÔ¼°ÏÂ±ßÒªÓÃµ½µÄva_start,va_end¶¼ÊÇÊÇÔÚ¶¨Òå£¬¿É±ä²ÎÊıº¯ÊıÖĞ±ØĞëÒªÓÃµ½ºê£¬ ÔÚstdarg.hÍ·ÎÄ¼şÖĞ¶¨Òå
