@@ -746,6 +746,11 @@
               <FileType>1</FileType>
               <FilePath>..\..\..\..\FWLIB\Lib\PHY\TM1618.C</FilePath>
             </File>
+            <File>
+              <FileName>EC11Encoder.C</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\..\FWLIB\Lib\PHY\EC11Encoder.C</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -1922,6 +1927,11 @@
               <FileType>1</FileType>
               <FilePath>..\..\..\..\FWLIB\Lib\PHY\TM1618.C</FilePath>
             </File>
+            <File>
+              <FileName>EC11Encoder.C</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\..\FWLIB\Lib\PHY\EC11Encoder.C</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -3033,6 +3043,11 @@
               <FileName>TM1618.C</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\..\..\FWLIB\Lib\PHY\TM1618.C</FilePath>
+            </File>
+            <File>
+              <FileName>EC11Encoder.C</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\..\FWLIB\Lib\PHY\EC11Encoder.C</FilePath>
             </File>
           </Files>
         </Group>
@@ -4146,6 +4161,11 @@
               <FileType>1</FileType>
               <FilePath>..\..\..\..\FWLIB\Lib\PHY\TM1618.C</FilePath>
             </File>
+            <File>
+              <FileName>EC11Encoder.C</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\..\FWLIB\Lib\PHY\EC11Encoder.C</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -5257,6 +5277,11 @@
               <FileName>TM1618.C</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\..\..\FWLIB\Lib\PHY\TM1618.C</FilePath>
+            </File>
+            <File>
+              <FileName>EC11Encoder.C</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\..\FWLIB\Lib\PHY\EC11Encoder.C</FilePath>
             </File>
           </Files>
         </Group>
@@ -6370,6 +6395,11 @@
               <FileType>1</FileType>
               <FilePath>..\..\..\..\FWLIB\Lib\PHY\TM1618.C</FilePath>
             </File>
+            <File>
+              <FileName>EC11Encoder.C</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\..\FWLIB\Lib\PHY\EC11Encoder.C</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -7481,6 +7511,11 @@
               <FileName>TM1618.C</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\..\..\FWLIB\Lib\PHY\TM1618.C</FilePath>
+            </File>
+            <File>
+              <FileName>EC11Encoder.C</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\..\FWLIB\Lib\PHY\EC11Encoder.C</FilePath>
             </File>
           </Files>
         </Group>
@@ -8594,6 +8629,11 @@
               <FileType>1</FileType>
               <FilePath>..\..\..\..\FWLIB\Lib\PHY\TM1618.C</FilePath>
             </File>
+            <File>
+              <FileName>EC11Encoder.C</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\..\FWLIB\Lib\PHY\EC11Encoder.C</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -9705,6 +9745,11 @@
               <FileName>TM1618.C</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\..\..\FWLIB\Lib\PHY\TM1618.C</FilePath>
+            </File>
+            <File>
+              <FileName>EC11Encoder.C</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\..\FWLIB\Lib\PHY\EC11Encoder.C</FilePath>
             </File>
           </Files>
         </Group>
@@ -10818,6 +10863,11 @@
               <FileType>1</FileType>
               <FilePath>..\..\..\..\FWLIB\Lib\PHY\TM1618.C</FilePath>
             </File>
+            <File>
+              <FileName>EC11Encoder.C</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\..\FWLIB\Lib\PHY\EC11Encoder.C</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -11929,6 +11979,11 @@
               <FileName>TM1618.C</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\..\..\FWLIB\Lib\PHY\TM1618.C</FilePath>
+            </File>
+            <File>
+              <FileName>EC11Encoder.C</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\..\FWLIB\Lib\PHY\EC11Encoder.C</FilePath>
             </File>
           </Files>
         </Group>
@@ -13106,6 +13161,11 @@
               <FileType>1</FileType>
               <FilePath>..\..\..\..\FWLIB\Lib\PHY\TM1618.C</FilePath>
             </File>
+            <File>
+              <FileName>EC11Encoder.C</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\..\FWLIB\Lib\PHY\EC11Encoder.C</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -14218,6 +14278,11 @@
               <FileType>1</FileType>
               <FilePath>..\..\..\..\FWLIB\Lib\PHY\TM1618.C</FilePath>
             </File>
+            <File>
+              <FileName>EC11Encoder.C</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\..\FWLIB\Lib\PHY\EC11Encoder.C</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -15329,6 +15394,11 @@
               <FileName>TM1618.C</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\..\..\FWLIB\Lib\PHY\TM1618.C</FilePath>
+            </File>
+            <File>
+              <FileName>EC11Encoder.C</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\..\FWLIB\Lib\PHY\EC11Encoder.C</FilePath>
             </File>
           </Files>
         </Group>
@@ -16506,6 +16576,11 @@
               <FileType>1</FileType>
               <FilePath>..\..\..\..\FWLIB\Lib\PHY\TM1618.C</FilePath>
             </File>
+            <File>
+              <FileName>EC11Encoder.C</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\..\FWLIB\Lib\PHY\EC11Encoder.C</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -17618,6 +17693,11 @@
               <FileType>1</FileType>
               <FilePath>..\..\..\..\FWLIB\Lib\PHY\TM1618.C</FilePath>
             </File>
+            <File>
+              <FileName>EC11Encoder.C</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\..\FWLIB\Lib\PHY\EC11Encoder.C</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -18729,6 +18809,11 @@
               <FileName>TM1618.C</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\..\..\FWLIB\Lib\PHY\TM1618.C</FilePath>
+            </File>
+            <File>
+              <FileName>EC11Encoder.C</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\..\FWLIB\Lib\PHY\EC11Encoder.C</FilePath>
             </File>
           </Files>
         </Group>
@@ -19906,6 +19991,11 @@
               <FileType>1</FileType>
               <FilePath>..\..\..\..\FWLIB\Lib\PHY\TM1618.C</FilePath>
             </File>
+            <File>
+              <FileName>EC11Encoder.C</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\..\FWLIB\Lib\PHY\EC11Encoder.C</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -21018,6 +21108,11 @@
               <FileType>1</FileType>
               <FilePath>..\..\..\..\FWLIB\Lib\PHY\TM1618.C</FilePath>
             </File>
+            <File>
+              <FileName>EC11Encoder.C</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\..\FWLIB\Lib\PHY\EC11Encoder.C</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -22129,6 +22224,11 @@
               <FileName>TM1618.C</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\..\..\FWLIB\Lib\PHY\TM1618.C</FilePath>
+            </File>
+            <File>
+              <FileName>EC11Encoder.C</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\..\FWLIB\Lib\PHY\EC11Encoder.C</FilePath>
             </File>
           </Files>
         </Group>
@@ -23306,6 +23406,11 @@
               <FileType>1</FileType>
               <FilePath>..\..\..\..\FWLIB\Lib\PHY\TM1618.C</FilePath>
             </File>
+            <File>
+              <FileName>EC11Encoder.C</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\..\FWLIB\Lib\PHY\EC11Encoder.C</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -24417,6 +24522,11 @@
               <FileName>TM1618.C</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\..\..\FWLIB\Lib\PHY\TM1618.C</FilePath>
+            </File>
+            <File>
+              <FileName>EC11Encoder.C</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\..\FWLIB\Lib\PHY\EC11Encoder.C</FilePath>
             </File>
           </Files>
         </Group>
@@ -25530,6 +25640,11 @@
               <FileType>1</FileType>
               <FilePath>..\..\..\..\FWLIB\Lib\PHY\TM1618.C</FilePath>
             </File>
+            <File>
+              <FileName>EC11Encoder.C</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\..\FWLIB\Lib\PHY\EC11Encoder.C</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -26641,6 +26756,11 @@
               <FileName>TM1618.C</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\..\..\FWLIB\Lib\PHY\TM1618.C</FilePath>
+            </File>
+            <File>
+              <FileName>EC11Encoder.C</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\..\FWLIB\Lib\PHY\EC11Encoder.C</FilePath>
             </File>
           </Files>
         </Group>
@@ -27818,6 +27938,11 @@
               <FileType>1</FileType>
               <FilePath>..\..\..\..\FWLIB\Lib\PHY\TM1618.C</FilePath>
             </File>
+            <File>
+              <FileName>EC11Encoder.C</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\..\FWLIB\Lib\PHY\EC11Encoder.C</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -28994,6 +29119,11 @@
               <FileType>1</FileType>
               <FilePath>..\..\..\..\FWLIB\Lib\PHY\TM1618.C</FilePath>
             </File>
+            <File>
+              <FileName>EC11Encoder.C</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\..\FWLIB\Lib\PHY\EC11Encoder.C</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -30106,6 +30236,11 @@
               <FileType>1</FileType>
               <FilePath>..\..\..\..\FWLIB\Lib\PHY\TM1618.C</FilePath>
             </File>
+            <File>
+              <FileName>EC11Encoder.C</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\..\FWLIB\Lib\PHY\EC11Encoder.C</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -31217,6 +31352,11 @@
               <FileName>TM1618.C</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\..\..\FWLIB\Lib\PHY\TM1618.C</FilePath>
+            </File>
+            <File>
+              <FileName>EC11Encoder.C</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\..\FWLIB\Lib\PHY\EC11Encoder.C</FilePath>
             </File>
           </Files>
         </Group>
@@ -32394,6 +32534,11 @@
               <FileType>1</FileType>
               <FilePath>..\..\..\..\FWLIB\Lib\PHY\TM1618.C</FilePath>
             </File>
+            <File>
+              <FileName>EC11Encoder.C</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\..\FWLIB\Lib\PHY\EC11Encoder.C</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -33569,6 +33714,11 @@
               <FileName>TM1618.C</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\..\..\FWLIB\Lib\PHY\TM1618.C</FilePath>
+            </File>
+            <File>
+              <FileName>EC11Encoder.C</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\..\FWLIB\Lib\PHY\EC11Encoder.C</FilePath>
             </File>
           </Files>
         </Group>
@@ -34746,6 +34896,11 @@
               <FileType>1</FileType>
               <FilePath>..\..\..\..\FWLIB\Lib\PHY\TM1618.C</FilePath>
             </File>
+            <File>
+              <FileName>EC11Encoder.C</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\..\FWLIB\Lib\PHY\EC11Encoder.C</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -35921,6 +36076,11 @@
               <FileName>TM1618.C</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\..\..\FWLIB\Lib\PHY\TM1618.C</FilePath>
+            </File>
+            <File>
+              <FileName>EC11Encoder.C</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\..\FWLIB\Lib\PHY\EC11Encoder.C</FilePath>
             </File>
           </Files>
         </Group>
@@ -37098,6 +37258,11 @@
               <FileType>1</FileType>
               <FilePath>..\..\..\..\FWLIB\Lib\PHY\TM1618.C</FilePath>
             </File>
+            <File>
+              <FileName>EC11Encoder.C</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\..\FWLIB\Lib\PHY\EC11Encoder.C</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -38273,6 +38438,11 @@
               <FileName>TM1618.C</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\..\..\FWLIB\Lib\PHY\TM1618.C</FilePath>
+            </File>
+            <File>
+              <FileName>EC11Encoder.C</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\..\FWLIB\Lib\PHY\EC11Encoder.C</FilePath>
             </File>
           </Files>
         </Group>
@@ -39450,6 +39620,11 @@
               <FileType>1</FileType>
               <FilePath>..\..\..\..\FWLIB\Lib\PHY\TM1618.C</FilePath>
             </File>
+            <File>
+              <FileName>EC11Encoder.C</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\..\FWLIB\Lib\PHY\EC11Encoder.C</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -40625,6 +40800,11 @@
               <FileName>TM1618.C</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\..\..\FWLIB\Lib\PHY\TM1618.C</FilePath>
+            </File>
+            <File>
+              <FileName>EC11Encoder.C</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\..\FWLIB\Lib\PHY\EC11Encoder.C</FilePath>
             </File>
           </Files>
         </Group>
@@ -41802,6 +41982,11 @@
               <FileType>1</FileType>
               <FilePath>..\..\..\..\FWLIB\Lib\PHY\TM1618.C</FilePath>
             </File>
+            <File>
+              <FileName>EC11Encoder.C</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\..\FWLIB\Lib\PHY\EC11Encoder.C</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -42977,6 +43162,11 @@
               <FileName>TM1618.C</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\..\..\FWLIB\Lib\PHY\TM1618.C</FilePath>
+            </File>
+            <File>
+              <FileName>EC11Encoder.C</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\..\FWLIB\Lib\PHY\EC11Encoder.C</FilePath>
             </File>
           </Files>
         </Group>
@@ -44154,6 +44344,11 @@
               <FileType>1</FileType>
               <FilePath>..\..\..\..\FWLIB\Lib\PHY\TM1618.C</FilePath>
             </File>
+            <File>
+              <FileName>EC11Encoder.C</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\..\FWLIB\Lib\PHY\EC11Encoder.C</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -45329,6 +45524,11 @@
               <FileName>TM1618.C</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\..\..\FWLIB\Lib\PHY\TM1618.C</FilePath>
+            </File>
+            <File>
+              <FileName>EC11Encoder.C</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\..\FWLIB\Lib\PHY\EC11Encoder.C</FilePath>
             </File>
           </Files>
         </Group>
@@ -46506,6 +46706,11 @@
               <FileType>1</FileType>
               <FilePath>..\..\..\..\FWLIB\Lib\PHY\TM1618.C</FilePath>
             </File>
+            <File>
+              <FileName>EC11Encoder.C</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\..\FWLIB\Lib\PHY\EC11Encoder.C</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -47681,6 +47886,11 @@
               <FileName>TM1618.C</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\..\..\FWLIB\Lib\PHY\TM1618.C</FilePath>
+            </File>
+            <File>
+              <FileName>EC11Encoder.C</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\..\FWLIB\Lib\PHY\EC11Encoder.C</FilePath>
             </File>
           </Files>
         </Group>
@@ -48858,6 +49068,11 @@
               <FileType>1</FileType>
               <FilePath>..\..\..\..\FWLIB\Lib\PHY\TM1618.C</FilePath>
             </File>
+            <File>
+              <FileName>EC11Encoder.C</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\..\FWLIB\Lib\PHY\EC11Encoder.C</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -50033,6 +50248,11 @@
               <FileName>TM1618.C</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\..\..\FWLIB\Lib\PHY\TM1618.C</FilePath>
+            </File>
+            <File>
+              <FileName>EC11Encoder.C</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\..\FWLIB\Lib\PHY\EC11Encoder.C</FilePath>
             </File>
           </Files>
         </Group>
@@ -51210,6 +51430,11 @@
               <FileType>1</FileType>
               <FilePath>..\..\..\..\FWLIB\Lib\PHY\TM1618.C</FilePath>
             </File>
+            <File>
+              <FileName>EC11Encoder.C</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\..\FWLIB\Lib\PHY\EC11Encoder.C</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -52386,6 +52611,11 @@
               <FileType>1</FileType>
               <FilePath>..\..\..\..\FWLIB\Lib\PHY\TM1618.C</FilePath>
             </File>
+            <File>
+              <FileName>EC11Encoder.C</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\..\FWLIB\Lib\PHY\EC11Encoder.C</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -53497,6 +53727,11 @@
               <FileName>TM1618.C</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\..\..\FWLIB\Lib\PHY\TM1618.C</FilePath>
+            </File>
+            <File>
+              <FileName>EC11Encoder.C</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\..\FWLIB\Lib\PHY\EC11Encoder.C</FilePath>
             </File>
           </Files>
         </Group>
