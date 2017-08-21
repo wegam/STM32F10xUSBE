@@ -1238,10 +1238,9 @@ void USM_BSP_PROCESS(BSP_Conf_TypeDef *BSP_Conf)
 	if(BSP_Conf->BSPM_Info.BSP_MASTER_STATUS==BSP_MSTATUS_IDLE)
 	{
 		BSP_Conf->BSPM_Info.BSP_MASTER_STATUS=BSP_MSTATUS_ResetDevice;
-	}	
+	}
 
 	USM_BSP_GetAck(BSP_Conf);				//»ñÈ¡´Ó»úÓ¦´ð	
-	
 	
 	USM_BSP_RESET(BSP_Conf);			//¸´Î»´Ó»ú
 	USM_BSP_Connect(BSP_Conf);		//Á¬½Ó´Ó»ú---¼ä¸ô5msÁ¬½Ó·¢ËÍ0x7F£¬ÈÃ´Ó»úÊ¶±ð²¨ÌØÂÊ
@@ -1249,8 +1248,7 @@ void USM_BSP_PROCESS(BSP_Conf_TypeDef *BSP_Conf)
 	USM_BSP_Get(BSP_Conf);				//»ñÈ¡µ±Ç°×Ô¾Ù³ÌÐò°æ±¾¼°ÔÊÐíÊ¹ÓÃµÄÃüÁî
 	USM_BSP_GetVR(BSP_Conf);			//»ñÈ¡×Ô¾Ù³ÌÐò°æ±¾¼° Flash µÄ¶Á±£»¤×´Ì¬
 	USM_BSP_GetId(BSP_Conf);			//»ñÈ¡Ð¾Æ¬ ID
-	USM_BSP_EraseMemory(BSP_Conf);			//²Á³ýÒ»¸öµ½È«²¿ Flash Ò³Ãæ
-	
+	USM_BSP_EraseMemory(BSP_Conf);			//²Á³ýÒ»¸öµ½È«²¿ Flash Ò³Ãæ	
 	
 	BSP_SendBuffer(BSP_Conf);				//Í¨¹ý´®¿Ú·¢ËÍÊý¾Ý£¬µ±¼ì²âµ½USARTSendLen²»Îª0Ê±×Ô¶¯·¢ËÍ
 }
@@ -1557,6 +1555,14 @@ void USM_BSP_Go(BSP_Conf_TypeDef *BSP_Conf)		//Ìø×ªµ½ÄÚ²¿ Flash »ò SRAM ÄÚµÄÓ¦ÓÃ
 *******************************************************************************/
 void USM_BSP_WriteMemory(BSP_Conf_TypeDef *BSP_Conf)		//´ÓÓ¦ÓÃ³ÌÐòÖ¸¶¨µÄµØÖ·¿ªÊ¼½«×î¶à 256 ¸ö×Ö½ÚµÄÊý¾ÝÐ´Èë RAM »ò Flash
 {
+	if(USM_BSP_GetStatus(BSP_Conf)==BSP_MSTATUS_WriteWM)	//BSPÖ÷»ú·¢ËÍÐ´ÃüÁî£¬Write Memory:´ÓÓ¦ÓÃ³ÌÐòÖ¸¶¨µÄµØÖ·¿ªÊ¼½«×î¶à 256 ¸ö×Ö½ÚµÄÊý¾ÝÐ´Èë RAM »ò Flash---ÐèÒªÓ¦´ð
+	{
+		BSP_Conf->BSP_DATA.TimeCount++;
+	}
+	else
+	{
+		return;
+	}
 
 }
 /*******************************************************************************
@@ -1599,7 +1605,7 @@ void USM_BSP_EraseMemory(BSP_Conf_TypeDef *BSP_Conf)		//²Á³ýÒ»¸öµ½È«²¿ Flash Ò³Ã
 	{
 		if(BSP_Conf->BSPM_Info.ACK2!=BSP_ACK)
 		{
-			USM_BSP_SendCommand(BSP_Conf,BSP_COMMAND_Erase);	//´®¿Ú±à³Ì·¢ËÍÃüÁî³ÌÐò
+			USM_BSP_SendCommand(BSP_Conf,BSP_COMMAND_Erase);	//´®¿Ú±à³Ì·¢ËÍÃüÁî³ÌÐò---²Á³ýÃüÁî
 		}
 		else
 		{
@@ -1615,25 +1621,25 @@ void USM_BSP_EraseMemory(BSP_Conf_TypeDef *BSP_Conf)		//²Á³ýÒ»¸öµ½È«²¿ Flash Ò³Ã
 		{
 			USM_BSP_SetStatus(BSP_Conf,BSP_MSTATUS_ERROR);		//¸üÐÂ×´Ì¬---µÈ´ýÊÍ·Å´Ó»ú
 		}	
-		BSP_Conf->BSP_DATA.TimeCount=0;				//Çå³ý¼ÆÊý		
+		BSP_Conf->BSP_DATA.TimeCount=0;				//Çå³ý¼ÆÊý--ÖØÐÂ¿ªÊ±½øÈë²Á³ý²Ù×÷		
 	}
-	else
+	else	//ÒÔÏÂ¹ý³ÌÎª²»¶Ï¼ì²âÓ¦´ð±êÖ¾---USM_BSP_GetAck(BSP_Conf);	//»ñÈ¡´Ó»úÓ¦´ð
 	{
-		if(BSP_Conf->BSPM_Info.ACK==BSP_ACK)
+		if(BSP_Conf->BSPM_Info.ACK==BSP_ACK)		//µÈ´ýÓ¦´ð
 		{	
-			if(BSP_Conf->BSPM_Info.ACK2!=BSP_ACK)
+			if(BSP_Conf->BSPM_Info.ACK2!=BSP_ACK)	//µÚ¶þ´ÎÎ´ÉèÖÃÓ¦´ð±êÖ¾£¬±íÊ¾ÎªµÚÒ»´ÎÓ¦´ð
 			{
 				BSP_Conf->BSP_DATA.TimeCount=0;		//Çå³ý¼ÆÊý
 				BSP_Conf->BSP_DATA.RetryTimes=0;	//ÖØÊÔ¼ÆÊýÇåÁã
-				BSP_Conf->BSPM_Info.ACK=BSP_NACK;	//Çå³ýÓ¦´ð±êÖ¾
-				BSP_Conf->BSPM_Info.ACK2=BSP_ACK;	//
+				BSP_Conf->BSPM_Info.ACK=BSP_NACK;	//Çå³ýÓ¦´ð±êÖ¾--Ó¦´ð¼ì²â±êÖ¾
+				BSP_Conf->BSPM_Info.ACK2=BSP_ACK;	//´æ´¢ÉÏ´ÎÓ¦´ð±êÖ¾
 			}
-			else
+			else		//¼ì²âµ½µÚ¶þ´Î³É¹¦Ó¦´ð£¬±íÊ¾´ËÏî³É¹¦Íê³É
 			{
 				USM_BSP_SetStatus(BSP_Conf,BSP_MSTATUS_WriteWM);		//¸üÐÂ×´Ì¬---µÈ´ýÊÍ·Å´Ó»ú
-				BSP_Conf->BSP_DATA.TimeCount=0;		//Çå³ý¼ÆÊý
-				BSP_Conf->BSP_DATA.RetryTimes=0;	//ÖØÊÔ¼ÆÊýÇåÁã
-				BSP_Conf->BSPM_Info.ACK=BSP_NACK;	//Çå³ýÓ¦´ð±êÖ¾
+				BSP_Conf->BSP_DATA.TimeCount=0;			//Çå³ý¼ÆÊý
+				BSP_Conf->BSP_DATA.RetryTimes=0;		//ÖØÊÔ¼ÆÊýÇåÁã
+				BSP_Conf->BSPM_Info.ACK=BSP_NACK;		//Çå³ýÓ¦´ð±êÖ¾
 				BSP_Conf->BSPM_Info.ACK2=BSP_NACK;	//Çå³ýÓ¦´ð±êÖ¾
 			}			
 		}		
@@ -1733,6 +1739,17 @@ void USM_BSP_SendBuffer(BSP_Conf_TypeDef *BSP_Conf)						//·¢ËÍº¯Êý°üÀ¨´Ó»ú·¢ËÍÓ
 		BSP_Conf->BSP_DATA.USARTSendLen=0;
 	}
 }
+
+
+
+
+
+
+
+
+
+
+
 
 
 

@@ -6,10 +6,10 @@
 
 typedef enum	_EC11_Status
 {
-	IDLE=	0,						//无触发
-	Button,							//按键
-	ClockWise,					//CW顺时针信号
-	AntiClockWise				//CCW逆时针信号
+	EC11_IDLE=	0,						//无触发
+	EC11_Button,							//按键
+	EC11_ClockWise,					//CW顺时针信号
+	EC11_AntiClockWise				//CCW逆时针信号
 }EC11_StatusTypeDef;				//编码器输出值
 
 
@@ -26,12 +26,12 @@ typedef struct	_EC11_Pin			//输入参数按1us时间计算
 	GPIO_TypeDef* 	EC11_B_PORT;					//GPIOX
 	unsigned short 	EC11_B_Pin;						//GPIO_Pin_x
 
-	unsigned	char	LongPressFlag;				//长按标志，LongPressFlag=0表示每次只允许一次按压，长按只当一次，LongPressFlag=1；长按达到LongPressStartTime时间后表示长按，后面每计时达到LongPressEffectiveTime后按键次数增加一次
-	unsigned 	int		LongPressStartTime;				//长按有效起始时间--LongPressStartTime计时到有效时间表示按键有效
-	unsigned 	int		LongPressEffectiveTime;		//按键有效时间--ButtonTimeCount计时到有效时间表示按键有效
+	unsigned	char	LongPressFlag;						//长按标志，LongPressFlag=0表示每次只允许一次按压，长按只当一次，LongPressFlag=1；长按达到LongPressStartTime时间后表示长按，后面每计时达到LongPressEffectiveTime后按键次数增加一次
+	unsigned 	int		LongPressStartTime;				//长按有效起始时间--LongPressStartTime计时到有效时间表示按键有效，长按3秒生效
+	unsigned 	int		LongPressEffectiveTime;		//长按按键单步有效时间--ButtonTimeCount计时到有效时间表示按键有效0.2秒返回一个有效按键
 	
-	unsigned 	int		ButtonEffectiveTime;	//按键有效时间--ButtonTimeCount计时到有效时间表示按键有效---默认干扰时间10us
-	unsigned 	int		EncoderEffectiveTime;	//编码器有效时间---默认干扰时间10us
+	unsigned 	int		ButtonEffectiveTime;		//按键有效时间--ButtonTimeCount计时到有效时间表示按键有效---默认干扰时间10us
+	unsigned 	int		EncoderEffectiveTime;		//编码器有效时间---默认干扰时间10us
 	
 	//不需要配置参数
 	unsigned	char	ButtonActiveFlag;			//按键有效标志----针对单次按键,ButtonActiveFlag==0;按键时长未到，按键无效，ButtonActiveFlag==1，按键有效，ButtonTimeCount不再计时，防止溢出
@@ -43,9 +43,8 @@ typedef struct	_EC11_Pin			//输入参数按1us时间计算
 }EC11_ConfTypeDef;
 
 
-//void TM1618_PinConf(TM1618_Pindef *Pinfo);
-//void TM1618_WriteData(TM1618_Pindef *Pinfo,u16 Data);
-//void TM1618_WriteDataN(TM1618_Pindef *Pinfo,u16 Data);		//反向信号写入
+void EC11_PinConf(EC11_ConfTypeDef *EC11_Conf);
+EC11_StatusTypeDef EC11_GetStatus(EC11_ConfTypeDef *EC11_Conf);
 
 
 #endif

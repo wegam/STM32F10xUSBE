@@ -16,6 +16,10 @@
 
 #include "stm32f10x_flash.h" //flash操作接口文件（在库文件中），必须要包含 
 
+#include "EC11Encoder.H"
+
+#define	N20170821		//编码器使用封装库形式使用
+
 
 #define	STARTADDR 0x08010400 	//STM32F103RB 其他型号基本适用，未测试
 #define	InfoAddr		5000	//20*1024+0x08010400		//存储有效起始地址信息（FLASH块坏了后切换地址）
@@ -25,6 +29,8 @@ u32	UsedAddr;		//备份数据存储起始基地址
 
 
 FLASH_Status	FLASHStatus;
+EC11_ConfTypeDef	EC11_Conf;
+EC11_StatusTypeDef	EC11_Status;
 
 
 u32	BackUpPage=0;
@@ -57,7 +63,9 @@ u8 RxNum=0;
 
 void CheckFlash(void);
 void WriteBackUp(void);	//先对比数据，如果数据不同再重新备份数据
+void EC11_Configuration(void);			//N20170821		//编码器使用封装库形式使用
 void PWM_ECODE(void);		//编码器
+void PWM_ECODE2(void);	//---旧版本
 void USART_UCODE(void);	//通过串口设置时间比
 u32 ReadFlashNBtye(u32 ReadAddress, u8 *ReadBuf, u32 ReadNum);
 void WriteFlashOneWord(u32 WriteAddress,u32 WriteData);
@@ -79,10 +87,13 @@ void PWM_LED_Configuration(void)
 	PWM_OUT2(TIM3,PWM_OUTChannel3,1200,0);		//PWM设定
 	PWM_OUT2(TIM3,PWM_OUTChannel4,1200,0);		//PWM设定
 
-	
-	GPIO_Configuration_IPU(GPIOB,	GPIO_Pin_12);			//将GPIO相应管脚配置为上拉输入模式----V20170605--BUTTON
-	GPIO_Configuration_IPU(GPIOB,	GPIO_Pin_13);			//将GPIO相应管脚配置为上拉输入模式----V20170605--A
-	GPIO_Configuration_IPU(GPIOB,	GPIO_Pin_14);			//将GPIO相应管脚配置为上拉输入模式----V20170605--B
+	#ifdef N20170821		//编码器使用封装库形式使用
+		EC11_Configuration();			//N20170821		//编码器使用封装库形式使用
+	#else
+		GPIO_Configuration_IPU(GPIOB,	GPIO_Pin_12);			//将GPIO相应管脚配置为上拉输入模式----V20170605--BUTTON
+		GPIO_Configuration_IPU(GPIOB,	GPIO_Pin_13);			//将GPIO相应管脚配置为上拉输入模式----V20170605--A
+		GPIO_Configuration_IPU(GPIOB,	GPIO_Pin_14);			//将GPIO相应管脚配置为上拉输入模式----V20170605--B
+	#endif
 	
 	USART_DMA_ConfigurationNR	(USART1,115200,(u32*)RxdBuffer,RxBufferSize);	//USART_DMA配置--查询方式，不开中断	
 	
@@ -139,6 +150,28 @@ void PWM_LED_Server(void)
 	PWM_ECODE();			//编码器
 	
 }
+/*******************************************************************************
+*函数名			:	function
+*功能描述		:	函数功能说明
+*输入				: 
+*返回值			:	无
+*******************************************************************************/
+void EC11_Configuration(void)			//N20170821		//编码器使用封装库形式使用
+{
+	EC11_Conf.EC11_Button_PORT=GPIOB;
+	EC11_Conf.EC11_Button_Pin=GPIO_Pin_12;
+	EC11_Conf.EC11_A_PORT=GPIOB;
+	EC11_Conf.EC11_A_Pin=GPIO_Pin_13;
+	EC11_Conf.EC11_B_PORT=GPIOB;
+	EC11_Conf.EC11_B_Pin=GPIO_Pin_14;
+	
+	EC11_Conf.LongPressFlag=0;//长按标志，LongPressFlag=0表示每次只允许一次按压，长按只当一次，LongPressFlag=1；长按达到LongPressStartTime时间后表示长按，后面每计时达到LongPressEffectiveTime后按键次数增加一次
+	EC11_Conf.ButtonEffectiveTime=1000;		//0.1秒表示按键有效
+	EC11_Conf.EncoderEffectiveTime=5;				//0.5ms表示有效
+	
+	EC11_PinConf(&EC11_Conf);
+}
+
 /*******************************************************************************
 *函数名			:	function
 *功能描述		:	函数功能说明
@@ -305,6 +338,126 @@ void USART_UCODE(void)		//通过串口设置时间比
 * 返回值			: void
 *******************************************************************************/
 void PWM_ECODE(void)
+{
+	#ifdef N20170821		//编码器使用封装库形式使用
+	EC11_Status=EC11_GetStatus(&EC11_Conf);
+	
+	if(EC11_Status==EC11_Button)		//按键时间大于50ms才有效
+	{
+		TimeSave=0;					//10秒更新一次备份数据
+		ButtonFlag=1;				//防止长按
+		
+		STEP=((STEP/((StepMax-1)/10))*((StepMax-1)/10));	//1200  12		//STEP转换成10%的倍数值	120的倍数
+		STEP=STEP+(StepMax-1)/10;	//1200  12
+		
+		if(STEP>StepMax)
+		{
+			STEP=0;
+		}
+
+		SetDuty();	//设置比较时间
+		Npow=(double)PWM_Count/StepLen;
+		USART_DMAPrintf(USART1,"当前输出比:%5d/60000；\t步数:%7d/1200；\t 占空比：%7.3f%%\r\n",PWM_Count,STEP,Npow/1200*100);					//自定义printf串口DMA发送程序,后边的省略号就是可变参数	
+	}
+	else if(EC11_Status==EC11_ClockWise)
+	{
+		STEP=PWM_Count/StepLen;
+		
+		if(STEP<StepMax-1)
+			STEP+=1;
+
+		SetDuty();	//设置比较时间				
+		Npow=(double)((PWM_Count/60000.0)*100);
+		
+		USART_DMAPrintf(USART1,"当前输出比:%5d/60000；\t步数:%7d/1200；\t 占空比：%7.3f%%\r\n",PWM_Count,STEP,(double)Npow);					//自定义printf串口DMA发送程序,后边的省略号就是可变参数		
+	}
+	else if(EC11_Status==EC11_AntiClockWise)
+	{
+		if(STEP>0)
+			STEP-=1;	
+		SetDuty();	//设置比较时间				
+		Npow=(double)((PWM_Count/60000.0)*100);
+		
+		USART_DMAPrintf(USART1,"当前输出比:%5d/60000；\t步数:%7d/1200；\t 占空比：%7.3f%%\r\n",PWM_Count,STEP,(double)Npow);					//自定义printf串口DMA发送程序,后边的省略号就是可变参数	
+	}
+	#else
+	//-----------------------按键****旋钮时按键无效
+	if(PB12in==0&&ECountA==0&&ECountB==0)			//EXTI_GetFlagStatus(u32 EXTI_Line);//PA6in==0
+	{
+		if(ButtonFlag==0)
+		{
+			ButtonCount++;	//按键计时
+			if(ButtonCount>=500)		//按键时间大于50ms才有效
+			{
+				TimeSave=0;					//10秒更新一次备份数据
+				ButtonFlag=1;				//防止长按
+				
+				STEP=((STEP/((StepMax-1)/10))*((StepMax-1)/10));	//1200  12		//STEP转换成10%的倍数值	120的倍数
+				STEP=STEP+(StepMax-1)/10;	//1200  12
+				
+				if(STEP>StepMax)
+				{
+					STEP=0;
+				}
+
+				SetDuty();	//设置比较时间
+				Npow=(double)PWM_Count/StepLen;
+				USART_DMAPrintf(USART1,"当前输出比:%5d/60000；\t步数:%7d/1200；\t 占空比：%7.3f%%\r\n",PWM_Count,STEP,Npow/1200*100);					//自定义printf串口DMA发送程序,后边的省略号就是可变参数	
+			}
+		}
+	}
+	else
+	{
+		ButtonCount=0;	//按键计时
+		ButtonFlag=0;
+	}
+	//-----------------------旋钮****按键时旋钮无效
+	if(PB13in==0&&ECountA<0xFF&&ECountB<0xFF&&ButtonCount==0)			//EXTI_GetFlagStatus(u32 EXTI_Line);//PA6in==0
+	{
+		ECountA++;
+	}
+	if(PB14in==0&&ECountA<0xFF&&ECountB<0xFF&&ButtonCount==0)
+	{
+		ECountB++;
+	}
+	if((PB13in&&PB14in)&&(ECountB>5&&ECountA>5))	//旋钮都在空置状态，并且计时大于1ms，防止干扰，旋钮才有效
+	{
+		TimeSave=0;					//10秒更新一次备份数据
+		STEP=PWM_Count/StepLen;
+		if(ECountA>ECountB)
+		{
+			if(STEP<StepMax-1)
+				STEP+=1;
+		}
+		else
+		{
+			if(STEP>0)
+				STEP-=1;
+		}
+		
+		SetDuty();	//设置比较时间	
+			
+		Npow=(double)((PWM_Count/60000.0)*100);
+		
+		USART_DMAPrintf(USART1,"当前输出比:%5d/60000；\t步数:%7d/1200；\t 占空比：%7.3f%%\r\n",PWM_Count,STEP,(double)Npow);					//自定义printf串口DMA发送程序,后边的省略号就是可变参数					
+
+		ECountA=0;
+		ECountB=0;
+	}
+	else if(PB13in&&PB14in)		//编码器AB两脚都为空置(高电平)状态，则表示编码器在空闲状态，清除计时
+	{
+		ECountA=0;
+		ECountB=0;
+	}
+	#endif
+}
+/*******************************************************************************
+* 函数名			:	function
+* 功能描述		:	函数功能说明 
+* 输入			: void
+* 返回值			: void
+*******************************************************************************/
+void PWM_ECODE2(void)
 {
 	//-----------------------按键****旋钮时按键无效
 	if(PB12in==0&&ECountA==0&&ECountB==0)			//EXTI_GetFlagStatus(u32 EXTI_Line);//PA6in==0

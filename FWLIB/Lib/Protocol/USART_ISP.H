@@ -374,9 +374,9 @@ typedef enum _BSP_MASTER_STATUS		//BSP状态标志---工作在主机状态时
 	BSP_MSTATUS_WriteGet,				//Get命令,获取当前自举程序版本及允许使用的命令
 	BSP_MSTATUS_WriteGetVR,			//Get Version & Read Protection Status:获取自举程序版本及 Flash 的读保护状态
 	BSP_MSTATUS_WriteGetID,			//Get ID:获取芯片 ID
-	BSP_MSTATUS_WriteRM,				//BSP主机发送读命令--主要为校验写入的数据，Read Memory:从应用程序指定的地址开始读取最多 256 个字节的存储器空间
+	BSP_MSTATUS_WriteRM,				//BSP主机发送读命令--主要为校验写入的数据可可以在写入前检测有无读写保护，Read Memory:从应用程序指定的地址开始读取最多 256 个字节的存储器空间
 	BSP_MSTATUS_WriteErase,			//BSP主机写擦除命令---需要应答
-	BSP_MSTATUS_WriteWM,					//BSP主机发送写命令，Write Memory:从应用程序指定的地址开始将最多 256 个字节的数据写入 RAM 或 Flash---需要应答
+	BSP_MSTATUS_WriteWM,				//BSP主机发送写命令，Write Memory:从应用程序指定的地址开始将最多 256 个字节的数据写入 RAM 或 Flash---需要应答
 	BSP_MSTATUS_Connectted,			//BSP主机与从机已经连接完成
 	BSP_MSTATUS_WriteUnprotect,	//禁止所有Flash扇区的写保护
 	BSP_MSTATUS_WaitUnprotect,	//等待禁用Flash扇区写保护操作完成
