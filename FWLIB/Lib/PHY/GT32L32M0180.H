@@ -161,7 +161,7 @@ typedef struct	_GT32L32_Pin
 	//____________SPI_波特率
 	unsigned short 	SPI_BaudRatePrescaler_x;		//x=2/4/8/16/32/64/128/256
 	
-}GT32L32_Init_TypeDef;
+}GT32L32_Port_TypeDef;
 
 //----字符点阵字库基地址表------------------------------------------------------------
 typedef enum
@@ -209,11 +209,11 @@ typedef enum
 	BarCode_BaseAddr_12x27			=	(u32)0x478FD2,			//12x27条形码字符 EAN13
 	BarCode_BaseAddr_16x20			=	(u32)0x479C7A,			//16x20条形码字符 CODE128
 	
-	AntennaCode_BaseAddr_12X12	=(u32)0x47AD32,				//12x12天线符号
-	BatteryCode_BaseAddr_12X12	=(u32)0x47ADAA,				//12x12电池符号
+	AntennaCode_BaseAddr_12X12	=	(u32)0x47AD32,			//12x12天线符号
+	BatteryCode_BaseAddr_12X12	=	(u32)0x47ADAA,			//12x12电池符号
 	
-	Reserved_BaseAddr_LSB				=(u32)0x7F8760,				//保留区低地址
-	Reserved_BaseAddr_MSB				=(u32)0x7FFFFF,				//保留区高地址		
+	Reserved_BaseAddr_LSB				=	(u32)0x7F8760,			//保留区低地址
+	Reserved_BaseAddr_MSB				=	(u32)0x7FFFFF,			//保留区高地址		
 }	GT32L32_BaseAddr_TypeDef;		//字符点阵字库基地址表
 //----错误列表------------------------------------------------------------
 typedef enum
@@ -223,63 +223,46 @@ typedef enum
 	GT32L32_Error_ASCIICode			=	(u8)0x02,			//ASCII码错误
 	GT32L32_Error_HzEmp					=	(u8)0x03,			//汉字内码低8位为0x7F,为空内容
 	
-}	GT32L32_Error_TypeDef;		//错误代码列表
+}	GT32L32_Status_TypeDef;		//错误代码列表
+//----数据结构体------------------------------------------------------------
+typedef struct      /*Card Identification Data*/
+{
+	GT32L32_BaseAddr_TypeDef		GT32L32_BaseAddr;		//字符点阵字库基地址表
+	u32	GT32L32_Address;													//字符地址
+	unsigned char	GT32L32_Buffer[200];														//点阵数据
+	u8	GT32L32_BufferSize;												//点阵数据长度
+} GT32L32_Data_TypeDef;
 //----消息结构体------------------------------------------------------------
 typedef struct      /*Card Identification Data*/
 {
-	GT32L32_BaseAddr_TypeDef	GT32L32_BaseAddr;		//字符点阵字库基地址表
-	GT32L32_Error_TypeDef			GT32L32_Error;			//错误列表
-	u32	GT32L32_Address;													//字符地址
-	u8	GT32L32_BufferSize;												//点阵数据长度
+	GT32L32_Port_TypeDef				GT32L32_Port;				//SPI接口引脚结构体	
+	GT32L32_Status_TypeDef			GT32L32_Status;			//错误列表
+	GT32L32_Data_TypeDef				GT32L32_Data;
+//	u32	GT32L32_Address;													//字符地址
+//	u32	GT32L32_Buffer;														//点阵数据
+//	u8	GT32L32_BufferSize;												//点阵数据长度
 } GT32L32_Info_TypeDef;
 /* Exported macro ------------------------------------------------------------*/
 
 
 /* Exported functions ------------------------------------------------------- */
 
-void 	GT32L32_ConfigurationNR(GT32L32_Init_TypeDef *GT32L32_Init);				//普通SPI通讯方式配置
-void 	GT32L32_DMA_ConfigurationNR(GT32L32_Init_TypeDef *GT32L32_Init);		//SPI-DMA通讯方式配置---20170722未完成
-u8 GT32L32_ReadStatus(GT32L32_Init_TypeDef *GT32L32_Init);								//读取芯片状态
+void 	GT32L32_ConfigurationNR(GT32L32_Info_TypeDef *GT32L32_Info);				//普通SPI通讯方式配置
+void 	GT32L32_DMA_ConfigurationNR(GT32L32_Info_TypeDef *GT32L32_Info);		//SPI-DMA通讯方式配置---20170722未完成
+u8 GT32L32_ReadStatus(GT32L32_Info_TypeDef *GT32L32_Info);								//读取芯片状态
 
 
-void 	GT32L32_PinConf(GT32L32_Init_TypeDef *GT32L32_Init);
+void 	GT32L32_PinConf(GT32L32_Info_TypeDef *GT32L32_Info);
 void	GT32L32_Server(void);
 
 
-u8  GT32L32_GetDig_Info(u8 Sequence,GT32L32_Info_TypeDef *GT32L32_Info);			//点阵数字符号字符
-u8  GT32L32_GetASCII_Info(u8 ASCIICode,GT32L32_Info_TypeDef *GT32L32_Info);		//ASCII字符信息
-u8	GT32L32_GetGB18030_Info(u16 word,GT32L32_Info_TypeDef *GT32L32_Info);			//GB18030汉字&字符信息
-u8 	GT32L32_Get_Info(u16 word,GT32L32_Info_TypeDef *GT32L32_Info);						//获取字符地址和点阵长度
 
-
-
-u32 GT32L32_GetAddress(u8 font, u8 c1, u8 c2, u8 c3, u8 c4);//获取地址
-u32 GT32L32_GetBufferLen(u8 font, u8 c1, u8 c2, u8 c3, u8 c4);//获取长度
-u16  GT32L32_ReadBuffer(GT32L32_Init_TypeDef *GT32L32_Init,u8 font,u16 word,unsigned char *Buffer);		//从字库中读数据函数
-
-
-u32 GT32L32_GetGB18030_12(u8 c1, u8 c2, u8 c3, u8 c4);		//12x12点阵GB18030汉字&字符地址计算
-u32 GT32L32_GetGB18030_16(u8 c1, u8 c2, u8 c3, u8 c4);		//16x16点阵GB18030汉字&字符地址计算
-u32 GT32L32_GetGB18030_24(u8 c1, u8 c2, u8 c3, u8 c4);		//24x24点阵GB18030汉字&字符地址计算
-u32 GT32L32_GetGB18030_32(u8 c1, u8 c2, u8 c3, u8 c4);		//32x32点阵GB18030汉字&字符地址计算
-u32 GT32L32_GetBarCode_13(u8 * BAR_NUM);															//EAN13条形码调用程序
-u32 GT32L32_GetBarCode_128(u8	*BAR_NUM,u8	flag);											//GB/T 18347-2001(CODE128)条形码调用程序
-u32 GT32L32_GetAntennaCode_12X12(u8	NUM,u8 *GetBuffer);								//天线图标调用程序
-u32 GT32L32_GetBatteryCode_12X12(u8	NUM,u8 *GetBuffer);								//电池图标调用程序
-
-u16	GT32L32_U2G_13(u16 Unicode);																			//UNICODE转GBK码表映射算法,仅1&3字符区
-u32 GT32L32_UNICODE_To_GBK(u16 unicode,u8 *GetBuffer);								//UNICODE转GBK码表映射算法（不含符号区,转换全部双字节区） 
-u32 GT32L32_BIG5_To_GBK(u16 BIG5_Code,u8 *GetBuffer);									//BIG5转GBK转换算法
-
-
-
-
-u8 GT32L32_ReadStatus(GT32L32_Init_TypeDef *GT32L32_Init);																					//读取芯片状态
-void GT32L32_ChipErase(GT32L32_Init_TypeDef *GT32L32_Init);																					//探除用户区数据
-u8  GT32L32_ReadBufferbac(GT32L32_Init_TypeDef *GT32L32_Init,u32 address,u16 len,unsigned char *Buffer);		//从字库中读数据函数
+u8 GT32L32_ReadStatus(GT32L32_Info_TypeDef *GT32L32_Info);																					//读取芯片状态
+void GT32L32_ChipErase(GT32L32_Info_TypeDef *GT32L32_Info);																					//探除用户区数据
+u8  GT32L32_ReadBufferbac(GT32L32_Info_TypeDef *GT32L32_Info,u32 address,u16 len,unsigned char *Buffer);		//从字库中读数据函数
 u8  GT32L32_ReadWriteByte(u8 Data);		//读写一个字节
-void GT32L32_SendByte(GT32L32_Init_TypeDef *GT32L32_Init,u8 ByteData);		//发送一个字节数据,先发送高位
-u8 GT32L32_ReadByte(GT32L32_Init_TypeDef *GT32L32_Init);		//读一个字节,先读高位
+void GT32L32_SendByte(GT32L32_Info_TypeDef *GT32L32_Info,u8 ByteData);		//发送一个字节数据,先发送高位
+u8 GT32L32_ReadByte(GT32L32_Info_TypeDef *GT32L32_Info);		//读一个字节,先读高位
 
 
 

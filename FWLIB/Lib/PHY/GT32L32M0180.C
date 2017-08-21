@@ -58,13 +58,38 @@ u8 UseSPI2_flg=0;		//如果使用纯硬件SPI2（含CS脚），UseSPI2_flg=1，否则UseSPI2_fl
 u8 UseSPI3_flg=0;		//如果使用纯硬件SPI3（含CS脚），UseSPI3_flg=1，否则UseSPI3_flg=0；
 
 
-void GT32L32_CS_DisSelect(GT32L32_Init_TypeDef *GT32L32_Init);
-void GT32L32_CS_Select(GT32L32_Init_TypeDef *GT32L32_Init);
-void GT32L32_CLK_L(GT32L32_Init_TypeDef *GT32L32_Init);
-void GT32L32_CLK_H(GT32L32_Init_TypeDef *GT32L32_Init);
-void GT32L32_SI_L(GT32L32_Init_TypeDef *GT32L32_Init);
-void GT32L32_SI_H(GT32L32_Init_TypeDef *GT32L32_Init);
-u8 GT32L32_SO(GT32L32_Init_TypeDef *GT32L32_Init);
+void GT32L32_CS_DisSelect(GT32L32_Info_TypeDef *GT32L32_Info);
+void GT32L32_CS_Select(GT32L32_Info_TypeDef *GT32L32_Info);
+void GT32L32_CLK_L	(GT32L32_Info_TypeDef *GT32L32_Info);
+void GT32L32_CLK_H	(GT32L32_Info_TypeDef *GT32L32_Info);
+void GT32L32_SI_L		(GT32L32_Info_TypeDef *GT32L32_Info);
+void GT32L32_SI_H		(GT32L32_Info_TypeDef *GT32L32_Info);
+u8 GT32L32_SO				(GT32L32_Info_TypeDef *GT32L32_Info);
+
+
+//---------私有函数
+u8  GT32L32_GetDig_Info(u8 Sequence,GT32L32_Info_TypeDef *GT32L32_Info);			//点阵数字符号字符
+u8  GT32L32_GetASCII_Info(u8 ASCIICode,GT32L32_Info_TypeDef *GT32L32_Info);		//ASCII字符信息
+u8	GT32L32_GetGB18030_Info(u16 word,GT32L32_Info_TypeDef *GT32L32_Info);			//GB18030汉字&字符信息
+u8 	GT32L32_Get_Info(u16 word,GT32L32_Info_TypeDef *GT32L32_Info);						//获取字符地址和点阵长度
+
+u32 GT32L32_GetAddress(u8 font, u8 c1, u8 c2, u8 c3, u8 c4);//获取地址
+u32 GT32L32_GetBufferLen(u8 font, u8 c1, u8 c2, u8 c3, u8 c4);//获取长度
+u16  GT32L32_ReadBuffer(GT32L32_Info_TypeDef *GT32L32_Info,u8 font,u16 word,unsigned char *Buffer);		//从字库中读数据函数
+
+u32 GT32L32_GetGB18030_12(u8 c1, u8 c2, u8 c3, u8 c4);		//12x12点阵GB18030汉字&字符地址计算
+u32 GT32L32_GetGB18030_16(u8 c1, u8 c2, u8 c3, u8 c4);		//16x16点阵GB18030汉字&字符地址计算
+u32 GT32L32_GetGB18030_24(u8 c1, u8 c2, u8 c3, u8 c4);		//24x24点阵GB18030汉字&字符地址计算
+u32 GT32L32_GetGB18030_32(u8 c1, u8 c2, u8 c3, u8 c4);		//32x32点阵GB18030汉字&字符地址计算
+
+u32 GT32L32_GetBarCode_13(u8 * BAR_NUM);															//EAN13条形码调用程序
+u32 GT32L32_GetBarCode_128(u8	*BAR_NUM,u8	flag);											//GB/T 18347-2001(CODE128)条形码调用程序
+u32 GT32L32_GetAntennaCode_12X12(u8	NUM,u8 *GetBuffer);								//天线图标调用程序
+u32 GT32L32_GetBatteryCode_12X12(u8	NUM,u8 *GetBuffer);								//电池图标调用程序
+
+u16	GT32L32_U2G_13(u16 Unicode);																			//UNICODE转GBK码表映射算法,仅1&3字符区
+u32 GT32L32_UNICODE_To_GBK(u16 unicode,u8 *GetBuffer);								//UNICODE转GBK码表映射算法（不含符号区,转换全部双字节区） 
+u32 GT32L32_BIG5_To_GBK(u16 BIG5_Code,u8 *GetBuffer);									//BIG5转GBK转换算法
 
 /*******************************************************************************
 *函数名			:	function
@@ -72,24 +97,24 @@ u8 GT32L32_SO(GT32L32_Init_TypeDef *GT32L32_Init);
 *输入				: 
 *返回值			:	无
 *******************************************************************************/
-void GT32L32_ConfigurationNR(GT32L32_Init_TypeDef *GT32L32_Init)
+void GT32L32_ConfigurationNR(GT32L32_Info_TypeDef *GT32L32_Info)
 {
 		//1)**********定义相关结构体
 	SPI_InitTypeDef  SPI_InitStructure;
 	GPIO_InitTypeDef GPIO_InitStructure;
 
 	//2)**********相关GPIO配置
-	if(GT32L32_Init->sSPIx==SPI1)
+	if(GT32L32_Info->GT32L32_Port.sSPIx==SPI1)
 	{
 		//PA4-NSS;PA5-SCK;PA6-MISO;PA7-MOSI;
 		//2.1)**********打开SPI时钟	
 		RCC_APB2PeriphClockCmd(RCC_APB2Periph_SPI1 ,ENABLE);			//开启SPI时钟	
 		RCC_APB2PeriphClockCmd(RCC_APB2Periph_AFIO|RCC_APB2Periph_GPIOA, ENABLE);	
 		
-		if((GT32L32_Init->sGT32L32_CS_PORT==GPIOA)&&(GT32L32_Init->sGT32L32_CS_PIN==GPIO_Pin_4))			//如果SPI_NSS为SPI_NSS_Soft（软件控制方式）
+		if((GT32L32_Info->GT32L32_Port.sGT32L32_CS_PORT==GPIOA)&&(GT32L32_Info->GT32L32_Port.sGT32L32_CS_PIN==GPIO_Pin_4))			//如果SPI_NSS为SPI_NSS_Soft（软件控制方式）
 		{
 //			SPI_SSOutputCmd(Pinfo->sSPIx, ENABLE);			//如果在主机模式下的片选方式为硬件（SPI_NSS_Hard）方式，此处必须打开，否则NSS无信号
-			u8 UseSPI1_flg=1;		//如果使用纯硬件SPI1（含CS脚），UseSPI1_flg=1，否则UseSPI1_flg=0；
+//			u8 UseSPI1_flg=1;		//如果使用纯硬件SPI1（含CS脚），UseSPI1_flg=1，否则UseSPI1_flg=0；
 			GPIO_InitStructure.GPIO_Pin = GPIO_Pin_4 | GPIO_Pin_5 | GPIO_Pin_6 | GPIO_Pin_7;
 			GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;
 			GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
@@ -98,20 +123,20 @@ void GT32L32_ConfigurationNR(GT32L32_Init_TypeDef *GT32L32_Init)
 		else
 		{
 //			SPI_SSOutputCmd(Pinfo->sSPIx, DISABLE);			//如果在主机模式下的片选方式为硬件（SPI_NSS_Hard）方式，此处必须打开，否则NSS无信号
-			u8 UseSPI1_flg=0;		//如果使用纯硬件SPI1（含CS脚），UseSPI1_flg=1，否则UseSPI1_flg=0；
+//			u8 UseSPI1_flg=0;		//如果使用纯硬件SPI1（含CS脚），UseSPI1_flg=1，否则UseSPI1_flg=0；
 			//开CS-GPIO时钟
-			if(GT32L32_Init->sGT32L32_CS_PORT==GPIOA)
+			if(GT32L32_Info->GT32L32_Port.sGT32L32_CS_PORT==GPIOA)
 			{
-				if((GT32L32_Init->sGT32L32_CS_PIN==GPIO_Pin_13)||(GT32L32_Init->sGT32L32_CS_PIN==GPIO_Pin_14)||(GT32L32_Init->sGT32L32_CS_PIN==GPIO_Pin_15))
+				if((GT32L32_Info->GT32L32_Port.sGT32L32_CS_PIN==GPIO_Pin_13)||(GT32L32_Info->GT32L32_Port.sGT32L32_CS_PIN==GPIO_Pin_14)||(GT32L32_Info->GT32L32_Port.sGT32L32_CS_PIN==GPIO_Pin_15))
 				{
 					RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA|RCC_APB2Periph_AFIO, ENABLE);
 					//GPIO_PinRemapConfig(GPIO_Remap_SWJ_Disable,ENABLE);			//关闭SW功能
 					GPIO_PinRemapConfig(GPIO_Remap_SWJ_JTAGDisable,ENABLE);		//关闭JTAG,SW功能开启
 				}
 			}
-			else if(GT32L32_Init->sGT32L32_CS_PORT==GPIOB)
+			else if(GT32L32_Info->GT32L32_Port.sGT32L32_CS_PORT==GPIOB)
 			{
-				if((GT32L32_Init->sGT32L32_CS_PIN==GPIO_Pin_3)||(GT32L32_Init->sGT32L32_CS_PIN==GPIO_Pin_4))
+				if((GT32L32_Info->GT32L32_Port.sGT32L32_CS_PIN==GPIO_Pin_3)||(GT32L32_Info->GT32L32_Port.sGT32L32_CS_PIN==GPIO_Pin_4))
 				{
 					RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOB|RCC_APB2Periph_AFIO, ENABLE);
 					GPIO_PinRemapConfig(GPIO_Remap_SWJ_JTAGDisable,ENABLE);				//关闭JTAG
@@ -119,26 +144,26 @@ void GT32L32_ConfigurationNR(GT32L32_Init_TypeDef *GT32L32_Init)
 				else
 					RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOB, ENABLE);
 			}
-			else if(GT32L32_Init->sGT32L32_CS_PORT==GPIOC)
+			else if(GT32L32_Info->GT32L32_Port.sGT32L32_CS_PORT==GPIOC)
 			{
-				if((GT32L32_Init->sGT32L32_CS_PIN==GPIO_Pin_14)||(GT32L32_Init->sGT32L32_CS_PIN==GPIO_Pin_15))
+				if((GT32L32_Info->GT32L32_Port.sGT32L32_CS_PIN==GPIO_Pin_14)||(GT32L32_Info->GT32L32_Port.sGT32L32_CS_PIN==GPIO_Pin_15))
 					RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOC |RCC_APB2Periph_AFIO, ENABLE);
 				else
 					RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOC, ENABLE);
 			}
-			else if(GT32L32_Init->sGT32L32_CS_PORT==GPIOD)
+			else if(GT32L32_Info->GT32L32_Port.sGT32L32_CS_PORT==GPIOD)
 			{
 				RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOD, ENABLE);
 			}
-			else if(GT32L32_Init->sGT32L32_CS_PORT==GPIOE)
+			else if(GT32L32_Info->GT32L32_Port.sGT32L32_CS_PORT==GPIOE)
 			{
 				RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOE, ENABLE);
 			}
-			else if(GT32L32_Init->sGT32L32_CS_PORT==GPIOF)
+			else if(GT32L32_Info->GT32L32_Port.sGT32L32_CS_PORT==GPIOF)
 			{
 				RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOF, ENABLE);
 			}
-			else if(GT32L32_Init->sGT32L32_CS_PORT==GPIOG)
+			else if(GT32L32_Info->GT32L32_Port.sGT32L32_CS_PORT==GPIOG)
 			{
 				RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOG, ENABLE);
 			}
@@ -148,23 +173,23 @@ void GT32L32_ConfigurationNR(GT32L32_Init_TypeDef *GT32L32_Init)
 			GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
 			GPIO_Init(GPIOA, &GPIO_InitStructure);
 			//CS配置
-			GPIO_InitStructure.GPIO_Pin 	= GT32L32_Init->sGT32L32_CS_PIN;
+			GPIO_InitStructure.GPIO_Pin 	= GT32L32_Info->GT32L32_Port.sGT32L32_CS_PIN;
 			GPIO_InitStructure.GPIO_Mode 	= GPIO_Mode_Out_PP;
 			GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-			GPIO_Init(GT32L32_Init->sGT32L32_CS_PORT, &GPIO_InitStructure);
+			GPIO_Init(GT32L32_Info->GT32L32_Port.sGT32L32_CS_PORT, &GPIO_InitStructure);
 		}
 	}
-	else if(GT32L32_Init->sSPIx==SPI2)
+	else if(GT32L32_Info->GT32L32_Port.sSPIx==SPI2)
 	{
 		//PB12-NSS;PB13-SCK;PB14-MISO;PB15-MOSI;
 		//2.2)**********打开SPI时钟
 		RCC_APB1PeriphClockCmd(RCC_APB1Periph_SPI2 ,ENABLE);				//开启SPI时钟			
 		RCC_APB2PeriphClockCmd(RCC_APB2Periph_AFIO|RCC_APB2Periph_GPIOB, ENABLE);
 		
-		if((GT32L32_Init->sGT32L32_CS_PORT==GPIOB)&&(GT32L32_Init->sGT32L32_CS_PIN==GPIO_Pin_12))			//如果SPI_NSS为SPI_NSS_Soft（软件控制方式）
+		if((GT32L32_Info->GT32L32_Port.sGT32L32_CS_PORT==GPIOB)&&(GT32L32_Info->GT32L32_Port.sGT32L32_CS_PIN==GPIO_Pin_12))			//如果SPI_NSS为SPI_NSS_Soft（软件控制方式）
 		{
-			u8 UseSPI2_flg=1;		//如果使用纯硬件SPI2（含CS脚），UseSPI2_flg=1，否则UseSPI2_flg=0；
-			SPI_SSOutputCmd(GT32L32_Init->sSPIx, ENABLE);			//如果在主机模式下的片选方式为硬件（SPI_NSS_Hard）方式，此处必须打开，否则NSS无信号
+//			u8 UseSPI2_flg=1;		//如果使用纯硬件SPI2（含CS脚），UseSPI2_flg=1，否则UseSPI2_flg=0；
+			SPI_SSOutputCmd(GT32L32_Info->GT32L32_Port.sSPIx, ENABLE);			//如果在主机模式下的片选方式为硬件（SPI_NSS_Hard）方式，此处必须打开，否则NSS无信号
 			GPIO_InitStructure.GPIO_Pin = GPIO_Pin_12 | GPIO_Pin_13 | GPIO_Pin_14 | GPIO_Pin_15;
 			GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
 			GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;  //复用推挽输出
@@ -174,11 +199,11 @@ void GT32L32_ConfigurationNR(GT32L32_Init_TypeDef *GT32L32_Init)
 		{
 			
 //			SPI_SSOutputCmd(Pinfo->sSPIx, DISABLE);			//如果在主机模式下的片选方式为硬件（SPI_NSS_Hard）方式，此处必须打开，否则NSS无信号
-			u8 UseSPI2_flg=0;		//如果使用纯硬件SPI2（含CS脚），UseSPI2_flg=1，否则UseSPI2_flg=0；
+//			u8 UseSPI2_flg=0;		//如果使用纯硬件SPI2（含CS脚），UseSPI2_flg=1，否则UseSPI2_flg=0；
 			//开CS-GPIO时钟
-			if(GT32L32_Init->sGT32L32_CS_PORT==GPIOA)
+			if(GT32L32_Info->GT32L32_Port.sGT32L32_CS_PORT==GPIOA)
 			{
-				if((GT32L32_Init->sGT32L32_CS_PIN==GPIO_Pin_13)||(GT32L32_Init->sGT32L32_CS_PIN==GPIO_Pin_14)||(GT32L32_Init->sGT32L32_CS_PIN==GPIO_Pin_15))
+				if((GT32L32_Info->GT32L32_Port.sGT32L32_CS_PIN==GPIO_Pin_13)||(GT32L32_Info->GT32L32_Port.sGT32L32_CS_PIN==GPIO_Pin_14)||(GT32L32_Info->GT32L32_Port.sGT32L32_CS_PIN==GPIO_Pin_15))
 				{
 					RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA|RCC_APB2Periph_AFIO, ENABLE);
 					//GPIO_PinRemapConfig(GPIO_Remap_SWJ_Disable,ENABLE);			//关闭SW功能
@@ -187,9 +212,9 @@ void GT32L32_ConfigurationNR(GT32L32_Init_TypeDef *GT32L32_Init)
 				else
 					RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA, ENABLE);
 			}
-			else if(GT32L32_Init->sGT32L32_CS_PORT==GPIOB)
+			else if(GT32L32_Info->GT32L32_Port.sGT32L32_CS_PORT==GPIOB)
 			{
-				if((GT32L32_Init->sGT32L32_CS_PIN==GPIO_Pin_3)||(GT32L32_Init->sGT32L32_CS_PIN==GPIO_Pin_4))
+				if((GT32L32_Info->GT32L32_Port.sGT32L32_CS_PIN==GPIO_Pin_3)||(GT32L32_Info->GT32L32_Port.sGT32L32_CS_PIN==GPIO_Pin_4))
 				{
 					RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOB|RCC_APB2Periph_AFIO, ENABLE);
 					GPIO_PinRemapConfig(GPIO_Remap_SWJ_JTAGDisable,ENABLE);				//关闭JTAG
@@ -197,26 +222,26 @@ void GT32L32_ConfigurationNR(GT32L32_Init_TypeDef *GT32L32_Init)
 				else
 					RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOB, ENABLE);
 			}
-			else if(GT32L32_Init->sGT32L32_CS_PORT==GPIOC)
+			else if(GT32L32_Info->GT32L32_Port.sGT32L32_CS_PORT==GPIOC)
 			{
-				if((GT32L32_Init->sGT32L32_CS_PIN==GPIO_Pin_14)||(GT32L32_Init->sGT32L32_CS_PIN==GPIO_Pin_15))
+				if((GT32L32_Info->GT32L32_Port.sGT32L32_CS_PIN==GPIO_Pin_14)||(GT32L32_Info->GT32L32_Port.sGT32L32_CS_PIN==GPIO_Pin_15))
 					RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOC |RCC_APB2Periph_AFIO, ENABLE);
 				else
 					RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOC, ENABLE);
 			}
-			else if(GT32L32_Init->sGT32L32_CS_PORT==GPIOD)
+			else if(GT32L32_Info->GT32L32_Port.sGT32L32_CS_PORT==GPIOD)
 			{
 				RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOD, ENABLE);
 			}
-			else if(GT32L32_Init->sGT32L32_CS_PORT==GPIOE)
+			else if(GT32L32_Info->GT32L32_Port.sGT32L32_CS_PORT==GPIOE)
 			{
 				RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOE, ENABLE);
 			}
-			else if(GT32L32_Init->sGT32L32_CS_PORT==GPIOF)
+			else if(GT32L32_Info->GT32L32_Port.sGT32L32_CS_PORT==GPIOF)
 			{
 				RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOF, ENABLE);
 			}
-			else if(GT32L32_Init->sGT32L32_CS_PORT==GPIOG)
+			else if(GT32L32_Info->GT32L32_Port.sGT32L32_CS_PORT==GPIOG)
 			{
 				RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOG, ENABLE);
 			}
@@ -226,20 +251,20 @@ void GT32L32_ConfigurationNR(GT32L32_Init_TypeDef *GT32L32_Init)
 			GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
 			GPIO_Init(GPIOA, &GPIO_InitStructure);
 			//CS配置
-			GPIO_InitStructure.GPIO_Pin 	= GT32L32_Init->sGT32L32_CS_PIN;
+			GPIO_InitStructure.GPIO_Pin 	= GT32L32_Info->GT32L32_Port.sGT32L32_CS_PIN;
 			GPIO_InitStructure.GPIO_Mode 	= GPIO_Mode_Out_PP;
 			GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-			GPIO_Init(GT32L32_Init->sGT32L32_CS_PORT, &GPIO_InitStructure);
+			GPIO_Init(GT32L32_Info->GT32L32_Port.sGT32L32_CS_PORT, &GPIO_InitStructure);
 		}
 	}
-	else if(GT32L32_Init->sSPIx==SPI3)
+	else if(GT32L32_Info->GT32L32_Port.sSPIx==SPI3)
 	{
 		//PA15-NSS;PB3-SCK;PB4-MISO;PB5-MOSI;
 		//2.2)**********打开SPI时钟
 		RCC_APB1PeriphClockCmd(RCC_APB1Periph_SPI3 ,ENABLE);			
 		RCC_APB2PeriphClockCmd(RCC_APB2Periph_AFIO|RCC_APB2Periph_GPIOA|RCC_APB2Periph_GPIOB, ENABLE);
 		
-		if((GT32L32_Init->sGT32L32_CS_PORT==GPIOA)&&(GT32L32_Init->sGT32L32_CS_PIN==GPIO_Pin_15))			//如果SPI_NSS为SPI_NSS_Soft（软件控制方式）
+		if((GT32L32_Info->GT32L32_Port.sGT32L32_CS_PORT==GPIOA)&&(GT32L32_Info->GT32L32_Port.sGT32L32_CS_PIN==GPIO_Pin_15))			//如果SPI_NSS为SPI_NSS_Soft（软件控制方式）
 		{
 			UseSPI3_flg=1;		//如果使用纯硬件SPI3（含CS脚），UseSPI3_flg=1，否则UseSPI3_flg=0；
 			
@@ -258,9 +283,9 @@ void GT32L32_ConfigurationNR(GT32L32_Init_TypeDef *GT32L32_Init)
 		{
 			UseSPI3_flg=0;		//如果使用纯硬件SPI3（含CS脚），UseSPI3_flg=1，否则UseSPI3_flg=0；
 			//开CS-GPIO时钟
-			if(GT32L32_Init->sGT32L32_CS_PORT==GPIOA)
+			if(GT32L32_Info->GT32L32_Port.sGT32L32_CS_PORT==GPIOA)
 			{
-				if((GT32L32_Init->sGT32L32_CS_PIN==GPIO_Pin_13)||(GT32L32_Init->sGT32L32_CS_PIN==GPIO_Pin_14)||(GT32L32_Init->sGT32L32_CS_PIN==GPIO_Pin_15))
+				if((GT32L32_Info->GT32L32_Port.sGT32L32_CS_PIN==GPIO_Pin_13)||(GT32L32_Info->GT32L32_Port.sGT32L32_CS_PIN==GPIO_Pin_14)||(GT32L32_Info->GT32L32_Port.sGT32L32_CS_PIN==GPIO_Pin_15))
 				{
 					RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA|RCC_APB2Periph_AFIO, ENABLE);
 					//GPIO_PinRemapConfig(GPIO_Remap_SWJ_Disable,ENABLE);			//关闭SW功能
@@ -269,9 +294,9 @@ void GT32L32_ConfigurationNR(GT32L32_Init_TypeDef *GT32L32_Init)
 				else
 					RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA, ENABLE);
 			}
-			else if(GT32L32_Init->sGT32L32_CS_PORT==GPIOB)
+			else if(GT32L32_Info->GT32L32_Port.sGT32L32_CS_PORT==GPIOB)
 			{
-				if((GT32L32_Init->sGT32L32_CS_PIN==GPIO_Pin_3)||(GT32L32_Init->sGT32L32_CS_PIN==GPIO_Pin_4))
+				if((GT32L32_Info->GT32L32_Port.sGT32L32_CS_PIN==GPIO_Pin_3)||(GT32L32_Info->GT32L32_Port.sGT32L32_CS_PIN==GPIO_Pin_4))
 				{
 					RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOB|RCC_APB2Periph_AFIO, ENABLE);
 					GPIO_PinRemapConfig(GPIO_Remap_SWJ_JTAGDisable,ENABLE);				//关闭JTAG
@@ -279,26 +304,26 @@ void GT32L32_ConfigurationNR(GT32L32_Init_TypeDef *GT32L32_Init)
 				else
 					RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOB, ENABLE);
 			}
-			else if(GT32L32_Init->sGT32L32_CS_PORT==GPIOC)
+			else if(GT32L32_Info->GT32L32_Port.sGT32L32_CS_PORT==GPIOC)
 			{
-				if((GT32L32_Init->sGT32L32_CS_PIN==GPIO_Pin_14)||(GT32L32_Init->sGT32L32_CS_PIN==GPIO_Pin_15))
+				if((GT32L32_Info->GT32L32_Port.sGT32L32_CS_PIN==GPIO_Pin_14)||(GT32L32_Info->GT32L32_Port.sGT32L32_CS_PIN==GPIO_Pin_15))
 					RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOC |RCC_APB2Periph_AFIO, ENABLE);
 				else
 					RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOC, ENABLE);
 			}
-			else if(GT32L32_Init->sGT32L32_CS_PORT==GPIOD)
+			else if(GT32L32_Info->GT32L32_Port.sGT32L32_CS_PORT==GPIOD)
 			{
 				RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOD, ENABLE);
 			}
-			else if(GT32L32_Init->sGT32L32_CS_PORT==GPIOE)
+			else if(GT32L32_Info->GT32L32_Port.sGT32L32_CS_PORT==GPIOE)
 			{
 				RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOE, ENABLE);
 			}
-			else if(GT32L32_Init->sGT32L32_CS_PORT==GPIOF)
+			else if(GT32L32_Info->GT32L32_Port.sGT32L32_CS_PORT==GPIOF)
 			{
 				RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOF, ENABLE);
 			}
-			else if(GT32L32_Init->sGT32L32_CS_PORT==GPIOG)
+			else if(GT32L32_Info->GT32L32_Port.sGT32L32_CS_PORT==GPIOG)
 			{
 				RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOG, ENABLE);
 			}
@@ -308,10 +333,10 @@ void GT32L32_ConfigurationNR(GT32L32_Init_TypeDef *GT32L32_Init)
 			GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
 			GPIO_Init(GPIOA, &GPIO_InitStructure);
 			//CS配置
-			GPIO_InitStructure.GPIO_Pin 	= GT32L32_Init->sGT32L32_CS_PIN;
+			GPIO_InitStructure.GPIO_Pin 	= GT32L32_Info->GT32L32_Port.sGT32L32_CS_PIN;
 			GPIO_InitStructure.GPIO_Mode 	= GPIO_Mode_Out_PP;
 			GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-			GPIO_Init(GT32L32_Init->sGT32L32_CS_PORT, &GPIO_InitStructure);
+			GPIO_Init(GT32L32_Info->GT32L32_Port.sGT32L32_CS_PORT, &GPIO_InitStructure);
 		}			
 	}
 	//3)**********SPI配置选项
@@ -331,289 +356,14 @@ void GT32L32_ConfigurationNR(GT32L32_Init_TypeDef *GT32L32_Init)
 	SPI_InitStructure.SPI_BaudRatePrescaler = SPI_BaudRatePrescaler_32;				//波特率预分频 	（从2---256分频）
 	SPI_InitStructure.SPI_FirstBit = SPI_FirstBit_MSB;												//最先发送的位 	（最低位，还是最高位在先）
 	SPI_InitStructure.SPI_CRCPolynomial = 7;																	//设置crc多项式	（数字）如7
-	SPI_Init(GT32L32_Init->sSPIx,&SPI_InitStructure);
+	SPI_Init(GT32L32_Info->GT32L32_Port.sSPIx,&SPI_InitStructure);
 
-	SPI_Cmd(GT32L32_Init->sSPIx, ENABLE);				//使能SPI	
+	SPI_Cmd(GT32L32_Info->GT32L32_Port.sSPIx, ENABLE);				//使能SPI	
 	
 	//3)**********使能SPIx_NESS为主输出模式
-	if((GT32L32_Init->sSPIx->CR1&0X0200)!=SPI_NSS_Soft)						//如果在主机模式下的片选方式为硬件（SPI_NSS_Hard）方式，此处必须打开，否则NSS无信号
+	if((GT32L32_Info->GT32L32_Port.sSPIx->CR1&0X0200)!=SPI_NSS_Soft)						//如果在主机模式下的片选方式为硬件（SPI_NSS_Hard）方式，此处必须打开，否则NSS无信号
 	{
-		SPI_SSOutputCmd(GT32L32_Init->sSPIx, ENABLE);			//如果在主机模式下的片选方式为硬件（SPI_NSS_Hard）方式，此处必须打开，否则NSS无信号
-	}
-}
-/*******************************************************************************
-*函数名			:	function
-*功能描述		:	函数功能说明
-*输入				: 
-*返回值			:	无
-*******************************************************************************/
-void GT32L32_PinConf(GT32L32_Init_TypeDef *GT32L32_Init)
-{
-		//1)**********定义相关结构体
-	SPI_InitTypeDef  SPI_InitStructure;
-	GPIO_InitTypeDef GPIO_InitStructure;
-
-	//2)**********相关GPIO配置
-	if(GT32L32_Init->sSPIx==SPI1)
-	{
-		//PA4-NSS;PA5-SCK;PA6-MISO;PA7-MOSI;
-		//2.1)**********打开SPI时钟	
-		RCC_APB2PeriphClockCmd(RCC_APB2Periph_SPI1 ,ENABLE);			//开启SPI时钟	
-		RCC_APB2PeriphClockCmd(RCC_APB2Periph_AFIO|RCC_APB2Periph_GPIOA, ENABLE);	
-		
-		if((GT32L32_Init->sGT32L32_CS_PORT==GPIOA)&&(GT32L32_Init->sGT32L32_CS_PIN==GPIO_Pin_4))			//如果SPI_NSS为SPI_NSS_Soft（软件控制方式）
-		{
-//			SPI_SSOutputCmd(Pinfo->sSPIx, ENABLE);			//如果在主机模式下的片选方式为硬件（SPI_NSS_Hard）方式，此处必须打开，否则NSS无信号
-			u8 UseSPI1_flg=1;		//如果使用纯硬件SPI1（含CS脚），UseSPI1_flg=1，否则UseSPI1_flg=0；
-			GPIO_InitStructure.GPIO_Pin = GPIO_Pin_4 | GPIO_Pin_5 | GPIO_Pin_6 | GPIO_Pin_7;
-			GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;
-			GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-			GPIO_Init(GPIOA, &GPIO_InitStructure);
-		}
-		else
-		{
-//			SPI_SSOutputCmd(Pinfo->sSPIx, DISABLE);			//如果在主机模式下的片选方式为硬件（SPI_NSS_Hard）方式，此处必须打开，否则NSS无信号
-			u8 UseSPI1_flg=0;		//如果使用纯硬件SPI1（含CS脚），UseSPI1_flg=1，否则UseSPI1_flg=0；
-			//开CS-GPIO时钟
-			if(GT32L32_Init->sGT32L32_CS_PORT==GPIOA)
-			{
-				if((GT32L32_Init->sGT32L32_CS_PIN==GPIO_Pin_13)||(GT32L32_Init->sGT32L32_CS_PIN==GPIO_Pin_14)||(GT32L32_Init->sGT32L32_CS_PIN==GPIO_Pin_15))
-				{
-					RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA|RCC_APB2Periph_AFIO, ENABLE);
-					//GPIO_PinRemapConfig(GPIO_Remap_SWJ_Disable,ENABLE);			//关闭SW功能
-					GPIO_PinRemapConfig(GPIO_Remap_SWJ_JTAGDisable,ENABLE);		//关闭JTAG,SW功能开启
-				}
-			}
-			else if(GT32L32_Init->sGT32L32_CS_PORT==GPIOB)
-			{
-				if((GT32L32_Init->sGT32L32_CS_PIN==GPIO_Pin_3)||(GT32L32_Init->sGT32L32_CS_PIN==GPIO_Pin_4))
-				{
-					RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOB|RCC_APB2Periph_AFIO, ENABLE);
-					GPIO_PinRemapConfig(GPIO_Remap_SWJ_JTAGDisable,ENABLE);				//关闭JTAG
-				}
-				else
-					RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOB, ENABLE);
-			}
-			else if(GT32L32_Init->sGT32L32_CS_PORT==GPIOC)
-			{
-				if((GT32L32_Init->sGT32L32_CS_PIN==GPIO_Pin_14)||(GT32L32_Init->sGT32L32_CS_PIN==GPIO_Pin_15))
-					RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOC |RCC_APB2Periph_AFIO, ENABLE);
-				else
-					RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOC, ENABLE);
-			}
-			else if(GT32L32_Init->sGT32L32_CS_PORT==GPIOD)
-			{
-				RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOD, ENABLE);
-			}
-			else if(GT32L32_Init->sGT32L32_CS_PORT==GPIOE)
-			{
-				RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOE, ENABLE);
-			}
-			else if(GT32L32_Init->sGT32L32_CS_PORT==GPIOF)
-			{
-				RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOF, ENABLE);
-			}
-			else if(GT32L32_Init->sGT32L32_CS_PORT==GPIOG)
-			{
-				RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOG, ENABLE);
-			}
-			//SCK,MISO,MOSI配置
-			GPIO_InitStructure.GPIO_Pin 	= GPIO_Pin_5 | GPIO_Pin_6 | GPIO_Pin_7;
-			GPIO_InitStructure.GPIO_Mode 	= GPIO_Mode_AF_PP;
-			GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-			GPIO_Init(GPIOA, &GPIO_InitStructure);
-			//CS配置
-			GPIO_InitStructure.GPIO_Pin 	= GT32L32_Init->sGT32L32_CS_PIN;
-			GPIO_InitStructure.GPIO_Mode 	= GPIO_Mode_Out_PP;
-			GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-			GPIO_Init(GT32L32_Init->sGT32L32_CS_PORT, &GPIO_InitStructure);
-		}
-	}
-	else if(GT32L32_Init->sSPIx==SPI2)
-	{
-		//PB12-NSS;PB13-SCK;PB14-MISO;PB15-MOSI;
-		//2.2)**********打开SPI时钟
-		RCC_APB1PeriphClockCmd(RCC_APB1Periph_SPI2 ,ENABLE);				//开启SPI时钟			
-		RCC_APB2PeriphClockCmd(RCC_APB2Periph_AFIO|RCC_APB2Periph_GPIOB, ENABLE);
-		
-		if((GT32L32_Init->sGT32L32_CS_PORT==GPIOB)&&(GT32L32_Init->sGT32L32_CS_PIN==GPIO_Pin_12))			//如果SPI_NSS为SPI_NSS_Soft（软件控制方式）
-		{
-			u8 UseSPI2_flg=1;		//如果使用纯硬件SPI2（含CS脚），UseSPI2_flg=1，否则UseSPI2_flg=0；
-			SPI_SSOutputCmd(GT32L32_Init->sSPIx, ENABLE);			//如果在主机模式下的片选方式为硬件（SPI_NSS_Hard）方式，此处必须打开，否则NSS无信号
-			GPIO_InitStructure.GPIO_Pin = GPIO_Pin_12 | GPIO_Pin_13 | GPIO_Pin_14 | GPIO_Pin_15;
-			GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-			GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;  //复用推挽输出
-			GPIO_Init(GPIOB, &GPIO_InitStructure);	
-		}
-		else
-		{
-			
-//			SPI_SSOutputCmd(Pinfo->sSPIx, DISABLE);			//如果在主机模式下的片选方式为硬件（SPI_NSS_Hard）方式，此处必须打开，否则NSS无信号
-			u8 UseSPI2_flg=0;		//如果使用纯硬件SPI2（含CS脚），UseSPI2_flg=1，否则UseSPI2_flg=0；
-			//开CS-GPIO时钟
-			if(GT32L32_Init->sGT32L32_CS_PORT==GPIOA)
-			{
-				if((GT32L32_Init->sGT32L32_CS_PIN==GPIO_Pin_13)||(GT32L32_Init->sGT32L32_CS_PIN==GPIO_Pin_14)||(GT32L32_Init->sGT32L32_CS_PIN==GPIO_Pin_15))
-				{
-					RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA|RCC_APB2Periph_AFIO, ENABLE);
-					//GPIO_PinRemapConfig(GPIO_Remap_SWJ_Disable,ENABLE);			//关闭SW功能
-					GPIO_PinRemapConfig(GPIO_Remap_SWJ_JTAGDisable,ENABLE);		//关闭JTAG,SW功能开启
-				}
-				else
-					RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA, ENABLE);
-			}
-			else if(GT32L32_Init->sGT32L32_CS_PORT==GPIOB)
-			{
-				if((GT32L32_Init->sGT32L32_CS_PIN==GPIO_Pin_3)||(GT32L32_Init->sGT32L32_CS_PIN==GPIO_Pin_4))
-				{
-					RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOB|RCC_APB2Periph_AFIO, ENABLE);
-					GPIO_PinRemapConfig(GPIO_Remap_SWJ_JTAGDisable,ENABLE);				//关闭JTAG
-				}
-				else
-					RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOB, ENABLE);
-			}
-			else if(GT32L32_Init->sGT32L32_CS_PORT==GPIOC)
-			{
-				if((GT32L32_Init->sGT32L32_CS_PIN==GPIO_Pin_14)||(GT32L32_Init->sGT32L32_CS_PIN==GPIO_Pin_15))
-					RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOC |RCC_APB2Periph_AFIO, ENABLE);
-				else
-					RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOC, ENABLE);
-			}
-			else if(GT32L32_Init->sGT32L32_CS_PORT==GPIOD)
-			{
-				RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOD, ENABLE);
-			}
-			else if(GT32L32_Init->sGT32L32_CS_PORT==GPIOE)
-			{
-				RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOE, ENABLE);
-			}
-			else if(GT32L32_Init->sGT32L32_CS_PORT==GPIOF)
-			{
-				RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOF, ENABLE);
-			}
-			else if(GT32L32_Init->sGT32L32_CS_PORT==GPIOG)
-			{
-				RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOG, ENABLE);
-			}
-			//SCK,MISO,MOSI配置
-			GPIO_InitStructure.GPIO_Pin 	= GPIO_Pin_13 | GPIO_Pin_14 | GPIO_Pin_15;
-			GPIO_InitStructure.GPIO_Mode 	= GPIO_Mode_AF_PP;
-			GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-			GPIO_Init(GPIOA, &GPIO_InitStructure);
-			//CS配置
-			GPIO_InitStructure.GPIO_Pin 	= GT32L32_Init->sGT32L32_CS_PIN;
-			GPIO_InitStructure.GPIO_Mode 	= GPIO_Mode_Out_PP;
-			GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-			GPIO_Init(GT32L32_Init->sGT32L32_CS_PORT, &GPIO_InitStructure);
-		}
-	}
-	else if(GT32L32_Init->sSPIx==SPI3)
-	{
-		//PA15-NSS;PB3-SCK;PB4-MISO;PB5-MOSI;
-		//2.2)**********打开SPI时钟
-		RCC_APB1PeriphClockCmd(RCC_APB1Periph_SPI3 ,ENABLE);			
-		RCC_APB2PeriphClockCmd(RCC_APB2Periph_AFIO|RCC_APB2Periph_GPIOA|RCC_APB2Periph_GPIOB, ENABLE);
-		
-		if((GT32L32_Init->sGT32L32_CS_PORT==GPIOA)&&(GT32L32_Init->sGT32L32_CS_PIN==GPIO_Pin_15))			//如果SPI_NSS为SPI_NSS_Soft（软件控制方式）
-		{
-			UseSPI3_flg=1;		//如果使用纯硬件SPI3（含CS脚），UseSPI3_flg=1，否则UseSPI3_flg=0；
-			
-			GPIO_InitStructure.GPIO_Pin 	= GPIO_Pin_3 | GPIO_Pin_4 | GPIO_Pin_5;
-			GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-			GPIO_InitStructure.GPIO_Mode 	= GPIO_Mode_AF_PP;  		//复用推挽输出
-			GPIO_Init(GPIOB, &GPIO_InitStructure);
-			
-			//2.2)**********SPI_NSS配置		
-			GPIO_InitStructure.GPIO_Pin 	= GPIO_Pin_15;
-			GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-			GPIO_InitStructure.GPIO_Mode 	= GPIO_Mode_AF_PP;  		//复用推挽输出
-			GPIO_Init(GPIOA, &GPIO_InitStructure);
-		}
-		else																										//如果SPI_NSS为SPI_NSS_Soft（软件控制方式）
-		{
-			UseSPI3_flg=0;		//如果使用纯硬件SPI3（含CS脚），UseSPI3_flg=1，否则UseSPI3_flg=0；
-			//开CS-GPIO时钟
-			if(GT32L32_Init->sGT32L32_CS_PORT==GPIOA)
-			{
-				if((GT32L32_Init->sGT32L32_CS_PIN==GPIO_Pin_13)||(GT32L32_Init->sGT32L32_CS_PIN==GPIO_Pin_14)||(GT32L32_Init->sGT32L32_CS_PIN==GPIO_Pin_15))
-				{
-					RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA|RCC_APB2Periph_AFIO, ENABLE);
-					//GPIO_PinRemapConfig(GPIO_Remap_SWJ_Disable,ENABLE);			//关闭SW功能
-					GPIO_PinRemapConfig(GPIO_Remap_SWJ_JTAGDisable,ENABLE);		//关闭JTAG,SW功能开启
-				}
-				else
-					RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA, ENABLE);
-			}
-			else if(GT32L32_Init->sGT32L32_CS_PORT==GPIOB)
-			{
-				if((GT32L32_Init->sGT32L32_CS_PIN==GPIO_Pin_3)||(GT32L32_Init->sGT32L32_CS_PIN==GPIO_Pin_4))
-				{
-					RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOB|RCC_APB2Periph_AFIO, ENABLE);
-					GPIO_PinRemapConfig(GPIO_Remap_SWJ_JTAGDisable,ENABLE);				//关闭JTAG
-				}
-				else
-					RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOB, ENABLE);
-			}
-			else if(GT32L32_Init->sGT32L32_CS_PORT==GPIOC)
-			{
-				if((GT32L32_Init->sGT32L32_CS_PIN==GPIO_Pin_14)||(GT32L32_Init->sGT32L32_CS_PIN==GPIO_Pin_15))
-					RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOC |RCC_APB2Periph_AFIO, ENABLE);
-				else
-					RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOC, ENABLE);
-			}
-			else if(GT32L32_Init->sGT32L32_CS_PORT==GPIOD)
-			{
-				RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOD, ENABLE);
-			}
-			else if(GT32L32_Init->sGT32L32_CS_PORT==GPIOE)
-			{
-				RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOE, ENABLE);
-			}
-			else if(GT32L32_Init->sGT32L32_CS_PORT==GPIOF)
-			{
-				RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOF, ENABLE);
-			}
-			else if(GT32L32_Init->sGT32L32_CS_PORT==GPIOG)
-			{
-				RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOG, ENABLE);
-			}
-			//SCK,MISO,MOSI配置
-			GPIO_InitStructure.GPIO_Pin 	= GPIO_Pin_13 | GPIO_Pin_14 | GPIO_Pin_15;
-			GPIO_InitStructure.GPIO_Mode 	= GPIO_Mode_AF_PP;
-			GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-			GPIO_Init(GPIOA, &GPIO_InitStructure);
-			//CS配置
-			GPIO_InitStructure.GPIO_Pin 	= GT32L32_Init->sGT32L32_CS_PIN;
-			GPIO_InitStructure.GPIO_Mode 	= GPIO_Mode_Out_PP;
-			GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-			GPIO_Init(GT32L32_Init->sGT32L32_CS_PORT, &GPIO_InitStructure);
-		}			
-	}
-	//3)**********SPI配置选项
-	SPI_InitStructure.SPI_Direction = SPI_Direction_2Lines_FullDuplex;				//设置方向				（2线全双工、2线只接收、一线发送、一线接收）
-	SPI_InitStructure.SPI_Mode = SPI_Mode_Master;															//模式         	（从或主设备）
-	SPI_InitStructure.SPI_DataSize = SPI_DataSize_8b;													//宽度         	（8或16位）
-	SPI_InitStructure.SPI_CPOL = SPI_CPOL_High;																//时钟极性     	（低或高）
-	SPI_InitStructure.SPI_CPHA = SPI_CPHA_2Edge;															//时钟相位     	（第一个或第二个跳变沿）
-	if(UseSPI1_flg==1||UseSPI2_flg==1||UseSPI3_flg==1)																			//如果使用纯硬件SPI1（含CS脚），UseSPI1_flg=1，否则UseSPI1_flg=0；
-	{
-		SPI_InitStructure.SPI_NSS = SPI_NSS_Hard;																//片选方式     	（硬件或软件方式）
-	}
-	else
-	{
-		SPI_InitStructure.SPI_NSS = SPI_NSS_Soft;															//片选方式     	（硬件或软件方式）
-	}	
-	SPI_InitStructure.SPI_BaudRatePrescaler = SPI_BaudRatePrescaler_32;				//波特率预分频 	（从2---256分频）
-	SPI_InitStructure.SPI_FirstBit = SPI_FirstBit_MSB;												//最先发送的位 	（最低位，还是最高位在先）
-	SPI_InitStructure.SPI_CRCPolynomial = 7;																	//设置crc多项式	（数字）如7
-	SPI_Init(GT32L32_Init->sSPIx,&SPI_InitStructure);
-
-	SPI_Cmd(GT32L32_Init->sSPIx, ENABLE);				//使能SPI	
-	
-	//3)**********使能SPIx_NESS为主输出模式
-	if((GT32L32_Init->sSPIx->CR1&0X0200)!=SPI_NSS_Soft)						//如果在主机模式下的片选方式为硬件（SPI_NSS_Hard）方式，此处必须打开，否则NSS无信号
-	{
-		SPI_SSOutputCmd(GT32L32_Init->sSPIx, ENABLE);			//如果在主机模式下的片选方式为硬件（SPI_NSS_Hard）方式，此处必须打开，否则NSS无信号
+		SPI_SSOutputCmd(GT32L32_Info->GT32L32_Port.sSPIx, ENABLE);			//如果在主机模式下的片选方式为硬件（SPI_NSS_Hard）方式，此处必须打开，否则NSS无信号
 	}
 }
 
@@ -645,7 +395,7 @@ u8  GT32L32_GetDig_Info(u8 Sequence,GT32L32_Info_TypeDef *GT32L32_Info)
 	//____________定义变量
 	u8 len=0;	//数据长度变量
 	u32 address=0;				//地址变量
-	u32 BaseAddr=GT32L32_Info->GT32L32_BaseAddr;	
+	u32 BaseAddr=GT32L32_Info->GT32L32_Data.GT32L32_BaseAddr;	
 	//____________配置数据
 	switch(BaseAddr)
 	{
@@ -664,8 +414,8 @@ u8  GT32L32_GetDig_Info(u8 Sequence,GT32L32_Info_TypeDef *GT32L32_Info)
 	default:       break ;
 	}
 	//____________更新数据
-	GT32L32_Info->GT32L32_Address=address;
-	GT32L32_Info->GT32L32_BufferSize=len;
+	GT32L32_Info->GT32L32_Data.GT32L32_Address=address;			//字符地址
+	GT32L32_Info->GT32L32_Data.GT32L32_BufferSize=len;			//点阵数据长度
 	return 0;	  
 }
 
@@ -681,7 +431,7 @@ u8  GT32L32_GetASCII_Info(u8 ASCIICode,GT32L32_Info_TypeDef *GT32L32_Info)
 	//____________定义变量
 	u8 len=0;	//数据长度变量
 	u32 address=0;				//地址变量
-	u32 BaseAddr=GT32L32_Info->GT32L32_BaseAddr;
+	u32 BaseAddr=GT32L32_Info->GT32L32_Data.GT32L32_BaseAddr;
 	
 	//____________配置数据	
 	if  ((ASCIICode >= 0x20)&&(ASCIICode<=0x7e))
@@ -743,15 +493,15 @@ u8  GT32L32_GetASCII_Info(u8 ASCIICode,GT32L32_Info_TypeDef *GT32L32_Info)
 					break ;
 	  }
 		//____________更新数据
-		GT32L32_Info->GT32L32_Address=address;			//字符地址
-		GT32L32_Info->GT32L32_BufferSize=len;				//点阵数据长度
+		GT32L32_Info->GT32L32_Data.GT32L32_Address=address;			//字符地址
+		GT32L32_Info->GT32L32_Data.GT32L32_BufferSize=len;			//点阵数据长度	
 	 return 1;
 	}
 	else
 	{
-		GT32L32_Info->GT32L32_Address=address;								//字符地址
-		GT32L32_Info->GT32L32_BufferSize=len;									//点阵数据长度
-		GT32L32_Info->GT32L32_Error=GT32L32_Error_ASCIICode;	//ASCII码错误
+		GT32L32_Info->GT32L32_Data.GT32L32_Address=address;			//字符地址
+		GT32L32_Info->GT32L32_Data.GT32L32_BufferSize=len;			//点阵数据长度	
+		GT32L32_Info->GT32L32_Status=GT32L32_Error_ASCIICode;		//ASCII码错误
 		return 0; 
 	}
 }
@@ -775,7 +525,7 @@ u8 GT32L32_GetGB18030_Info(u16 word,GT32L32_Info_TypeDef *GT32L32_Info)
 	//____________定义变量
 	u8	len=0;	//数据长度变量
 	u32 address=0;				//地址变量
-	u32 BaseAddr=GT32L32_Info->GT32L32_BaseAddr;
+	u32 BaseAddr=GT32L32_Info->GT32L32_Data.GT32L32_BaseAddr;
 	
 	u8	c1=word>>8;
 	u8	c2=word;
@@ -799,7 +549,7 @@ u8 GT32L32_GetGB18030_Info(u16 word,GT32L32_Info_TypeDef *GT32L32_Info)
 	//____________数据检查
 	if(c2==0x7F) 	//空
 	{
-		GT32L32_Info->GT32L32_Error=GT32L32_Error_HzEmp;	//汉字内码低8位为0x7F,为空内容
+		GT32L32_Info->GT32L32_Status=GT32L32_Error_HzEmp;	//汉字内码低8位为0x7F,为空内容
 		return 0;
 	}
 	//0）____________配置数据		
@@ -835,8 +585,8 @@ u8 GT32L32_GetGB18030_Info(u16 word,GT32L32_Info_TypeDef *GT32L32_Info)
 	}
 	//____________更新数据
 	address=address*len+BaseAddr;
-	GT32L32_Info->GT32L32_Address=address;			//字符地址
-	GT32L32_Info->GT32L32_BufferSize=len;				//点阵数据长度	
+	GT32L32_Info->GT32L32_Data.GT32L32_Address=address;			//字符地址
+	GT32L32_Info->GT32L32_Data.GT32L32_BufferSize=len;			//点阵数据长度	
 	
 	return	1; 
 }
@@ -859,13 +609,13 @@ word address = byte address / 2
 u8 GT32L32_Get_Info(u16 word,GT32L32_Info_TypeDef *GT32L32_Info) 
 { 
 	//____________定义变量
-	u8 len=0;	//数据长度变量
-	u32 address=0;				//地址变量
-	u32 GT32L32_BaseAddress=GT32L32_Info->GT32L32_BaseAddr;
+//	u8 len=0;	//数据长度变量
+//	u32 address=0;				//地址变量
+	u32 GT32L32_BaseAddress=GT32L32_Info->GT32L32_Data.GT32L32_BaseAddr;
 	//0）____________基地址判断
 	if((GT32L32_BaseAddress<ASCII_BaseAddr_zf5x7)||(GT32L32_BaseAddress>=Reserved_BaseAddr_LSB))
 	{
-		GT32L32_Info->GT32L32_Error=GT32L32_Error_Addr;
+		GT32L32_Info->GT32L32_Status=GT32L32_Error_Addr;
 		return 0;
 	}
 	//1）____________获取数字地址&点阵字符长度信息
@@ -1678,9 +1428,9 @@ u32 GT32L32_BIG5_To_GBK(u16 BIG5_Code,u8 *GetBuffer)
 *输入				: 
 *返回值			:	无
 *******************************************************************************/
-void GT32L32_CS_DisSelect(GT32L32_Init_TypeDef *GT32L32_Init)
+void GT32L32_CS_DisSelect(GT32L32_Info_TypeDef *GT32L32_Info)
 {
-	GPIO_SetBits(GT32L32_Init->sGT32L32_CS_PORT,	GT32L32_Init->sGT32L32_CS_PIN);			//取消片选
+	GPIO_SetBits(GT32L32_Info->GT32L32_Port.sGT32L32_CS_PORT,	GT32L32_Info->GT32L32_Port.sGT32L32_CS_PIN);			//取消片选
 }
 /*******************************************************************************
 *函数名			:	function
@@ -1688,9 +1438,9 @@ void GT32L32_CS_DisSelect(GT32L32_Init_TypeDef *GT32L32_Init)
 *输入				: 
 *返回值			:	无
 *******************************************************************************/
-void GT32L32_CS_Select(GT32L32_Init_TypeDef *GT32L32_Init)
+void GT32L32_CS_Select(GT32L32_Info_TypeDef *GT32L32_Info)
 {
-	GPIO_ResetBits(GT32L32_Init->sGT32L32_CS_PORT,	GT32L32_Init->sGT32L32_CS_PIN);			//使能片选
+	GPIO_ResetBits(GT32L32_Info->GT32L32_Port.sGT32L32_CS_PORT,	GT32L32_Info->GT32L32_Port.sGT32L32_CS_PIN);			//使能片选
 }
 /*******************************************************************************
 *函数名			:	function
@@ -1698,9 +1448,9 @@ void GT32L32_CS_Select(GT32L32_Init_TypeDef *GT32L32_Init)
 *输入				: 
 *返回值			:	无
 *******************************************************************************/
-void GT32L32_CLK_L(GT32L32_Init_TypeDef *GT32L32_Init)
+void GT32L32_CLK_L(GT32L32_Info_TypeDef *GT32L32_Info)
 {
-	GPIO_ResetBits(GT32L32_Init->sGT32L32_CLK_PORT,	GT32L32_Init->sGT32L32_CLK_PIN);			//取消片选
+	GPIO_ResetBits(GT32L32_Info->GT32L32_Port.sGT32L32_CLK_PORT,	GT32L32_Info->GT32L32_Port.sGT32L32_CLK_PIN);			//取消片选
 }
 /*******************************************************************************
 *函数名			:	function
@@ -1708,9 +1458,9 @@ void GT32L32_CLK_L(GT32L32_Init_TypeDef *GT32L32_Init)
 *输入				: 
 *返回值			:	无
 *******************************************************************************/
-void GT32L32_CLK_H(GT32L32_Init_TypeDef *GT32L32_Init)
+void GT32L32_CLK_H(GT32L32_Info_TypeDef *GT32L32_Info)
 {
-	GPIO_SetBits(GT32L32_Init->sGT32L32_CLK_PORT,	GT32L32_Init->sGT32L32_CLK_PIN);			//使能片选
+	GPIO_SetBits(GT32L32_Info->GT32L32_Port.sGT32L32_CLK_PORT,	GT32L32_Info->GT32L32_Port.sGT32L32_CLK_PIN);			//使能片选
 }
 /*******************************************************************************
 *函数名			:	function
@@ -1718,9 +1468,9 @@ void GT32L32_CLK_H(GT32L32_Init_TypeDef *GT32L32_Init)
 *输入				: 
 *返回值			:	无
 *******************************************************************************/
-void GT32L32_SI_L(GT32L32_Init_TypeDef *GT32L32_Init)
+void GT32L32_SI_L(GT32L32_Info_TypeDef *GT32L32_Info)
 {
-	GPIO_ResetBits(GT32L32_Init->sGT32L32_MOSI_PORT,	GT32L32_Init->sGT32L32_MOSI_PIN);			//取消片选
+	GPIO_ResetBits(GT32L32_Info->GT32L32_Port.sGT32L32_MOSI_PORT,	GT32L32_Info->GT32L32_Port.sGT32L32_MOSI_PIN);			//取消片选
 }
 /*******************************************************************************
 *函数名			:	function
@@ -1728,9 +1478,9 @@ void GT32L32_SI_L(GT32L32_Init_TypeDef *GT32L32_Init)
 *输入				: 
 *返回值			:	无
 *******************************************************************************/
-void GT32L32_SI_H(GT32L32_Init_TypeDef *GT32L32_Init)
+void GT32L32_SI_H(GT32L32_Info_TypeDef *GT32L32_Info)
 {
-	GPIO_SetBits(GT32L32_Init->sGT32L32_MOSI_PORT,	GT32L32_Init->sGT32L32_MOSI_PIN);			//使能片选
+	GPIO_SetBits(GT32L32_Info->GT32L32_Port.sGT32L32_MOSI_PORT,	GT32L32_Info->GT32L32_Port.sGT32L32_MOSI_PIN);			//使能片选
 }
 /*******************************************************************************
 *函数名			:	function
@@ -1738,25 +1488,10 @@ void GT32L32_SI_H(GT32L32_Init_TypeDef *GT32L32_Init)
 *输入				: 
 *返回值			:	无
 *******************************************************************************/
-u8 GT32L32_SO(GT32L32_Init_TypeDef *GT32L32_Init)
+u8 GT32L32_SO(GT32L32_Info_TypeDef *GT32L32_Info)
 {
-	return GPIO_ReadOutputDataBit(GT32L32_Init->sGT32L32_MOSI_PORT,GT32L32_Init->sGT32L32_MOSI_PIN);			//读取MISO数据
+	return GPIO_ReadOutputDataBit(GT32L32_Info->GT32L32_Port.sGT32L32_MOSI_PORT,GT32L32_Info->GT32L32_Port.sGT32L32_MOSI_PIN);			//读取MISO数据
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 //=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>
 //->函数名			:	GT32L32_ReadStatus
 //->功能描述		:	读取芯片状态
@@ -1769,7 +1504,7 @@ u8 GT32L32_SO(GT32L32_Init_TypeDef *GT32L32_Init)
 //->调用函数		:
 //->被调用函数	:
 //<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=
-u8 GT32L32_ReadStatus(GT32L32_Init_TypeDef *GT32L32_Init)
+u8 GT32L32_ReadStatus(GT32L32_Info_TypeDef *GT32L32_Info)
 {
 #ifdef	GT32L32_SPIPORT_EN
 	//____________定义变量
@@ -1777,7 +1512,7 @@ u8 GT32L32_ReadStatus(GT32L32_Init_TypeDef *GT32L32_Init)
 	u8	Address=0x05;	//0X60 OR 0XC7
 	//____________使能片选
 	GPIO_ResetBits(GPIOC,GPIO_Pin_6);
-	GT32L32_CS_Select(GT32L32_Init);
+	GT32L32_CS_Select(GT32L32_Info);
 	//____________发送地址数据	
 	GT32L32_ReadWriteByte(Address);						//发送地址
 	//____________接收数据	
@@ -1786,20 +1521,20 @@ u8 GT32L32_ReadStatus(GT32L32_Init_TypeDef *GT32L32_Init)
 
 	//____________取消片选	
 	GPIO_SetBits(GPIOC,GPIO_Pin_6);
-	GT32L32_CS_DisSelect(GT32L32_Init);
+	GT32L32_CS_DisSelect(GT32L32_Info);
 
 #else
 	//____________定义变量
 	u8	ChipStatus=0;
 	u8	Address=0x05;	//0X60 OR 0XC7
 	//____________使能片选
-	GT32L32_CS_Select(GT32L32_Init);
+	GT32L32_CS_Select(GT32L32_Info);
 	//____________发送地址数据	
 	GT32L32_SendByte(Address);
 	//____________接收数据	
 	ChipStatus=GT32L32_ReadByte();	// 从字库读出点阵数据到数组中。
 	//____________取消片选
-	GT32L32_CS_DisSelect(GT32L32_Init);
+	GT32L32_CS_DisSelect(GT32L32_Info);
 #endif
 	return ChipStatus;
 }
@@ -1815,7 +1550,7 @@ u8 GT32L32_ReadStatus(GT32L32_Init_TypeDef *GT32L32_Init)
 //->调用函数		:
 //->被调用函数	:
 //<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=
-void GT32L32_ChipErase(GT32L32_Init_TypeDef *GT32L32_Init)
+void GT32L32_ChipErase(GT32L32_Info_TypeDef *GT32L32_Info)
 {
 #ifdef	GT32L32_SPIPORT_EN
 	//____________定义变量
@@ -1824,7 +1559,7 @@ void GT32L32_ChipErase(GT32L32_Init_TypeDef *GT32L32_Init)
 	u8	Address=0x60;	//0X60 OR 0XC7
 	//____________使能片选
 	GPIO_ResetBits(GPIOC,GPIO_Pin_6);
-	GT32L32_CS_Select(GT32L32_Init);
+	GT32L32_CS_Select(GT32L32_Info);
 
 	GT32L32_ReadWriteByte(Address);						//发送地址
 
@@ -1834,7 +1569,7 @@ void GT32L32_ChipErase(GT32L32_Init_TypeDef *GT32L32_Init)
 	}
 	//____________取消片选	
 	GPIO_SetBits(GPIOC,GPIO_Pin_6);
-	GT32L32_CS_DisSelect(GT32L32_Init);
+	GT32L32_CS_DisSelect(GT32L32_Info);
 
 #else
 	//____________定义变量
@@ -1867,13 +1602,13 @@ void GT32L32_ChipErase(GT32L32_Init_TypeDef *GT32L32_Init)
 //->调用函数		:
 //->被调用函数	:
 //<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=
-u8 GT32L32_ReadBufferbac(GT32L32_Init_TypeDef *GT32L32_Init,u32 Address,u16 len,u8 *Buffer)
+u8 GT32L32_ReadBufferbac(GT32L32_Info_TypeDef *GT32L32_Info,u32 Address,u16 len,u8 *Buffer)
 {
 	//____________定义变量
 	u32 i=0;
 //	u8	Status=0XFF;
 	//____________使能片选
-	GT32L32_CS_Select(GT32L32_Init);
+	GT32L32_CS_Select(GT32L32_Info);
 	Address=Address|0x03000000;		//0x03指令字+地址。
 //	Address=Address|0x0B000000;//0x0B指令字+地址。--快速
 	GT32L32_ReadWriteByte(Address>>24);				//发送地址高8位
@@ -1891,7 +1626,7 @@ u8 GT32L32_ReadBufferbac(GT32L32_Init_TypeDef *GT32L32_Init,u32 Address,u16 len,
 	}
 	//____________取消片选	
 	GPIO_SetBits(GPIOC,GPIO_Pin_6);
-	GT32L32_CS_DisSelect(GT32L32_Init);
+	GT32L32_CS_DisSelect(GT32L32_Info);
 	return Buffer[0];	
 }
 //=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>
@@ -1906,7 +1641,7 @@ u8 GT32L32_ReadBufferbac(GT32L32_Init_TypeDef *GT32L32_Init,u32 Address,u16 len,
 //->调用函数		:
 //->被调用函数	:
 //<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=
-u16 GT32L32_ReadBuffer(GT32L32_Init_TypeDef *GT32L32_Init,u8 font,u16 word,unsigned char *Buffer)
+u16 GT32L32_ReadBuffer(GT32L32_Info_TypeDef *GT32L32_Info,u8 font,u16 word,unsigned char *Buffer)
 {
 	//____________定义变量
 	u32 i=0;
@@ -1927,15 +1662,11 @@ u16 GT32L32_ReadBuffer(GT32L32_Init_TypeDef *GT32L32_Init,u8 font,u16 word,unsig
 		Address	=	GT32L32_GetAddress(font, (u8)word, 0, 0, 0);		//获取地址
 		//获取ASCII点阵数据长度
 		lengh= GT32L32_GetBufferLen(font, (u8)word, 0, 0, 0);			//获取长度
-	}
-
-	
-	
-	
+	}	
 	
 	
 	//____________使能片选
-	GT32L32_CS_Select(GT32L32_Init);
+	GT32L32_CS_Select(GT32L32_Info);
 	Address=Address|0x03000000;		//0x03指令字+地址。
 //	Address=Address|0x0B000000;//0x0B指令字+地址。--快速
 	GT32L32_ReadWriteByte(Address>>24);				//发送地址高8位
@@ -1952,7 +1683,7 @@ u16 GT32L32_ReadBuffer(GT32L32_Init_TypeDef *GT32L32_Init,u8 font,u16 word,unsig
 		Buffer[i]=GT32L32_ReadWriteByte(0XFF);	//从字库读出点阵数据到数组中。
 	}
 	//____________取消片选	
-	GT32L32_CS_DisSelect(GT32L32_Init);
+	GT32L32_CS_DisSelect(GT32L32_Info);
 	
 	return lengh;	
 }
@@ -2011,17 +1742,17 @@ u8	GT32L32_ReadWriteByte(u8 Data)
 //->调用函数		:
 //->被调用函数	:
 //<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=
-void GT32L32_SendByte(GT32L32_Init_TypeDef *GT32L32_Init,u8 ByteData)
+void GT32L32_SendByte(GT32L32_Info_TypeDef *GT32L32_Info,u8 ByteData)
 {
 	u8 i;
 	for(i=0;i<8;i++)
 	{
-		GT32L32_CLK_L(GT32L32_Init);
+		GT32L32_CLK_L(GT32L32_Info);
 		if(ByteData&0x80)
-			GT32L32_SI_H(GT32L32_Init);
+			GT32L32_SI_H(GT32L32_Info);
 		else 
-			GT32L32_SI_L(GT32L32_Init);
-		GT32L32_CLK_H(GT32L32_Init);
+			GT32L32_SI_L(GT32L32_Info);
+		GT32L32_CLK_H(GT32L32_Info);
 		ByteData=ByteData<<1;
 	}					
 }
@@ -2035,23 +1766,25 @@ void GT32L32_SendByte(GT32L32_Init_TypeDef *GT32L32_Init,u8 ByteData)
 //->调用函数		:
 //->被调用函数	:
 //<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=
-u8 GT32L32_ReadByte(GT32L32_Init_TypeDef *GT32L32_Init)
+u8 GT32L32_ReadByte(GT32L32_Info_TypeDef *GT32L32_Info)
 {
 	u8 i;
 	u8 dat=0;
-	GT32L32_CLK_H(GT32L32_Init);
+	GT32L32_CLK_H(GT32L32_Info);
 	for(i=0;i<8;i++)
 	{
-		GT32L32_CLK_L(GT32L32_Init);
+		GT32L32_CLK_L(GT32L32_Info);
 		dat=dat<<1;
-		if(GT32L32_SO(GT32L32_Init))
+		if(GT32L32_SO(GT32L32_Info))
 			dat=dat|0x01;
 		else 
 			dat&=0xfe;
-		GT32L32_CLK_H(GT32L32_Init);		
+		GT32L32_CLK_H(GT32L32_Info);		
 	}	
 	return dat;
 }
+
+
 
 
 /*******************	wegam@sina.com	*******************/

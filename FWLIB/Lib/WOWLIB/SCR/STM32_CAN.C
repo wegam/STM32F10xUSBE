@@ -743,19 +743,22 @@ void CAN_ExtTX_DATA(
 * 输出			: 无
 * 返回			: 无
 *******************************************************************************/
-void CAN_RX_DATA(CanRxMsg *RxMessage)
+u8 CAN_RX_DATA(CanRxMsg *RxMessage)
 {
 	if(SET == CAN_GetITStatus(CAN_IT_FF0))
 	{
 		CAN_ClearITPendingBit(CAN_IT_FF0);
+		return 0;
 	}
 	else if(SET == CAN_GetITStatus(CAN_IT_FOV0))
 	{
 		CAN_ClearITPendingBit(CAN_IT_FOV0);
+		return 0;
 	}
 	else
 	{
-			CAN_Receive(CAN_FIFO0, RxMessage);
+		CAN_Receive(CAN_FIFO0, RxMessage);
+		return 1;
 	}
 }
 

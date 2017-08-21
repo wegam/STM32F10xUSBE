@@ -21,7 +21,7 @@ u16 Sreen_Rotate=SCREEN_ROTATE_270D;			//屏方向
 R61509V_Pindef *R61509V_sPinfo=0;
 
 u16 R61509V_BACK_COLOR	=	R61509V_BLACK;		//背景色
-u16 R61509V_POINT_COLOR	=	R61509V_BLUE;   //画笔色
+u16 R61509V_POINT_COLOR	=	R61509V_BLUE;   	//画笔色
 
 /*******************************************************************************
 * 函数名			:	function
@@ -1288,7 +1288,7 @@ void R61509V_Initialize(void)			//按照主控芯片R61509V的power supply on sequence 
 	R61509V_WriteCommand(R61509V_R308_YC9		,	0x100C);		R61509V_Delay(dtime); //--------
 	R61509V_WriteCommand(R61509V_R309_YC10	,	0x2232);		R61509V_Delay(dtime); //--------
 	
-	R61509V_WriteCommand(R61509V_R010_PIC1	,	0x0019);		R61509V_Delay(dtime); //--------面板频率
+	R61509V_WriteCommand(R61509V_R010_PIC1	,	0x001F);		R61509V_Delay(dtime); //--------面板频率--0x19
 	R61509V_WriteCommand(R61509V_R100_PC1		,	0x0330);		R61509V_Delay(dtime); //--------设置电源控制，平衡显示与电消耗
 	R61509V_WriteCommand(R61509V_R101_PC2		,	0x0247);		R61509V_Delay(dtime); //--------
 	R61509V_WriteCommand(R61509V_R102_PC3		,	0xC1B0);		R61509V_Delay(dtime); //--------PSON,PON 都设为1，电源供应打开
@@ -1419,101 +1419,9 @@ void R61509V_Initialize(void)			//按照主控芯片R61509V的power supply on sequence 
 
 //	Sreen_Rotate=SCREEN_ROTATE_270D;				//显示方式
 	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
+
+
+
 //	R61509V_WR_HIGH;
 //	R61509V_RD_HIGH;
 //	R61509V_CS_LOW;
@@ -2089,7 +1997,7 @@ void R61509V_ShowChar(
 {
 	u8 temp;
 //	u8 mode=0;
-	u8 i,j;
+	u8 i=0,j=0;
 //	u8 num=0;
 //	u16 x0=x;
 	u16 colortemp=R61509V_POINT_COLOR;
@@ -2115,28 +2023,37 @@ void R61509V_ShowChar(
 	{
 		if(x>R61509V_W-32||y>R61509V_H-32)
 			return;
-		R61509V_SetWindowAddress(x,y,x+16-1,y+32-1);      //设置光标位置 
+		if(num==128)
+		{
+			R61509V_SetWindowAddress(x,y,x+32-1,y+32-1);      //设置光标位置
+		}
+		else
+		{
+			R61509V_SetWindowAddress(x,y,x+16-1,y+32-1);      //设置光标位置 
+		}
 	}
 	else
 	{
-		return ;
+//		return ;
 	}
 //	SSD1963_DC_Data;			//数据/命令切换	//1-数据，0-命令
 //	SSD1963_WR_Write; 		//0--写开启，1--写关闭
+	i=0;
 	for(i=0;i<num;i++)
 	{ 
-		temp=Buffer[i];		 					//调用1608字体--二维数组形式--字库使用时取消  
+		u16 R61509V_PEN_COLOR	=	R61509V_BLUE;   	//画笔色	
+		temp=Buffer[i];		 					//调用1608字体--二维数组形式--字库使用时取消 	
 		for(j=0;j<8;j++)
 		{
 			if((temp&0x80)==0X80)
 			{
-				R61509V_POINT_COLOR=R61509V_POINT_COLOR;
+				R61509V_PEN_COLOR=R61509V_BLACK;
 			}
 			else
-				R61509V_POINT_COLOR=R61509V_BACK_COLOR;
+				R61509V_PEN_COLOR=R61509V_WHITE;
 			
 //			R61509V_DrawDot(j,i,POINT_COLOR);
-			R61509V_WriteData16(R61509V_POINT_COLOR);
+			R61509V_WriteData16(R61509V_PEN_COLOR);
 //			SSD1963_WR_Write; 		//0--写开启，1--写关闭
 //			GPIO_Write(SSD1963_sPinfo->SSD1963_sDATABUS_PORT,POINT_COLOR);
 //			SSD1963_WR_Read; 			//0--写开启，1--写关闭
@@ -2152,9 +2069,10 @@ void R61509V_ShowChar(
 //			}
 			temp=temp<<1;
 		}
+		R61509V_POINT_COLOR=colortemp;	
 	}	
 //	SSD1963_WR_Read; 		//0--写开启，1--写关闭
-	R61509V_POINT_COLOR=colortemp;	
+//	R61509V_POINT_COLOR=colortemp;	
 }
 
 /*******************************************************************************

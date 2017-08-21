@@ -56,7 +56,7 @@ void CAN_ExtTX_DATA(u32 CAN_ID,u8 length,u8 *Data);			//CAN使用扩展帧发送数据
 
 void CAN_Server(void);
 
-void CAN_RX_DATA(CanRxMsg *RxMessage);
+u8  CAN_RX_DATA(CanRxMsg *RxMessage);
 #endif
 
 

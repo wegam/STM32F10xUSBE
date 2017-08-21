@@ -653,15 +653,288 @@ void SPI_FLASH_ConfigurationDMA(SPI_FLASH_TypeDef *SPI_Conf)		//SPI_FLASH_DMA·½Ê
 	¡ñ ½ÓÊÕÊ±£¬ÔÚÃ¿´ÎRXNE±»ÉèÖÃÎª¡¯1¡¯Ê±·¢³öDMAÇëÇó£¬DMA¿ØÖÆÆ÷Ôò´ÓSPI_DR¼Ä´æÆ÷¶Á³öÊý¾Ý£¬RXNE±êÖ¾Òò´Ë¶ø±»Çå³ý¡£
 -----------------------------------------------------------------------------------------------------**/
 	//1)**********¶¨ÒåÏà¹Ø½á¹¹Ìå
+	SPI_InitTypeDef  SPI_InitStructure;
+	GPIO_InitTypeDef GPIO_InitStructure;
 	DMA_InitTypeDef	DMA_Initstructure;
-
 	DMA_Channel_TypeDef* DMAx_Channeltx=0;				//DMA·¢ËÍÍ¨µÀÇëÇóÐÅºÅ---µ±DMA´®¿Ú·¢ËÍÊý¾ÝÍê³ÉÊ±£¬»á·¢ÆðDMAÖÐ¶Ï
 	DMA_Channel_TypeDef* DMAx_Channelrx=0;				//DMA½ÓÊÕÍ¨µÀÇëÇóÐÅºÅ---DMA´®¿Ú½ÓÊÕÓÉ´®¿Ú·¢ÆðÖÐ¶Ï£¬Òò´Ë´Ë´¦½ÓÊÕÍ¨µÀÖÐ¶Ï²»Ê¹ÓÃ
-
 	u8 Conf_Flag=0;																//ÐèÒªÅäÖÃ±êÖ¾£¬Èç¹ûSPIxºÏ·¨£¬ÔòConf_Flag==1£¬È»ºó½øÐÐÏÂÒ»²½DMAÅäÖÃÏî
 	
 	//2)**********»ù±¾SPIÅäÖÃ
-	SPI_FLASH_ConfigurationNR(SPI_Conf);					//ÆÕÍ¨SPI½Ó¿ÚÅäÖÃ--Î´¿ªÖÐ¶ÏºÍDMA
+//	SPI_FLASH_ConfigurationNR(SPI_Conf);					//ÆÕÍ¨SPI½Ó¿ÚÅäÖÃ--Î´¿ªÖÐ¶ÏºÍDMA
+
+	//2)**********Ïà¹ØGPIOÅäÖÃ
+	if(SPI_Conf->SPIx==SPI1)
+	{
+		//PA4-NSS;PA5-SCK;PA6-MISO;PA7-MOSI;
+		//2.1)**********´ò¿ªSPIÊ±ÖÓ	
+		RCC_APB2PeriphClockCmd(RCC_APB2Periph_SPI1 ,ENABLE);			//¿ªÆôSPIÊ±ÖÓ	
+		RCC_APB2PeriphClockCmd(RCC_APB2Periph_AFIO|RCC_APB2Periph_GPIOA, ENABLE);	
+		
+		if((SPI_Conf->SPI_CS_PORT==GPIOA)&&(SPI_Conf->SPI_CS_PIN==GPIO_Pin_4))			//Èç¹ûSPI_NSSÎªSPI_NSS_Soft£¨Èí¼þ¿ØÖÆ·½Ê½£©
+		{
+//			SPI_SSOutputCmd(Pinfo->sSPIx, ENABLE);			//Èç¹ûÔÚÖ÷»úÄ£Ê½ÏÂµÄÆ¬Ñ¡·½Ê½ÎªÓ²¼þ£¨SPI_NSS_Hard£©·½Ê½£¬´Ë´¦±ØÐë´ò¿ª£¬·ñÔòNSSÎÞÐÅºÅ
+			SPI_Conf->SPI_Flash_NSS_CsFlg=1;		//Èç¹ûÊ¹ÓÃ´¿Ó²¼þSPI1£¨º¬CS½Å£©£¬SPI1_CsFlg=1£¬·ñÔòSPI1_CsFlg=0£»
+			GPIO_InitStructure.GPIO_Pin = GPIO_Pin_4 | GPIO_Pin_5 | GPIO_Pin_6 | GPIO_Pin_7;
+			GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;
+			GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+			GPIO_Init(GPIOA, &GPIO_InitStructure);
+			
+//			GPIO_InitStructure.GPIO_Pin 	= SPI_Conf->SPI_CS_PIN;
+//			GPIO_InitStructure.GPIO_Mode 	= GPIO_Mode_Out_PP;
+//			GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+//			GPIO_Init(SPI_Conf->SPI_CS_PORT, &GPIO_InitStructure);
+		}
+		else
+		{
+//			SPI_SSOutputCmd(Pinfo->sSPIx, DISABLE);			//Èç¹ûÔÚÖ÷»úÄ£Ê½ÏÂµÄÆ¬Ñ¡·½Ê½ÎªÓ²¼þ£¨SPI_NSS_Hard£©·½Ê½£¬´Ë´¦±ØÐë´ò¿ª£¬·ñÔòNSSÎÞÐÅºÅ
+			SPI_Conf->SPI_Flash_NSS_CsFlg=0;		//Èç¹ûÊ¹ÓÃ´¿Ó²¼þSPI1£¨º¬CS½Å£©£¬SPI1_CsFlg=1£¬·ñÔòSPI1_CsFlg=0£»
+			//¿ªCS-GPIOÊ±ÖÓ
+			if(SPI_Conf->SPI_CS_PORT==GPIOA)
+			{
+				if((SPI_Conf->SPI_CS_PIN==GPIO_Pin_13)||(SPI_Conf->SPI_CS_PIN==GPIO_Pin_14)||(SPI_Conf->SPI_CS_PIN==GPIO_Pin_15))
+				{
+					RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA|RCC_APB2Periph_AFIO, ENABLE);
+					//GPIO_PinRemapConfig(GPIO_Remap_SWJ_Disable,ENABLE);			//¹Ø±ÕSW¹¦ÄÜ
+					GPIO_PinRemapConfig(GPIO_Remap_SWJ_JTAGDisable,ENABLE);		//¹Ø±ÕJTAG,SW¹¦ÄÜ¿ªÆô
+				}
+			}
+			else if(SPI_Conf->SPI_CS_PORT==GPIOB)
+			{
+				if((SPI_Conf->SPI_CS_PIN==GPIO_Pin_3)||(SPI_Conf->SPI_CS_PIN==GPIO_Pin_4))
+				{
+					RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOB|RCC_APB2Periph_AFIO, ENABLE);
+					GPIO_PinRemapConfig(GPIO_Remap_SWJ_JTAGDisable,ENABLE);				//¹Ø±ÕJTAG
+				}
+				else
+					RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOB, ENABLE);
+			}
+			else if(SPI_Conf->SPI_CS_PORT==GPIOC)
+			{
+				if((SPI_Conf->SPI_CS_PIN==GPIO_Pin_14)||(SPI_Conf->SPI_CS_PIN==GPIO_Pin_15))
+					RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOC |RCC_APB2Periph_AFIO, ENABLE);
+				else
+					RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOC, ENABLE);
+			}
+			else if(SPI_Conf->SPI_CS_PORT==GPIOD)
+			{
+				RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOD, ENABLE);
+			}
+			else if(SPI_Conf->SPI_CS_PORT==GPIOE)
+			{
+				RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOE, ENABLE);
+			}
+			else if(SPI_Conf->SPI_CS_PORT==GPIOF)
+			{
+				RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOF, ENABLE);
+			}
+			else if(SPI_Conf->SPI_CS_PORT==GPIOG)
+			{
+				RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOG, ENABLE);
+			}
+			//SCK,MISO,MOSIÅäÖÃ
+			GPIO_InitStructure.GPIO_Pin 	= GPIO_Pin_5 | GPIO_Pin_6 | GPIO_Pin_7;
+			GPIO_InitStructure.GPIO_Mode 	= GPIO_Mode_AF_PP;
+			GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+			GPIO_Init(GPIOA, &GPIO_InitStructure);
+			//CSÅäÖÃ
+			GPIO_InitStructure.GPIO_Pin 	= SPI_Conf->SPI_CS_PIN;
+			GPIO_InitStructure.GPIO_Mode 	= GPIO_Mode_Out_PP;
+			GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+			GPIO_Init(SPI_Conf->SPI_CS_PORT, &GPIO_InitStructure);
+		}
+	}
+	else if(SPI_Conf->SPIx==SPI2)
+	{
+		//PB12-NSS;PB13-SCK;PB14-MISO;PB15-MOSI;
+		//2.2)**********´ò¿ªSPIÊ±ÖÓ
+		RCC_APB1PeriphClockCmd(RCC_APB1Periph_SPI2 ,ENABLE);				//¿ªÆôSPIÊ±ÖÓ			
+		RCC_APB2PeriphClockCmd(RCC_APB2Periph_AFIO|RCC_APB2Periph_GPIOB, ENABLE);
+		
+		if((SPI_Conf->SPI_CS_PORT==GPIOB)&&(SPI_Conf->SPI_CS_PIN==GPIO_Pin_12))			//Èç¹ûSPI_NSSÎªSPI_NSS_Soft£¨Èí¼þ¿ØÖÆ·½Ê½£©
+		{
+			SPI_Conf->SPI_Flash_NSS_CsFlg=1;		//Èç¹ûÊ¹ÓÃ´¿Ó²¼þSPI2£¨º¬CS½Å£©£¬SPI2_CsFlg=1£¬·ñÔòSPI2_CsFlg=0£»
+			SPI_SSOutputCmd(SPI_Conf->SPIx, ENABLE);			//Èç¹ûÔÚÖ÷»úÄ£Ê½ÏÂµÄÆ¬Ñ¡·½Ê½ÎªÓ²¼þ£¨SPI_NSS_Hard£©·½Ê½£¬´Ë´¦±ØÐë´ò¿ª£¬·ñÔòNSSÎÞÐÅºÅ
+			GPIO_InitStructure.GPIO_Pin = GPIO_Pin_12 | GPIO_Pin_13 | GPIO_Pin_14 | GPIO_Pin_15;
+			GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+			GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;  //¸´ÓÃÍÆÍìÊä³ö
+			GPIO_Init(GPIOB, &GPIO_InitStructure);	
+		}
+		else
+		{
+			
+//			SPI_SSOutputCmd(Pinfo->sSPIx, DISABLE);			//Èç¹ûÔÚÖ÷»úÄ£Ê½ÏÂµÄÆ¬Ñ¡·½Ê½ÎªÓ²¼þ£¨SPI_NSS_Hard£©·½Ê½£¬´Ë´¦±ØÐë´ò¿ª£¬·ñÔòNSSÎÞÐÅºÅ
+			SPI_Conf->SPI_Flash_NSS_CsFlg=0;		//Èç¹ûÊ¹ÓÃ´¿Ó²¼þSPI2£¨º¬CS½Å£©£¬SPI2_CsFlg=1£¬·ñÔòSPI2_CsFlg=0£»
+			//¿ªCS-GPIOÊ±ÖÓ
+			if(SPI_Conf->SPI_CS_PORT==GPIOA)
+			{
+				if((SPI_Conf->SPI_CS_PIN==GPIO_Pin_13)||(SPI_Conf->SPI_CS_PIN==GPIO_Pin_14)||(SPI_Conf->SPI_CS_PIN==GPIO_Pin_15))
+				{
+					RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA|RCC_APB2Periph_AFIO, ENABLE);
+					//GPIO_PinRemapConfig(GPIO_Remap_SWJ_Disable,ENABLE);			//¹Ø±ÕSW¹¦ÄÜ
+					GPIO_PinRemapConfig(GPIO_Remap_SWJ_JTAGDisable,ENABLE);		//¹Ø±ÕJTAG,SW¹¦ÄÜ¿ªÆô
+				}
+				else
+					RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA, ENABLE);
+			}
+			else if(SPI_Conf->SPI_CS_PORT==GPIOB)
+			{
+				if((SPI_Conf->SPI_CS_PIN==GPIO_Pin_3)||(SPI_Conf->SPI_CS_PIN==GPIO_Pin_4))
+				{
+					RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOB|RCC_APB2Periph_AFIO, ENABLE);
+					GPIO_PinRemapConfig(GPIO_Remap_SWJ_JTAGDisable,ENABLE);				//¹Ø±ÕJTAG
+				}
+				else
+					RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOB, ENABLE);
+			}
+			else if(SPI_Conf->SPI_CS_PORT==GPIOC)
+			{
+				if((SPI_Conf->SPI_CS_PIN==GPIO_Pin_14)||(SPI_Conf->SPI_CS_PIN==GPIO_Pin_15))
+					RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOC |RCC_APB2Periph_AFIO, ENABLE);
+				else
+					RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOC, ENABLE);
+			}
+			else if(SPI_Conf->SPI_CS_PORT==GPIOD)
+			{
+				RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOD, ENABLE);
+			}
+			else if(SPI_Conf->SPI_CS_PORT==GPIOE)
+			{
+				RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOE, ENABLE);
+			}
+			else if(SPI_Conf->SPI_CS_PORT==GPIOF)
+			{
+				RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOF, ENABLE);
+			}
+			else if(SPI_Conf->SPI_CS_PORT==GPIOG)
+			{
+				RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOG, ENABLE);
+			}
+			//SCK,MISO,MOSIÅäÖÃ
+			GPIO_InitStructure.GPIO_Pin 	= GPIO_Pin_13 | GPIO_Pin_14 | GPIO_Pin_15;
+			GPIO_InitStructure.GPIO_Mode 	= GPIO_Mode_AF_PP;
+			GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+			GPIO_Init(GPIOB, &GPIO_InitStructure);
+			//CSÅäÖÃ
+			GPIO_InitStructure.GPIO_Pin 	= SPI_Conf->SPI_CS_PIN;
+			GPIO_InitStructure.GPIO_Mode 	= GPIO_Mode_Out_PP;
+			GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+			GPIO_Init(SPI_Conf->SPI_CS_PORT, &GPIO_InitStructure);
+		}
+	}
+	else if(SPI_Conf->SPIx==SPI3)
+	{
+		//PA15-NSS;PB3-SCK;PB4-MISO;PB5-MOSI;
+		//2.2)**********´ò¿ªSPIÊ±ÖÓ
+		RCC_APB1PeriphClockCmd(RCC_APB1Periph_SPI3 ,ENABLE);			
+		RCC_APB2PeriphClockCmd(RCC_APB2Periph_AFIO|RCC_APB2Periph_GPIOA|RCC_APB2Periph_GPIOB, ENABLE);
+		
+		if((SPI_Conf->SPI_CS_PORT==GPIOA)&&(SPI_Conf->SPI_CS_PIN==GPIO_Pin_15))			//Èç¹ûSPI_NSSÎªSPI_NSS_Soft£¨Èí¼þ¿ØÖÆ·½Ê½£©
+		{
+			SPI_Conf->SPI_Flash_NSS_CsFlg=1;		//Èç¹ûÊ¹ÓÃ´¿Ó²¼þSPI3£¨º¬CS½Å£©£¬SPI3_CsFlg=1£¬·ñÔòSPI3_CsFlg=0£»
+			
+			GPIO_InitStructure.GPIO_Pin 	= GPIO_Pin_3 | GPIO_Pin_4 | GPIO_Pin_5;
+			GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+			GPIO_InitStructure.GPIO_Mode 	= GPIO_Mode_AF_PP;  		//¸´ÓÃÍÆÍìÊä³ö
+			GPIO_Init(GPIOB, &GPIO_InitStructure);
+			
+			//2.2)**********SPI_NSSÅäÖÃ		
+			GPIO_InitStructure.GPIO_Pin 	= GPIO_Pin_15;
+			GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+			GPIO_InitStructure.GPIO_Mode 	= GPIO_Mode_AF_PP;  		//¸´ÓÃÍÆÍìÊä³ö
+			GPIO_Init(GPIOA, &GPIO_InitStructure);
+		}
+		else																										//Èç¹ûSPI_NSSÎªSPI_NSS_Soft£¨Èí¼þ¿ØÖÆ·½Ê½£©
+		{
+			SPI_Conf->SPI_Flash_NSS_CsFlg=0;		//Èç¹ûÊ¹ÓÃ´¿Ó²¼þSPI3£¨º¬CS½Å£©£¬UseSPI3_flg=1£¬·ñÔòUseSPI3_flg=0£»
+			//¿ªCS-GPIOÊ±ÖÓ
+			if(SPI_Conf->SPI_CS_PORT==GPIOA)
+			{
+				if((SPI_Conf->SPI_CS_PIN==GPIO_Pin_13)||(SPI_Conf->SPI_CS_PIN==GPIO_Pin_14)||(SPI_Conf->SPI_CS_PIN==GPIO_Pin_15))
+				{
+					RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA|RCC_APB2Periph_AFIO, ENABLE);
+					//GPIO_PinRemapConfig(GPIO_Remap_SWJ_Disable,ENABLE);			//¹Ø±ÕSW¹¦ÄÜ
+					GPIO_PinRemapConfig(GPIO_Remap_SWJ_JTAGDisable,ENABLE);		//¹Ø±ÕJTAG,SW¹¦ÄÜ¿ªÆô
+				}
+				else
+					RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA, ENABLE);
+			}
+			else if(SPI_Conf->SPI_CS_PORT==GPIOB)
+			{
+				if((SPI_Conf->SPI_CS_PIN==GPIO_Pin_3)||(SPI_Conf->SPI_CS_PIN==GPIO_Pin_4))
+				{
+					RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOB|RCC_APB2Periph_AFIO, ENABLE);
+					GPIO_PinRemapConfig(GPIO_Remap_SWJ_JTAGDisable,ENABLE);				//¹Ø±ÕJTAG
+				}
+				else
+					RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOB, ENABLE);
+			}
+			else if(SPI_Conf->SPI_CS_PORT==GPIOC)
+			{
+				if((SPI_Conf->SPI_CS_PIN==GPIO_Pin_14)||(SPI_Conf->SPI_CS_PIN==GPIO_Pin_15))
+					RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOC |RCC_APB2Periph_AFIO, ENABLE);
+				else
+					RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOC, ENABLE);
+			}
+			else if(SPI_Conf->SPI_CS_PORT==GPIOD)
+			{
+				RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOD, ENABLE);
+			}
+			else if(SPI_Conf->SPI_CS_PORT==GPIOE)
+			{
+				RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOE, ENABLE);
+			}
+			else if(SPI_Conf->SPI_CS_PORT==GPIOF)
+			{
+				RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOF, ENABLE);
+			}
+			else if(SPI_Conf->SPI_CS_PORT==GPIOG)
+			{
+				RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOG, ENABLE);
+			}
+			//SCK,MISO,MOSIÅäÖÃ
+			GPIO_InitStructure.GPIO_Pin 	= GPIO_Pin_3 | GPIO_Pin_4 | GPIO_Pin_5;
+			GPIO_InitStructure.GPIO_Mode 	= GPIO_Mode_AF_PP;
+			GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+			GPIO_Init(GPIOB, &GPIO_InitStructure);
+			//CSÅäÖÃ
+			GPIO_InitStructure.GPIO_Pin 	= SPI_Conf->SPI_CS_PIN;
+			GPIO_InitStructure.GPIO_Mode 	= GPIO_Mode_Out_PP;
+			GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+			GPIO_Init(SPI_Conf->SPI_CS_PORT, &GPIO_InitStructure);
+		}			
+	}
+	//3)**********SPIÅäÖÃÑ¡Ïî
+	SPI_InitStructure.SPI_Direction = SPI_Direction_2Lines_FullDuplex;				//ÉèÖÃ·½Ïò				£¨2ÏßÈ«Ë«¹¤¡¢2ÏßÖ»½ÓÊÕ¡¢Ò»Ïß·¢ËÍ¡¢Ò»Ïß½ÓÊÕ£©
+	SPI_InitStructure.SPI_Mode = SPI_Mode_Master;															//Ä£Ê½         	£¨´Ó»òÖ÷Éè±¸£©
+	SPI_InitStructure.SPI_DataSize = SPI_DataSize_8b;													//¿í¶È         	£¨8»ò16Î»£©
+	SPI_InitStructure.SPI_CPOL = SPI_CPOL_Low;																//Ê±ÖÓ¼«ÐÔ     	£¨µÍ»ò¸ß£©
+	SPI_InitStructure.SPI_CPHA = SPI_CPHA_1Edge;															//Ê±ÖÓÏàÎ»     	£¨µÚÒ»¸ö»òµÚ¶þ¸öÌø±äÑØ£©
+	if(SPI_Conf->SPI_Flash_NSS_CsFlg==1)																			//Èç¹ûÊ¹ÓÃ´¿Ó²¼þSPI1£¨º¬CS½Å£©£¬UseSPI1_flg=1£¬·ñÔòUseSPI1_flg=0£»
+	{
+		SPI_InitStructure.SPI_NSS = SPI_NSS_Hard;																//Æ¬Ñ¡·½Ê½     	£¨Ó²¼þ»òÈí¼þ·½Ê½£©
+	}
+	else
+	{
+		SPI_InitStructure.SPI_NSS = SPI_NSS_Soft;															//Æ¬Ñ¡·½Ê½     	£¨Ó²¼þ»òÈí¼þ·½Ê½£©
+	}	
+	SPI_InitStructure.SPI_BaudRatePrescaler = SPI_Conf->SPI_BaudRatePrescaler_x;				//²¨ÌØÂÊÔ¤·ÖÆµ 	£¨´Ó2---256·ÖÆµ£©
+	SPI_InitStructure.SPI_FirstBit = SPI_FirstBit_MSB;												//×îÏÈ·¢ËÍµÄÎ» 	£¨×îµÍÎ»£¬»¹ÊÇ×î¸ßÎ»ÔÚÏÈ£©
+	SPI_InitStructure.SPI_CRCPolynomial = 7;																	//ÉèÖÃcrc¶àÏîÊ½	£¨Êý×Ö£©Èç7
+	SPI_Init(SPI_Conf->SPIx,&SPI_InitStructure);
+
+	SPI_FLASH_DISALBE(SPI_Conf);				//¹Ø±ÕSPI½Ó¿Ú£¬Ê¹ÓÃÊ±ÔÙ´ò¿ª
+	
+	//3)**********Ê¹ÄÜSPIx_NESSÎªÖ÷Êä³öÄ£Ê½
+	if((SPI_Conf->SPIx->CR1&0X0200)!=SPI_NSS_Soft)						//Èç¹ûÔÚÖ÷»úÄ£Ê½ÏÂµÄÆ¬Ñ¡·½Ê½ÎªÓ²¼þ£¨SPI_NSS_Hard£©·½Ê½£¬´Ë´¦±ØÐë´ò¿ª£¬·ñÔòNSSÎÞÐÅºÅ
+	{
+		SPI_SSOutputCmd(SPI_Conf->SPIx, ENABLE);								//Èç¹ûÔÚÖ÷»úÄ£Ê½ÏÂµÄÆ¬Ñ¡·½Ê½ÎªÓ²¼þ£¨SPI_NSS_Hard£©·½Ê½£¬´Ë´¦±ØÐë´ò¿ª£¬·ñÔòNSSÎÞÐÅºÅ
+//		SPI_SSOutputCmd(SPI_Conf->SPIx, DISABLE);								//Èç¹ûÔÚÖ÷»úÄ£Ê½ÏÂµÄÆ¬Ñ¡·½Ê½ÎªÓ²¼þ£¨SPI_NSS_Hard£©·½Ê½£¬´Ë´¦±ØÐë´ò¿ª£¬·ñÔòNSSÎÞÐÅºÅ
+	}
+	else
+	{
+		SPI_SSOutputCmd(SPI_Conf->SPIx, DISABLE);								//Èç¹ûÔÚÖ÷»úÄ£Ê½ÏÂµÄÆ¬Ñ¡·½Ê½ÎªÓ²¼þ£¨SPI_NSS_Hard£©·½Ê½£¬´Ë´¦±ØÐë´ò¿ª£¬·ñÔòNSSÎÞÐÅºÅ
+	}
 	
 	//3)**********SPIÍ¨µÀÑ¡Ôñ
 	if(SPI_Conf->SPIx==SPI1)

@@ -751,6 +751,11 @@
               <FileType>1</FileType>
               <FilePath>..\..\..\..\FWLIB\Lib\PHY\EC11Encoder.C</FilePath>
             </File>
+            <File>
+              <FileName>LCDDISPLAY.C</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\..\FWLIB\Lib\PHY\LCDDISPLAY.C</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -1932,6 +1937,11 @@
               <FileType>1</FileType>
               <FilePath>..\..\..\..\FWLIB\Lib\PHY\EC11Encoder.C</FilePath>
             </File>
+            <File>
+              <FileName>LCDDISPLAY.C</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\..\FWLIB\Lib\PHY\LCDDISPLAY.C</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -3048,6 +3058,11 @@
               <FileName>EC11Encoder.C</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\..\..\FWLIB\Lib\PHY\EC11Encoder.C</FilePath>
+            </File>
+            <File>
+              <FileName>LCDDISPLAY.C</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\..\FWLIB\Lib\PHY\LCDDISPLAY.C</FilePath>
             </File>
           </Files>
         </Group>
@@ -4166,6 +4181,11 @@
               <FileType>1</FileType>
               <FilePath>..\..\..\..\FWLIB\Lib\PHY\EC11Encoder.C</FilePath>
             </File>
+            <File>
+              <FileName>LCDDISPLAY.C</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\..\FWLIB\Lib\PHY\LCDDISPLAY.C</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -5282,6 +5302,11 @@
               <FileName>EC11Encoder.C</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\..\..\FWLIB\Lib\PHY\EC11Encoder.C</FilePath>
+            </File>
+            <File>
+              <FileName>LCDDISPLAY.C</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\..\FWLIB\Lib\PHY\LCDDISPLAY.C</FilePath>
             </File>
           </Files>
         </Group>
@@ -6400,6 +6425,11 @@
               <FileType>1</FileType>
               <FilePath>..\..\..\..\FWLIB\Lib\PHY\EC11Encoder.C</FilePath>
             </File>
+            <File>
+              <FileName>LCDDISPLAY.C</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\..\FWLIB\Lib\PHY\LCDDISPLAY.C</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -7516,6 +7546,11 @@
               <FileName>EC11Encoder.C</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\..\..\FWLIB\Lib\PHY\EC11Encoder.C</FilePath>
+            </File>
+            <File>
+              <FileName>LCDDISPLAY.C</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\..\FWLIB\Lib\PHY\LCDDISPLAY.C</FilePath>
             </File>
           </Files>
         </Group>
@@ -8634,6 +8669,11 @@
               <FileType>1</FileType>
               <FilePath>..\..\..\..\FWLIB\Lib\PHY\EC11Encoder.C</FilePath>
             </File>
+            <File>
+              <FileName>LCDDISPLAY.C</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\..\FWLIB\Lib\PHY\LCDDISPLAY.C</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -9750,6 +9790,11 @@
               <FileName>EC11Encoder.C</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\..\..\FWLIB\Lib\PHY\EC11Encoder.C</FilePath>
+            </File>
+            <File>
+              <FileName>LCDDISPLAY.C</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\..\FWLIB\Lib\PHY\LCDDISPLAY.C</FilePath>
             </File>
           </Files>
         </Group>
@@ -10868,6 +10913,11 @@
               <FileType>1</FileType>
               <FilePath>..\..\..\..\FWLIB\Lib\PHY\EC11Encoder.C</FilePath>
             </File>
+            <File>
+              <FileName>LCDDISPLAY.C</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\..\FWLIB\Lib\PHY\LCDDISPLAY.C</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -11984,6 +12034,11 @@
               <FileName>EC11Encoder.C</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\..\..\FWLIB\Lib\PHY\EC11Encoder.C</FilePath>
+            </File>
+            <File>
+              <FileName>LCDDISPLAY.C</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\..\FWLIB\Lib\PHY\LCDDISPLAY.C</FilePath>
             </File>
           </Files>
         </Group>
@@ -13166,6 +13221,11 @@
               <FileType>1</FileType>
               <FilePath>..\..\..\..\FWLIB\Lib\PHY\EC11Encoder.C</FilePath>
             </File>
+            <File>
+              <FileName>LCDDISPLAY.C</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\..\FWLIB\Lib\PHY\LCDDISPLAY.C</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -14283,6 +14343,11 @@
               <FileType>1</FileType>
               <FilePath>..\..\..\..\FWLIB\Lib\PHY\EC11Encoder.C</FilePath>
             </File>
+            <File>
+              <FileName>LCDDISPLAY.C</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\..\FWLIB\Lib\PHY\LCDDISPLAY.C</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -15399,6 +15464,11 @@
               <FileName>EC11Encoder.C</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\..\..\FWLIB\Lib\PHY\EC11Encoder.C</FilePath>
+            </File>
+            <File>
+              <FileName>LCDDISPLAY.C</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\..\FWLIB\Lib\PHY\LCDDISPLAY.C</FilePath>
             </File>
           </Files>
         </Group>
@@ -16581,6 +16651,11 @@
               <FileType>1</FileType>
               <FilePath>..\..\..\..\FWLIB\Lib\PHY\EC11Encoder.C</FilePath>
             </File>
+            <File>
+              <FileName>LCDDISPLAY.C</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\..\FWLIB\Lib\PHY\LCDDISPLAY.C</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -17698,6 +17773,11 @@
               <FileType>1</FileType>
               <FilePath>..\..\..\..\FWLIB\Lib\PHY\EC11Encoder.C</FilePath>
             </File>
+            <File>
+              <FileName>LCDDISPLAY.C</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\..\FWLIB\Lib\PHY\LCDDISPLAY.C</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -18814,6 +18894,11 @@
               <FileName>EC11Encoder.C</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\..\..\FWLIB\Lib\PHY\EC11Encoder.C</FilePath>
+            </File>
+            <File>
+              <FileName>LCDDISPLAY.C</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\..\FWLIB\Lib\PHY\LCDDISPLAY.C</FilePath>
             </File>
           </Files>
         </Group>
@@ -19996,6 +20081,11 @@
               <FileType>1</FileType>
               <FilePath>..\..\..\..\FWLIB\Lib\PHY\EC11Encoder.C</FilePath>
             </File>
+            <File>
+              <FileName>LCDDISPLAY.C</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\..\FWLIB\Lib\PHY\LCDDISPLAY.C</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -21113,6 +21203,11 @@
               <FileType>1</FileType>
               <FilePath>..\..\..\..\FWLIB\Lib\PHY\EC11Encoder.C</FilePath>
             </File>
+            <File>
+              <FileName>LCDDISPLAY.C</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\..\FWLIB\Lib\PHY\LCDDISPLAY.C</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -22229,6 +22324,11 @@
               <FileName>EC11Encoder.C</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\..\..\FWLIB\Lib\PHY\EC11Encoder.C</FilePath>
+            </File>
+            <File>
+              <FileName>LCDDISPLAY.C</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\..\FWLIB\Lib\PHY\LCDDISPLAY.C</FilePath>
             </File>
           </Files>
         </Group>
@@ -23411,6 +23511,11 @@
               <FileType>1</FileType>
               <FilePath>..\..\..\..\FWLIB\Lib\PHY\EC11Encoder.C</FilePath>
             </File>
+            <File>
+              <FileName>LCDDISPLAY.C</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\..\FWLIB\Lib\PHY\LCDDISPLAY.C</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -24527,6 +24632,11 @@
               <FileName>EC11Encoder.C</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\..\..\FWLIB\Lib\PHY\EC11Encoder.C</FilePath>
+            </File>
+            <File>
+              <FileName>LCDDISPLAY.C</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\..\FWLIB\Lib\PHY\LCDDISPLAY.C</FilePath>
             </File>
           </Files>
         </Group>
@@ -25645,6 +25755,11 @@
               <FileType>1</FileType>
               <FilePath>..\..\..\..\FWLIB\Lib\PHY\EC11Encoder.C</FilePath>
             </File>
+            <File>
+              <FileName>LCDDISPLAY.C</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\..\FWLIB\Lib\PHY\LCDDISPLAY.C</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -26761,6 +26876,11 @@
               <FileName>EC11Encoder.C</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\..\..\FWLIB\Lib\PHY\EC11Encoder.C</FilePath>
+            </File>
+            <File>
+              <FileName>LCDDISPLAY.C</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\..\FWLIB\Lib\PHY\LCDDISPLAY.C</FilePath>
             </File>
           </Files>
         </Group>
@@ -27943,6 +28063,11 @@
               <FileType>1</FileType>
               <FilePath>..\..\..\..\FWLIB\Lib\PHY\EC11Encoder.C</FilePath>
             </File>
+            <File>
+              <FileName>LCDDISPLAY.C</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\..\FWLIB\Lib\PHY\LCDDISPLAY.C</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -29124,6 +29249,11 @@
               <FileType>1</FileType>
               <FilePath>..\..\..\..\FWLIB\Lib\PHY\EC11Encoder.C</FilePath>
             </File>
+            <File>
+              <FileName>LCDDISPLAY.C</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\..\FWLIB\Lib\PHY\LCDDISPLAY.C</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -30241,6 +30371,11 @@
               <FileType>1</FileType>
               <FilePath>..\..\..\..\FWLIB\Lib\PHY\EC11Encoder.C</FilePath>
             </File>
+            <File>
+              <FileName>LCDDISPLAY.C</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\..\FWLIB\Lib\PHY\LCDDISPLAY.C</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -31357,6 +31492,11 @@
               <FileName>EC11Encoder.C</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\..\..\FWLIB\Lib\PHY\EC11Encoder.C</FilePath>
+            </File>
+            <File>
+              <FileName>LCDDISPLAY.C</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\..\FWLIB\Lib\PHY\LCDDISPLAY.C</FilePath>
             </File>
           </Files>
         </Group>
@@ -32539,6 +32679,11 @@
               <FileType>1</FileType>
               <FilePath>..\..\..\..\FWLIB\Lib\PHY\EC11Encoder.C</FilePath>
             </File>
+            <File>
+              <FileName>LCDDISPLAY.C</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\..\FWLIB\Lib\PHY\LCDDISPLAY.C</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -33719,6 +33864,11 @@
               <FileName>EC11Encoder.C</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\..\..\FWLIB\Lib\PHY\EC11Encoder.C</FilePath>
+            </File>
+            <File>
+              <FileName>LCDDISPLAY.C</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\..\FWLIB\Lib\PHY\LCDDISPLAY.C</FilePath>
             </File>
           </Files>
         </Group>
@@ -34901,6 +35051,11 @@
               <FileType>1</FileType>
               <FilePath>..\..\..\..\FWLIB\Lib\PHY\EC11Encoder.C</FilePath>
             </File>
+            <File>
+              <FileName>LCDDISPLAY.C</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\..\FWLIB\Lib\PHY\LCDDISPLAY.C</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -36081,6 +36236,11 @@
               <FileName>EC11Encoder.C</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\..\..\FWLIB\Lib\PHY\EC11Encoder.C</FilePath>
+            </File>
+            <File>
+              <FileName>LCDDISPLAY.C</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\..\FWLIB\Lib\PHY\LCDDISPLAY.C</FilePath>
             </File>
           </Files>
         </Group>
@@ -37263,6 +37423,11 @@
               <FileType>1</FileType>
               <FilePath>..\..\..\..\FWLIB\Lib\PHY\EC11Encoder.C</FilePath>
             </File>
+            <File>
+              <FileName>LCDDISPLAY.C</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\..\FWLIB\Lib\PHY\LCDDISPLAY.C</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -38443,6 +38608,11 @@
               <FileName>EC11Encoder.C</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\..\..\FWLIB\Lib\PHY\EC11Encoder.C</FilePath>
+            </File>
+            <File>
+              <FileName>LCDDISPLAY.C</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\..\FWLIB\Lib\PHY\LCDDISPLAY.C</FilePath>
             </File>
           </Files>
         </Group>
@@ -39625,6 +39795,11 @@
               <FileType>1</FileType>
               <FilePath>..\..\..\..\FWLIB\Lib\PHY\EC11Encoder.C</FilePath>
             </File>
+            <File>
+              <FileName>LCDDISPLAY.C</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\..\FWLIB\Lib\PHY\LCDDISPLAY.C</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -40805,6 +40980,11 @@
               <FileName>EC11Encoder.C</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\..\..\FWLIB\Lib\PHY\EC11Encoder.C</FilePath>
+            </File>
+            <File>
+              <FileName>LCDDISPLAY.C</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\..\FWLIB\Lib\PHY\LCDDISPLAY.C</FilePath>
             </File>
           </Files>
         </Group>
@@ -41987,6 +42167,11 @@
               <FileType>1</FileType>
               <FilePath>..\..\..\..\FWLIB\Lib\PHY\EC11Encoder.C</FilePath>
             </File>
+            <File>
+              <FileName>LCDDISPLAY.C</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\..\FWLIB\Lib\PHY\LCDDISPLAY.C</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -43167,6 +43352,11 @@
               <FileName>EC11Encoder.C</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\..\..\FWLIB\Lib\PHY\EC11Encoder.C</FilePath>
+            </File>
+            <File>
+              <FileName>LCDDISPLAY.C</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\..\FWLIB\Lib\PHY\LCDDISPLAY.C</FilePath>
             </File>
           </Files>
         </Group>
@@ -44349,6 +44539,11 @@
               <FileType>1</FileType>
               <FilePath>..\..\..\..\FWLIB\Lib\PHY\EC11Encoder.C</FilePath>
             </File>
+            <File>
+              <FileName>LCDDISPLAY.C</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\..\FWLIB\Lib\PHY\LCDDISPLAY.C</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -45529,6 +45724,11 @@
               <FileName>EC11Encoder.C</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\..\..\FWLIB\Lib\PHY\EC11Encoder.C</FilePath>
+            </File>
+            <File>
+              <FileName>LCDDISPLAY.C</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\..\FWLIB\Lib\PHY\LCDDISPLAY.C</FilePath>
             </File>
           </Files>
         </Group>
@@ -46711,6 +46911,11 @@
               <FileType>1</FileType>
               <FilePath>..\..\..\..\FWLIB\Lib\PHY\EC11Encoder.C</FilePath>
             </File>
+            <File>
+              <FileName>LCDDISPLAY.C</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\..\FWLIB\Lib\PHY\LCDDISPLAY.C</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -47891,6 +48096,11 @@
               <FileName>EC11Encoder.C</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\..\..\FWLIB\Lib\PHY\EC11Encoder.C</FilePath>
+            </File>
+            <File>
+              <FileName>LCDDISPLAY.C</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\..\FWLIB\Lib\PHY\LCDDISPLAY.C</FilePath>
             </File>
           </Files>
         </Group>
@@ -49073,6 +49283,11 @@
               <FileType>1</FileType>
               <FilePath>..\..\..\..\FWLIB\Lib\PHY\EC11Encoder.C</FilePath>
             </File>
+            <File>
+              <FileName>LCDDISPLAY.C</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\..\FWLIB\Lib\PHY\LCDDISPLAY.C</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -50253,6 +50468,11 @@
               <FileName>EC11Encoder.C</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\..\..\FWLIB\Lib\PHY\EC11Encoder.C</FilePath>
+            </File>
+            <File>
+              <FileName>LCDDISPLAY.C</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\..\FWLIB\Lib\PHY\LCDDISPLAY.C</FilePath>
             </File>
           </Files>
         </Group>
@@ -51435,6 +51655,11 @@
               <FileType>1</FileType>
               <FilePath>..\..\..\..\FWLIB\Lib\PHY\EC11Encoder.C</FilePath>
             </File>
+            <File>
+              <FileName>LCDDISPLAY.C</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\..\FWLIB\Lib\PHY\LCDDISPLAY.C</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -52616,6 +52841,11 @@
               <FileType>1</FileType>
               <FilePath>..\..\..\..\FWLIB\Lib\PHY\EC11Encoder.C</FilePath>
             </File>
+            <File>
+              <FileName>LCDDISPLAY.C</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\..\FWLIB\Lib\PHY\LCDDISPLAY.C</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -53732,6 +53962,11 @@
               <FileName>EC11Encoder.C</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\..\..\FWLIB\Lib\PHY\EC11Encoder.C</FilePath>
+            </File>
+            <File>
+              <FileName>LCDDISPLAY.C</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\..\FWLIB\Lib\PHY\LCDDISPLAY.C</FilePath>
             </File>
           </Files>
         </Group>

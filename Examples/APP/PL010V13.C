@@ -33,6 +33,8 @@
 #include "stm32f10x_dma.h"
 
 u16	DelayTime=0x1000;
+u16	LCDTime=0;
+u16	DSPTime=0;
 u32 testADC=0;
 u32 bacADC=0;
 u32 bacADC2=0;
@@ -44,7 +46,7 @@ u16 ADC_doty1=0;
 
 R61509V_Pindef R61509V_Pinfo;
 CS5530_Pindef CS5530_Pinfo;
-GT32L32_Init_TypeDef 	GT32L32_Init;
+GT32L32_Info_TypeDef 	GT32L32_Info;
 u32 CS5530_ADC_Value=0xFFFFFFFF;
 t_Point point;
 u8 zimo[720]="R61509V_DrawRectangle(11,11,229,389,0X07FF)";
@@ -77,7 +79,7 @@ void PL010V13_Configuration(void)
 	
 	IWDG_Configuration(1000);			//¶ÀÁ¢¿´ÃÅ¹·ÅäÖÃ---²ÎÊıµ¥Î»ms	
 	
-	PWM_OUT(TIM2,PWM_OUTChannel1,1,200);		//PWMÉè¶¨-20161127°æ±¾
+//	PWM_OUT(TIM2,PWM_OUTChannel4,60,200);		//PWMÉè¶¨-20161127°æ±¾
 }
 /*******************************************************************************
 * º¯ÊıÃû		:	
@@ -92,17 +94,61 @@ void PL010V13_Server(void)
 	
 	DelayTime++;
 	
-	RxNum=RS485_ReadBufferIDLE(&RS485_Conf,(u32*)RevBuffe,(u32*)RxdBuffe);	//´®¿Ú¿ÕÏĞÄ£Ê½¶Á´®¿Ú½ÓÊÕ»º³åÇø£¬Èç¹ûÓĞÊı¾İ£¬½«Êı¾İ¿½±´µ½RevBuffer,²¢·µ»Ø½ÓÊÕµ½µÄÊı¾İ¸öÊı£¬È»ºóÖØĞÂ½«½ÓÊÕ»º³åÇøµØÖ·Ö¸ÏòRxdBuffer
-	if(RxNum)		//RS485½ÓÊÕµ½Êı¾İ
+	LCDTime++;
+	if(LCDTime>=1000)
 	{
-		R61509V_Fill(0,16,24,48,R61509V_BLACK);				//ÔÚÖ¸¶¨ÇøÓòÄÚÌî³äÖ¸¶¨ÑÕÉ«;ÇøÓò´óĞ¡:(xend-xsta)*(yend-ysta)
+		LCDTime=0;
+		DSPTime++;
+		if(DSPTime>3)
+			DSPTime=0;
+//		PL010V13_PrintfString(0		,200	,16	,"A");				//ºó±ßµÄÊ¡ÂÔºÅ¾ÍÊÇ¿É±ä²ÎÊı
+//		PL010V13_PrintfString(32	,200	,16	,"Ê¡ÂÔºÅ");				//ºó±ßµÄÊ¡ÂÔºÅ¾ÍÊÇ¿É±ä²ÎÊı
+//		PL010V13_PrintfString(0		,240	,16	,"%d",DSPTime);				//ºó±ßµÄÊ¡ÂÔºÅ¾ÍÊÇ¿É±ä²ÎÊı
+//		PL010V13_PrintfString(0		,0	,32	,"´ı·¢Ò©²ÛÎ»£º%2d",RevBuffe[0]);				//ºó±ßµÄÊ¡ÂÔºÅ¾ÍÊÇ¿É±ä²ÎÊı
+//		PL010V13_PrintfString(0		,34	,32	,"´ı·¢Ò©ÊıÁ¿£º%2d",RevBuffe[1]);				//ºó±ßµÄÊ¡ÂÔºÅ¾ÍÊÇ¿É±ä²ÎÊı
+//		PL010V13_PrintfString(0		,68	,32	,"ÒÑ·¢Ò©ÊıÁ¿£º%2d",RevBuffe[1]);				//ºó±ßµÄÊ¡ÂÔºÅ¾ÍÊÇ¿É±ä²ÎÊı
 		
-		R61509V_ShowEn(0,16,RevBuffe[0]);
-		R61509V_ShowEn(0,32,RevBuffe[1]);
-		
-		LCD_PrintfString(0,48,32,"Im LCD");				//ºó±ßµÄÊ¡ÂÔºÅ¾ÍÊÇ¿É±ä²ÎÊı
+//		if(DSPTime==0)
+//		{
+//			PL010V13_PrintfString(0		,16	,16	,"´ı·¢Ò©²ÛÎ»£º%3d",RevBuffe[0]);				//ºó±ßµÄÊ¡ÂÔºÅ¾ÍÊÇ¿É±ä²ÎÊı
+////			R61509V_DrawLine(0,120,400,120,R61509V_YELLOW);						//AB Á½¸ö×ø±ê»­Ò»ÌõÖ±Ïß
+//		}
+//		else	if(DSPTime==1)
+//		{
+//			PL010V13_PrintfString(0		,34	,16	,"´ı·¢Ò©ÊıÁ¿£º%3d",RevBuffe[1]);				//ºó±ßµÄÊ¡ÂÔºÅ¾ÍÊÇ¿É±ä²ÎÊı
+//			R61509V_DrawLine(385,1,385,240,R61509V_BLACK);						//AB Á½¸ö×ø±ê»­Ò»ÌõÖ±Ïß
+//		}
+//		else	if(DSPTime==2)
+//		{
+//			PL010V13_PrintfString(0		,52	,16	,"ÒÑ·¢Ò©ÊıÁ¿£º%3d",RevBuffe[1]);				//ºó±ßµÄÊ¡ÂÔºÅ¾ÍÊÇ¿É±ä²ÎÊı
+//			R61509V_DrawLine(368,1,368,240,R61509V_BLACK);						//AB Á½¸ö×ø±ê»­Ò»ÌõÖ±Ïß
+//			R61509V_DrawLine(350,1,350,240,R61509V_BLACK);						//AB Á½¸ö×ø±ê»­Ò»ÌõÖ±Ïß
+//		}
 	}
-	#if 1
+	
+	
+	
+	
+	RxNum=RS485_ReadBufferIDLE(&RS485_Conf,(u32*)RevBuffe,(u32*)RxdBuffe);	//´®¿Ú¿ÕÏĞÄ£Ê½¶Á´®¿Ú½ÓÊÕ»º³åÇø£¬Èç¹ûÓĞÊı¾İ£¬½«Êı¾İ¿½±´µ½RevBuffer,²¢·µ»Ø½ÓÊÕµ½µÄÊı¾İ¸öÊı£¬È»ºóÖØĞÂ½«½ÓÊÕ»º³åÇøµØÖ·Ö¸ÏòRxdBuffer
+	if(RxNum==4&&RevBuffe[0]==0x00&&RevBuffe[1]==0xFF)		//RS485½ÓÊÕµ½Êı¾İ
+	{
+		PL010V13_PrintfString(192		,0	,32	,"%2d",RevBuffe[2]);				//´ı·¢Ò©²ÛÎ»£¬ºó±ßµÄÊ¡ÂÔºÅ¾ÍÊÇ¿É±ä²ÎÊı
+		PL010V13_PrintfString(192		,34	,32	,"%2d",RevBuffe[3]);				//´ı·¢Ò©ÊıÁ¿£¬ºó±ßµÄÊ¡ÂÔºÅ¾ÍÊÇ¿É±ä²ÎÊı
+//		PL010V13_PrintfString(192		,68	,32	,"%2d",RevBuffe[1]);				//ÒÑ·¢Ò©ÊıÁ¿£¬ºó±ßµÄÊ¡ÂÔºÅ¾ÍÊÇ¿É±ä²ÎÊı
+	}
+	if(RxNum==3&&RevBuffe[0]==0x02)		//RS485½ÓÊÕµ½Êı¾İ
+	{
+		PL010V13_PrintfString(192		,0	,32	,"%2d",RevBuffe[1]);				//´ı·¢Ò©²ÛÎ»£¬ºó±ßµÄÊ¡ÂÔºÅ¾ÍÊÇ¿É±ä²ÎÊı
+		PL010V13_PrintfString(192		,34	,32	,"%2d",RevBuffe[2]);				//´ı·¢Ò©ÊıÁ¿£¬ºó±ßµÄÊ¡ÂÔºÅ¾ÍÊÇ¿É±ä²ÎÊı
+//		PL010V13_PrintfString(192		,68	,32	,"%2d",RevBuffe[1]);				//ÒÑ·¢Ò©ÊıÁ¿£¬ºó±ßµÄÊ¡ÂÔºÅ¾ÍÊÇ¿É±ä²ÎÊı
+	}
+	if(RxNum==3&&RevBuffe[0]==0x82)		//RS485½ÓÊÕµ½Êı¾İ
+	{
+		PL010V13_PrintfString(192		,0	,32	,"%2d",RevBuffe[1]);				//´ı·¢Ò©²ÛÎ»£¬ºó±ßµÄÊ¡ÂÔºÅ¾ÍÊÇ¿É±ä²ÎÊı
+//		PL010V13_PrintfString(192		,34	,32	,"%2d",RevBuffe[2]);				//´ı·¢Ò©ÊıÁ¿£¬ºó±ßµÄÊ¡ÂÔºÅ¾ÍÊÇ¿É±ä²ÎÊı
+		PL010V13_PrintfString(192		,68	,32	,"%2d",RevBuffe[2]);				//ÒÑ·¢Ò©ÊıÁ¿£¬ºó±ßµÄÊ¡ÂÔºÅ¾ÍÊÇ¿É±ä²ÎÊı
+	}
+	#if 0
 	if(DelayTime>=100)
 	{
 		
@@ -130,7 +176,7 @@ void PL010V13_Server(void)
 //				R61509V_DrawLine(0,150,400,150,0X5458);						//AB Á½¸ö×ø±ê»­Ò»ÌõÖ±Ïß
 //				R61509V_DrawLine(0,140,400,140,0X5458);						//AB Á½¸ö×ø±ê»­Ò»ÌõÖ±Ïß
 //				R61509V_DrawLine(0,130,400,130,0X5458);						//AB Á½¸ö×ø±ê»­Ò»ÌõÖ±Ïß
-//				R61509V_DrawLine(0,120,400,120,R61509V_YELLOW);						//AB Á½¸ö×ø±ê»­Ò»ÌõÖ±Ïß
+				R61509V_DrawLine(0,120,400,120,R61509V_YELLOW);						//AB Á½¸ö×ø±ê»­Ò»ÌõÖ±Ïß
 //				R61509V_DrawLine(0,110,400,110,0X5458);						//AB Á½¸ö×ø±ê»­Ò»ÌõÖ±Ïß
 //				R61509V_DrawLine(0,100,400,100,R61509V_YELLOW);						//AB Á½¸ö×ø±ê»­Ò»ÌõÖ±Ïß
 //				R61509V_DrawLine(0,90,400,90,0X5458);							//AB Á½¸ö×ø±ê»­Ò»ÌõÖ±Ïß
@@ -211,6 +257,7 @@ void PL010V13_Server(void)
 		else
 		{
 			R61509V_PinConf(&R61509V_Pinfo);
+			
 		}
 	}
 	#else
@@ -223,10 +270,10 @@ void PL010V13_Server(void)
 //		R61509V_Fill(0,0,400,240,R61509V_BLACK);				//ÔÚÖ¸¶¨ÇøÓòÄÚÌî³äÖ¸¶¨ÑÕÉ«;ÇøÓò´óĞ¡:(xend-xsta)*(yend-ysta)--90/270		
 //		R61509V_Fill(0,0,240,400,R61509V_BLACK);				//ÔÚÖ¸¶¨ÇøÓòÄÚÌî³äÖ¸¶¨ÑÕÉ«;ÇøÓò´óĞ¡:(xend-xsta)*(yend-ysta)--0/180
 		
-		R61509V_DrawLine(0,120,400,120,R61509V_RED);						//AB Á½¸ö×ø±ê»­Ò»ÌõÖ±Ïß--90/270
-		R61509V_DrawLine(200,0,200,240,R61509V_YELLOW);						//AB Á½¸ö×ø±ê»­Ò»ÌõÖ±Ïß--90/270
-		R61509V_DrawLine(0,0,400,240,R61509V_MAGENTA);						//AB Á½¸ö×ø±ê»­Ò»ÌõÖ±Ïß--90/270
-		R61509V_DrawLine(400,0,0,240,R61509V_BLUE);						//AB Á½¸ö×ø±ê»­Ò»ÌõÖ±Ïß--90/270
+//		R61509V_DrawLine(0,120,400,120,R61509V_RED);						//AB Á½¸ö×ø±ê»­Ò»ÌõÖ±Ïß--90/270
+//		R61509V_DrawLine(200,0,200,240,R61509V_YELLOW);						//AB Á½¸ö×ø±ê»­Ò»ÌõÖ±Ïß--90/270
+//		R61509V_DrawLine(0,0,400,240,R61509V_MAGENTA);						//AB Á½¸ö×ø±ê»­Ò»ÌõÖ±Ïß--90/270
+//		R61509V_DrawLine(400,0,0,240,R61509V_BLUE);						//AB Á½¸ö×ø±ê»­Ò»ÌõÖ±Ïß--90/270
 	}
 	else if(DelayTime==500)
 	{
@@ -234,14 +281,15 @@ void PL010V13_Server(void)
 //		R61509V_Fill(0,0,400,240,R61509V_CYAN);				//ÔÚÖ¸¶¨ÇøÓòÄÚÌî³äÖ¸¶¨ÑÕÉ«;ÇøÓò´óĞ¡:(xend-xsta)*(yend-ysta)--90/270		
 //		R61509V_Fill(0,0,240,400,R61509V_CYAN);				//ÔÚÖ¸¶¨ÇøÓòÄÚÌî³äÖ¸¶¨ÑÕÉ«;ÇøÓò´óĞ¡:(xend-xsta)*(yend-ysta)--0/180
 		
-		R61509V_DrawLine(0,120,400,120,R61509V_YELLOW);						//AB Á½¸ö×ø±ê»­Ò»ÌõÖ±Ïß--90/270
-		R61509V_DrawLine(200,0,200,240,R61509V_RED);						//AB Á½¸ö×ø±ê»­Ò»ÌõÖ±Ïß--90/270
-		R61509V_DrawLine(0,0,400,240,R61509V_BLUE);						//AB Á½¸ö×ø±ê»­Ò»ÌõÖ±Ïß--90/270
-		R61509V_DrawLine(400,0,0,240,R61509V_MAGENTA);						//AB Á½¸ö×ø±ê»­Ò»ÌõÖ±Ïß--90/270
+//		R61509V_DrawLine(0,120,400,120,R61509V_YELLOW);						//AB Á½¸ö×ø±ê»­Ò»ÌõÖ±Ïß--90/270
+//		R61509V_DrawLine(200,0,200,240,R61509V_RED);						//AB Á½¸ö×ø±ê»­Ò»ÌõÖ±Ïß--90/270
+//		R61509V_DrawLine(0,0,400,240,R61509V_BLUE);						//AB Á½¸ö×ø±ê»­Ò»ÌõÖ±Ïß--90/270
+//		R61509V_DrawLine(400,0,0,240,R61509V_MAGENTA);						//AB Á½¸ö×ø±ê»­Ò»ÌõÖ±Ïß--90/270
 	}
 	else if(DelayTime>=1000)
 	{
 			DelayTime=0;
+			
 	}
 	#endif
 	
@@ -263,12 +311,12 @@ void PL010V13_PinSet(void)
 	RS485_Conf.RS485_CTL_PORT=GPIOA;
 	RS485_Conf.RS485_CTL_Pin=GPIO_Pin_11;
 	
-	GT32L32_Init.sSPIx=SPI1;
-	GT32L32_Init.sGT32L32_CS_PORT=GPIOB;
-	GT32L32_Init.sGT32L32_CS_PIN=GPIO_Pin_14;
-	GT32L32_Init.SPI_BaudRatePrescaler_x=SPI_BaudRatePrescaler_128;
+	GT32L32_Info.GT32L32_Port.sSPIx=SPI1;
+	GT32L32_Info.GT32L32_Port.sGT32L32_CS_PORT=GPIOC;
+	GT32L32_Info.GT32L32_Port.sGT32L32_CS_PIN=GPIO_Pin_14;
+	GT32L32_Info.GT32L32_Port.SPI_BaudRatePrescaler_x=SPI_BaudRatePrescaler_128;
 	
-	GT32L32_ConfigurationNR(&GT32L32_Init);				//ÆÕÍ¨SPIÍ¨Ñ¶·½Ê½ÅäÖÃ
+	GT32L32_ConfigurationNR(&GT32L32_Info);				//ÆÕÍ¨SPIÍ¨Ñ¶·½Ê½ÅäÖÃ
 	
 	
 	
@@ -369,9 +417,9 @@ void PL010V13_PinSet(void)
 //	
 //	R61509V_DrawLine(0,20,400,20,0X5458);						//AB Á½¸ö×ø±ê»­Ò»ÌõÖ±Ïß
 	
-	R61509V_DrawLine(0,100,160,100,0X5458);						//AB Á½¸ö×ø±ê»­Ò»ÌõÖ±Ïß
-	
-	R61509V_DrawLine(80,0,80,400,0X5458);						//AB Á½¸ö×ø±ê»­Ò»ÌõÖ±Ïß
+//	R61509V_DrawLine(0,100,160,100,0X5458);						//AB Á½¸ö×ø±ê»­Ò»ÌõÖ±Ïß
+//	
+//	R61509V_DrawLine(80,0,80,400,0X5458);						//AB Á½¸ö×ø±ê»­Ò»ÌõÖ±Ïß
 	
 //	R61509V_DrawRectangle(10,10,390,230,0X07FF);		//»­Ò»¸ö¾ØĞÎ¿ò
 	
@@ -384,9 +432,24 @@ void PL010V13_PinSet(void)
 //	R61509V_ShowChar(1,1,32,100,zimo);								//¸ßÍ¨×Ö¿â²âÊÔ³ÌĞò
 //	
 //	R61509V_ShowCharT(50,50,15,0);
-	R61509V_ShowEn(0,0,12);
+//	R61509V_ShowEn(200,120,12);
 	
-	R61509V_Clean(R61509V_BLACK);			//Çå³ıÆÁÄ»º¯Êı------
+//	PL010V13_PrintfString(0		,16	,16	,"´ı·¢Ò©²ÛÎ»£º%3d",RevBuffe[0]);				//ºó±ßµÄÊ¡ÂÔºÅ¾ÍÊÇ¿É±ä²ÎÊı
+//	PL010V13_PrintfString(0		,32	,16	,"´ı·¢Ò©ÊıÁ¿£º%3d",RevBuffe[1]);				//ºó±ßµÄÊ¡ÂÔºÅ¾ÍÊÇ¿É±ä²ÎÊı
+
+//	PL010V13_PrintfString(0		,0	,32	,"²ÛÎ»-%2dÊıÁ¿-%2d",RevBuffe[0],RevBuffe[1]);				//ºó±ßµÄÊ¡ÂÔºÅ¾ÍÊÇ¿É±ä²ÎÊı
+	
+//	PL010V13_PrintfString(0		,0	,32	,"´ı·¢Ò©ÊıÁ¿£º%2d",RevBuffe[1]);				//ºó±ßµÄÊ¡ÂÔºÅ¾ÍÊÇ¿É±ä²ÎÊı
+//	
+//	
+//	PL010V13_PrintfString(0		,100	,32	,"´ı·¢Ò©ÊıÁ¿£º%2d",RevBuffe[1]);				//ºó±ßµÄÊ¡ÂÔºÅ¾ÍÊÇ¿É±ä²ÎÊı
+//	PL010V13_PrintfString(0		,100	,32	,"´ı·¢Ò©ÊıÁ¿£º%2d",RevBuffe[1]);				//ºó±ßµÄÊ¡ÂÔºÅ¾ÍÊÇ¿É±ä²ÎÊı
+//	
+	PL010V13_PrintfString(0		,0	,32	,"´ı·¢Ò©²ÛÎ»£º%2d",RevBuffe[0]);				//ºó±ßµÄÊ¡ÂÔºÅ¾ÍÊÇ¿É±ä²ÎÊı
+	PL010V13_PrintfString(0		,34	,32	,"´ı·¢Ò©ÊıÁ¿£º%2d",RevBuffe[1]);				//ºó±ßµÄÊ¡ÂÔºÅ¾ÍÊÇ¿É±ä²ÎÊı
+	PL010V13_PrintfString(0		,68	,32	,"ÒÑ·¢Ò©ÊıÁ¿£º%2d",RevBuffe[1]);				//ºó±ßµÄÊ¡ÂÔºÅ¾ÍÊÇ¿É±ä²ÎÊı
+	
+//	R61509V_Clean(R61509V_BLACK);			//Çå³ıÆÁÄ»º¯Êı------
 	
 }
 /*******************************************************************************
@@ -399,7 +462,7 @@ void PL010V13_PinSet(void)
 *·µ»ØÖµ		:	ÎŞ
 *Àı³Ì			:
 *******************************************************************************/
-unsigned int LCD_PrintfString(u16 x,u16 y,u8 font,const char *format,...)				//ºó±ßµÄÊ¡ÂÔºÅ¾ÍÊÇ¿É±ä²ÎÊı
+unsigned int PL010V13_PrintfString(u16 x,u16 y,u8 font,const char *format,...)				//ºó±ßµÄÊ¡ÂÔºÅ¾ÍÊÇ¿É±ä²ÎÊı
 { 
 		
 //		va_list ap; 										//VA_LIST ÊÇÔÚCÓïÑÔÖĞ½â¾ö±ä²ÎÎÊÌâµÄÒ»×éºê£¬ËùÔÚÍ·ÎÄ¼ş£º#include <stdarg.h>,ÓÃÓÚ»ñÈ¡²»È·¶¨¸öÊıµÄ²ÎÊı
@@ -436,7 +499,7 @@ unsigned int LCD_PrintfString(u16 x,u16 y,u8 font,const char *format,...)				//º
 	for(i=0;i<num;i++)
 	{ 
 		unsigned char dst=Char_Buffer[i];
-		u8 GTBuffer[512]={0};		//µãÕóÊı¾İ´æ´¢¿Õ¼ä
+//		u8 GTBuffer[512]={0};		//µãÕóÊı¾İ´æ´¢¿Õ¼ä
 		u32 lengh=0;						//ºº×ÖµãÕóµÄÊı¾İ³¤¶È		
 		if(dst>0x80)		//Ë«×Ö½Ú--ºº×Ö
 		{
@@ -453,11 +516,11 @@ unsigned int LCD_PrintfString(u16 x,u16 y,u8 font,const char *format,...)				//º
 			if(y>R61509V_H-32)
 			{
 				y=x=0;
-				R61509V_Clean(R61509V_BLACK);
+//				R61509V_Clean(R61509V_BLACK);
 			}
-			lengh=GT32L32_ReadBuffer(&GT32L32_Init,font,word,GTBuffer);		//´Ó×Ö¿âÖĞ¶ÁÊı¾İº¯Êı
+			lengh=GT32L32_ReadBuffer(&GT32L32_Info,font,word,GT32L32_Info.GT32L32_Data.GT32L32_Buffer);		//´Ó×Ö¿âÖĞ¶ÁÊı¾İº¯Êı
 			//Ğ´ÈëÆÁÄ»
-			SSD1963_ShowString(x,y,font,lengh,GTBuffer);
+			R61509V_ShowChar(x,y,font,lengh,GT32L32_Info.GT32L32_Data.GT32L32_Buffer);
 			//ÏÔÊ¾µØÖ·Ôö¼Ó	
 			if(font==12)
 			{
@@ -488,11 +551,11 @@ unsigned int LCD_PrintfString(u16 x,u16 y,u8 font,const char *format,...)				//º
 			if(y>R61509V_H-32)
 			{
 				y=x=0;
-				R61509V_Clean(R61509V_BLACK);
+//				R61509V_Clean(R61509V_BLACK);
 			}
-			lengh=GT32L32_ReadBuffer(&GT32L32_Init,font,(u16)dst,GTBuffer);		//´Ó×Ö¿âÖĞ¶ÁÊı¾İº¯Êı
+			lengh=GT32L32_ReadBuffer(&GT32L32_Info,font,(u16)dst,GT32L32_Info.GT32L32_Data.GT32L32_Buffer);		//´Ó×Ö¿âÖĞ¶ÁÊı¾İº¯Êı
 //			//Ğ´ÈëÆÁÄ»
-			SSD1963_ShowString(x,y,font,lengh,GTBuffer);			
+			R61509V_ShowChar(x,y,font,lengh,GT32L32_Info.GT32L32_Data.GT32L32_Buffer);			
 			//ÏÔÊ¾µØÖ·Ôö¼Ó
 			if(font==12)
 			{

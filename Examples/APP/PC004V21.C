@@ -214,7 +214,12 @@ void PC004V21_Server(void)
 	if(SwitchIDBAC!=SwitchID)
 	{		
 		SwitchIDBAC=SwitchID;		//更新备份
-		RS485_DMAPrintf(&RS485_Conf,"请求更新，发药槽号:%d,发药数量：%d",NumW,NumF);					//自定义printf串口DMA发送程序,后边的省略号就是可变参数
+		PC004V10_TBuffer[0]=0x00;		//0xFF,NumW,NumF
+		PC004V10_TBuffer[1]=0xFF;		//0xFF,NumW,NumF
+		PC004V10_TBuffer[2]=NumW;		//0xFF,NumW,NumF
+		PC004V10_TBuffer[3]=NumF;		//0xFF,NumW,NumF
+		RS485_DMASend	(&RS485_Conf,(u32*)PC004V10_TBuffer,4);	//RS485-DMA发送程序
+//		RS485_DMAPrintf(&RS485_Conf,"请求更新，发药槽号:%d,发药数量：%d",NumW,NumF);					//自定义printf串口DMA发送程序,后边的省略号就是可变参数
 	}
 	
 	if(SYSTime>=1000)
@@ -259,9 +264,10 @@ void PC004V21_Server(void)
 		PC004V10_CANBuffer[1]=NumW;		//槽号
 		PC004V10_CANBuffer[2]=NumF;		//数量
 		
-		PC004V10_TBuffer[0]=NumW;
-		PC004V10_TBuffer[1]=NumF;
-		RS485_DMASend(&RS485_Conf,(u32*)PC004V10_TBuffer,2);	//RS485-DMA发送程序
+		PC004V10_TBuffer[0]=0x02;
+		PC004V10_TBuffer[1]=NumW;
+		PC004V10_TBuffer[2]=NumF;
+		RS485_DMASend(&RS485_Conf,(u32*)PC004V10_TBuffer,3);	//RS485-DMA发送程序
 //		RS485_DMAPrintf(&RS485_Conf,"%d,%d",NumW,NumF);					//自定义printf串口DMA发送程序,后边的省略号就是可变参数
 		CAN_StdTX_DATA(0x01,0x08,PC004V10_CANBuffer);			//CAN使用标准帧发送数据
 		if(PW1Flg==0)
@@ -276,6 +282,9 @@ void PC004V21_Server(void)
 			PB1Flg=0;
 			PWM_OUT(TIM3,PWM_OUTChannel3,5,500);						//PWM设定-20161127版本
 		}
+	}
+	if(CAN_RX_DATA(&RxMessage))
+	{
 	}
 	//**************检查通讯标志位，查看是否为通讯中断，如果是，则此次时间增量无效
 //	status=PC004V10_485_TR();				//485收发程序//通讯接口
