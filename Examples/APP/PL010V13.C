@@ -44,6 +44,9 @@ u16 ADC_doty=0;
 u16 ADC_dotx1=0;
 u16 ADC_doty1=0;
 
+u16 SumFed=0;		//总共已发药数量
+u16	SumFQ=0;		//总共发药请求数量
+
 R61509V_Pindef R61509V_Pinfo;
 CS5530_Pindef CS5530_Pinfo;
 GT32L32_Info_TypeDef 	GT32L32_Info;
@@ -56,6 +59,7 @@ RS485_TypeDef  RS485_Conf;
 u8 RxdBuffe[256]={0};
 u8 RevBuffe[256]={0};
 u16 RxNum=0;
+char	Char_Buffer[256]={0xFF};		//记录format内码
 //t_LcdCfg **pLcdpara;
 
 /*******************************************************************************
@@ -95,8 +99,21 @@ void PL010V13_Server(void)
 	DelayTime++;
 	
 	LCDTime++;
+	
+//	if(LCDTime==500)
+//	{
+//		PL010V13_PrintfString(0		,134+50+16	,16	,"发药层控制器通信异常！！！！");				//错误状态
+//	}
+//	else if(LCDTime==1000)
+//	{
+//		PL010V13_PrintfString(0		,134+50+16	,16	,"XXXXXXXXXXXXXXXXXXXXXXXXXX");				//错误状态
+//	}
+	
+	
+			
 	if(LCDTime>=1000)
 	{
+			
 		LCDTime=0;
 		DSPTime++;
 		if(DSPTime>3)
@@ -136,18 +153,71 @@ void PL010V13_Server(void)
 		PL010V13_PrintfString(192		,34	,32	,"%2d",RevBuffe[3]);				//待发药数量，后边的省略号就是可变参数
 //		PL010V13_PrintfString(192		,68	,32	,"%2d",RevBuffe[1]);				//已发药数量，后边的省略号就是可变参数
 	}
-	if(RxNum==3&&RevBuffe[0]==0x02)		//RS485接收到数据
+	else if(RxNum==3&&RevBuffe[0]==0x02)		//RS485接收到数据
 	{
+		SumFQ+=RevBuffe[2];
 		PL010V13_PrintfString(192		,0	,32	,"%2d",RevBuffe[1]);				//待发药槽位，后边的省略号就是可变参数
 		PL010V13_PrintfString(192		,34	,32	,"%2d",RevBuffe[2]);				//待发药数量，后边的省略号就是可变参数
-//		PL010V13_PrintfString(192		,68	,32	,"%2d",RevBuffe[1]);				//已发药数量，后边的省略号就是可变参数
+		PL010V13_PrintfString(192		,68	,32	,"%2d",0);									//已发药数量，后边的省略号就是可变参数
+		
+		PL010V13_PrintfString(0		,102+50	,16	,"总共请求数量：%4d",SumFQ);				//总共发药请求数量
+		PL010V13_PrintfString(0		,134+50+16	,16	,"正在发药！！！！！！！！！！");				//错误状态
 	}
-	if(RxNum==3&&RevBuffe[0]==0x82)		//RS485接收到数据
+	else if(RxNum==4&&RevBuffe[0]==0x82)		//RS485接收到数据
 	{
+		SumFed+=RevBuffe[2];
 		PL010V13_PrintfString(192		,0	,32	,"%2d",RevBuffe[1]);				//待发药槽位，后边的省略号就是可变参数
-//		PL010V13_PrintfString(192		,34	,32	,"%2d",RevBuffe[2]);				//待发药数量，后边的省略号就是可变参数
-		PL010V13_PrintfString(192		,68	,32	,"%2d",RevBuffe[2]);				//已发药数量，后边的省略号就是可变参数
+		PL010V13_PrintfString(192		,34	,32	,"%2d",0);									//待发药数量，后边的省略号就是可变参数
+		PL010V13_PrintfString(192		,68	,32	,"%2d",RevBuffe[2]);				//已发药数量，后边的省略号就是可变参数		
+		
+		PL010V13_PrintfString(112		,118+50	,16	,"%4d",SumFed);					//总共已发药数量
+		
 	}
+	else if(RxNum==6&&RevBuffe[0]==0x81)	//槽位信息0x01--获取,0x81--上报
+	{
+		PL010V13_PrintfString(0		,200	,16	,"%d,%d,%d,%d",RevBuffe[1],RevBuffe[2],RevBuffe[3],RevBuffe[4]);				//
+		
+//		SumFed=0;PL010V13_PrintfString(112		,118+50	,16	,"%4d",SumFed);					//总共已发药数量
+//		SumFQ=0;PL010V13_PrintfString(0		,102+50	,16	,"总共请求数量：%4d",SumFQ);				//总共发药请求数量
+//		PL010V13_PrintfString(192		,0	,32	,"%2d",0);				//待发药槽位，后边的省略号就是可变参数
+//		PL010V13_PrintfString(192		,34	,32	,"%2d",0);				//待发药数量，后边的省略号就是可变参数
+	}
+	else if(RxNum==1&&RevBuffe[0]==0x01)	//槽位信息0x01--获取,0x81--上报
+	{
+		PL010V13_PrintfString(0		,134+50+16	,16	,"获取槽位信息！！！");				//错误状态
+		
+		SumFed=0;PL010V13_PrintfString(112		,118+50	,16	,"%4d",SumFed);					//总共已发药数量
+		SumFQ=0;PL010V13_PrintfString(0		,102+50	,16	,"总共请求数量：%4d",SumFQ);				//总共发药请求数量
+		PL010V13_PrintfString(192		,0	,32	,"%2d",0);				//待发药槽位，后边的省略号就是可变参数
+		PL010V13_PrintfString(192		,34	,32	,"%2d",0);				//待发药数量，后边的省略号就是可变参数
+	}
+	for(DelayTime=0;DelayTime<1000;DelayTime++)
+	{
+		
+	}
+	if(RxNum&&(RevBuffe[0]==0x82))		//错误状态显示
+	{
+		switch(RevBuffe[3])
+		{
+			case 0x00:	PL010V13_PrintfString(0		,134+50+16	,16	,"！！！！！！！！！！！！！！");				//错误状态
+				break;
+			case 0x80:	PL010V13_PrintfString(0		,134+50+16	,16	,"药品被卡住！！！！！！！！！");				//错误状态
+				break;
+			case 0x81:	PL010V13_PrintfString(0		,134+50+16	,16	,"缺药！！！！！！！！！！！！");				//错误状态
+				break;
+			case 0x82:	PL010V13_PrintfString(0		,134+50+16	,16	,"等待命令结果超时！！！！！！");				//错误状态
+				break;
+			case 0xC0:	PL010V13_PrintfString(0		,134+50+16	,16	,"单元柜控制器通信异常！！！！");				//错误状态
+				break;
+			case 0xC1:	PL010V13_PrintfString(0		,134+50+16	,16	,"发药层控制器通信异常！！！！");				//错误状态
+				break;
+		}
+//		RevBuffe[0]=0;
+//		RevBuffe[1]=0;
+//		RevBuffe[2]=0;
+//		RevBuffe[3]=0;
+	}
+	
 	#if 0
 	if(DelayTime>=100)
 	{
@@ -377,7 +447,7 @@ void PL010V13_PinSet(void)
 //	R61509V_Clean(0xF800);			//清除屏幕函数--蓝白
 //	R61509V_Delay(1000);
 
-	R61509V_Clean(R61509V_WHITE);			//清除屏幕函数------
+	R61509V_Clean(R61509V_BLACK);			//清除屏幕函数------
 	R61509V_Delay(1000);
 	
 //	R61509V_DrawDot(50,50,0X5458);
@@ -445,10 +515,26 @@ void PL010V13_PinSet(void)
 //	PL010V13_PrintfString(0		,100	,32	,"待发药数量：%2d",RevBuffe[1]);				//后边的省略号就是可变参数
 //	PL010V13_PrintfString(0		,100	,32	,"待发药数量：%2d",RevBuffe[1]);				//后边的省略号就是可变参数
 //	
+	#if 1
 	PL010V13_PrintfString(0		,0	,32	,"待发药槽位：%2d",RevBuffe[0]);				//后边的省略号就是可变参数
 	PL010V13_PrintfString(0		,34	,32	,"待发药数量：%2d",RevBuffe[1]);				//后边的省略号就是可变参数
 	PL010V13_PrintfString(0		,68	,32	,"已发药数量：%2d",RevBuffe[1]);				//后边的省略号就是可变参数
 	
+	PL010V13_PrintfString(0		,102+50	,16	,"总共请求数量：%4d",SumFQ);				//总共发药请求数量
+	PL010V13_PrintfString(0		,118+50	,16	,"总共发药数量：%4d",SumFed);				//总共已发药数量
+	PL010V13_PrintfString(0		,134+50	,16	,"错误状态：");				//错误状态
+	
+	#else
+//	R61509V_Clean(R61509V_WHITE);			//清除屏幕函数------
+//	PL010Delay(0x8FFFFF);
+//	R61509V_Clean(R61509V_BLUE);			//清除屏幕函数------
+//	PL010Delay(0x8FFFFF);
+	R61509V_Clean(R61509V_GRED);			//清除屏幕函数------
+	PL010Delay(0x8FFFFF);
+	R61509V_Clean(R61509V_BLACK);			//清除屏幕函数------
+	PL010Delay(0xFFFF);
+	PL010V13_PrintfString(0	,0,16	,"G");				//错误状态
+	#endif
 //	R61509V_Clean(R61509V_BLACK);			//清除屏幕函数------
 	
 }
@@ -471,7 +557,7 @@ unsigned int PL010V13_PrintfString(u16 x,u16 y,u8 font,const char *format,...)		
 //		vsprintf( string , format, ap );    
 //		va_end( ap );
 	
-	char	*Char_Buffer=NULL;		//记录format内码
+//	char	*Char_Buffer=NULL;		//记录format内码
 	u16 i=0;		//显示
 
 	//1)**********获取数据宽度
@@ -479,14 +565,15 @@ unsigned int PL010V13_PrintfString(u16 x,u16 y,u8 font,const char *format,...)		
 	//2)**********定义缓冲区大小变量
 	unsigned int BufferSize;
 	//3)**********args为定义的一个指向可变参数的变量，va_list以及下边要用到的va_start,va_end都是是在定义，可变参数函数中必须要用到宏， 在stdarg.h头文件中定义
-	va_list args;                                        
+	va_list args; 
+	free(Char_Buffer);						//释放动态空间	
 	//4)**********申请动态空间
-	Char_Buffer = (char*)malloc(sizeof(char) * num);
-	if(Char_Buffer==NULL)
-	{
-		Char_Buffer=NULL;
-		return 0;
-	}
+//	Char_Buffer = (char*)malloc(sizeof(char) * num);
+//	if(Char_Buffer==NULL)
+//	{
+//		Char_Buffer=NULL;
+//		return 0;
+//	}
 	//5)**********初始化args的函数，使其指向可变参数的第一个参数，format是可变参数的前一个参数
 	va_start(args, format);
 	//6)**********正常情况下返回生成字串的长度(除去\0),错误情况返回负值
@@ -578,7 +665,7 @@ unsigned int PL010V13_PrintfString(u16 x,u16 y,u8 font,const char *format,...)		
 		}
 	}
 	//9)**********DMA发送完成后注意应该释放缓冲区：free(USART_BUFFER);
-	free(Char_Buffer);		//发送完成后注意应该释放缓冲区：free(Char_Buffer); 
+//	free(Char_Buffer);		//发送完成后注意应该释放缓冲区：free(Char_Buffer); 
 	return BufferSize;
 }
 /*******************************************************************************
@@ -593,4 +680,9 @@ void PL010V13_DISPLAY(void)
 //	R61509V_DrawPixelEx( 100, 100,LCD_FORE_COLOR);
 //	R61509V_DrawHLine( 10, 100, 200, LCD_FORE_COLOR);
 }
+void PL010Delay(u32 time)
+{	
+	while(time--);
+}
+	
 #endif

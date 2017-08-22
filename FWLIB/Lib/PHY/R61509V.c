@@ -1205,7 +1205,7 @@ void R61509V_SetWindowAddress(			//设置窗口地址
 															unsigned int y2
 															)
 {	
-	
+#if 0	
 	R61509V_WriteCommand(0x210,x1);			//Window Horizontal RAM Address Start(R210h)
 //	R61509V_Delay(100);
 	R61509V_WriteCommand(0x211,x2);			//Window Horizontal RAM Address End(R211h)
@@ -1222,22 +1222,20 @@ void R61509V_SetWindowAddress(			//设置窗口地址
 	R61509V_WriteIndex16(0x0202);				//GRAM(Graphics RAM--图形内存) Data Write (R202h)准备写入
 //	R61509V_Delay(100);		//准备写
 
-
+#else
 	
-//	R61509V_WriteCommand(0x210,x1);			//Window Horizontal RAM Address Start(R210h)
-////	R61509V_Delay(100);
-//	R61509V_WriteCommand(0x211,x2);			//Window Horizontal RAM Address End(R211h)
-////	R61509V_Delay(100);
-//	R61509V_WriteCommand(0x212,y1);			//Window Vertical RAM Address Start (R212h)
-////	R61509V_Delay(100);
-//	R61509V_WriteCommand(0x213,y2);			//Window Vertical RAM Address End (R213h)
-////	R61509V_Delay(100);
-//	R61509V_WriteCommand(0x200,x1);			//RAM Address Set (Horizontal Address) (R200h)
-////	R61509V_Delay(100);
-//	R61509V_WriteCommand(0x201,y1);			//RAM Address Set (Vertical Address) (R201h)
-////	R61509V_Delay(100);
-//	R61509V_WriteIndex16(0x0202);				//GRAM(Graphics RAM--图形内存) Data Write (R202h)准备写入
-////	R61509V_Delay(100);		//准备写
+	R61509V_WriteCommand(0x210,x1);			//Window Horizontal RAM Address Start(R210h)
+	R61509V_WriteCommand(0x211,x2);			//Window Horizontal RAM Address End(R211h)
+	R61509V_WriteCommand(0x212,y1);			//Window Vertical RAM Address Start (R212h)
+	R61509V_WriteCommand(0x213,y2);			//Window Vertical RAM Address End (R213h)
+	
+	R61509V_WriteCommand(0x200,x1);			//RAM Address Set (Horizontal Address) (R200h)
+	R61509V_WriteCommand(0x201,y1);			//RAM Address Set (Vertical Address) (R201h)
+	
+	R61509V_WriteCommand(0x003,0X5030);			//RAM Address Set (Vertical Address) (R201h)
+	
+	R61509V_WriteIndex16(0x0202);				//GRAM(Graphics RAM--图形内存) Data Write (R202h)准备写入
+#endif
 }
 
 
@@ -1317,7 +1315,18 @@ void R61509V_Initialize(void)			//按照主控芯片R61509V的power supply on sequence 
 	R61509V_WriteCommand(R61509V_R404_BIVSC	,	0x0000);		R61509V_Delay(dtime);	//--------从0线开始滚
 	R61509V_WriteCommand(R61509V_R200_HA		,	0x0000);		R61509V_Delay(dtime);	//--------RAM address 设置
 	R61509V_WriteCommand(R61509V_R201_VA		,	0x0000);		R61509V_Delay(dtime);	//--------
-
+	
+	
+	//-----------------测试开始	
+//	R61509V_WriteCommand(R61509V_R210_HSA		,	0x0015);		R61509V_Delay(dtime);	//--------RAM address 设置
+//	R61509V_WriteCommand(R61509V_R211_HEA		,	0x00E0);		R61509V_Delay(dtime);	//--------
+//	
+//	R61509V_WriteCommand(R61509V_R212_VSA		,	0x0015);		R61509V_Delay(dtime);	//--------RAM address 设置
+//	R61509V_WriteCommand(R61509V_R213_VEA		,	0x00FF);		R61509V_Delay(dtime);	//--------
+//	
+//	R61509V_WriteCommand(R61509V_R200_HA		,	0x0015);		R61509V_Delay(dtime);	//--------RAM address 设置
+//	R61509V_WriteCommand(R61509V_R201_VA		,	0x0015);		R61509V_Delay(dtime);	//--------
+	//-----------------测试结束
 
 	R61509V_WriteIndex16(0X202);					R61509V_Delay(dtime);		//准备写入
 
@@ -2047,10 +2056,10 @@ void R61509V_ShowChar(
 		{
 			if((temp&0x80)==0X80)
 			{
-				R61509V_PEN_COLOR=R61509V_BLACK;
+				R61509V_PEN_COLOR=R61509V_WHITE;
 			}
 			else
-				R61509V_PEN_COLOR=R61509V_WHITE;
+				R61509V_PEN_COLOR=R61509V_BLACK;
 			
 //			R61509V_DrawDot(j,i,POINT_COLOR);
 			R61509V_WriteData16(R61509V_PEN_COLOR);

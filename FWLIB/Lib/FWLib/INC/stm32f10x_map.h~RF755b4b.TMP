@@ -181,8 +181,8 @@ typedef struct
   vu32 MCR;			//CAN主控制寄存器
   vu32 MSR;			//CAN主状态寄存器
   vu32 TSR;			//CAN发送状态寄存器
-  vu32 RF0R;		//CAN接收FIFO 0 寄存器 FMP0[1:0]: FIFO 0 报文数目 (FIFO 0 message pending),FIFO 0报文数目这2位反映了当前接收FIFO 0中存放的报文数目。每当1个新的报文被存入接收FIFO 0，硬件就对FMP0加1。每当软件对RFOM0位写’1’来释放输出邮箱，FMP0就被减1，直到其为0。
-  vu32 RF1R;		//CAN接收FIFO 1 寄存器 功能与FMP0相同
+  vu32 RF0R;		//CAN接收FIFO 0 寄存器
+  vu32 RF1R;		//CAN接收FIFO 1 寄存器
   vu32 IER;			//CAN 中断允许寄存器
   vu32 ESR;			//CAN 错误状态寄存器
   vu32 BTR;			//CAN 位时间特性寄存器

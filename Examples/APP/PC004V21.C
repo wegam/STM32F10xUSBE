@@ -134,7 +134,7 @@ u8 Self_Dsp=0;							//拔码开关为0时，自检测试显示标识变量
 u8 num=0;
 u8 PB1Flg=0;
 u8 PW1Flg=0;
-u8 KeyTime=0;
+u16 KeyTime=0;
 
 RS485_TypeDef  RS485_Conf;
 CanRxMsg RxMessage;
@@ -167,7 +167,7 @@ void PC004V21_Configuration(void)
 	
 	CAN_Configuration_NR(100000);										//CAN配置---标志位查询方式，不开中断
 	
-	CAN_FilterInitConfiguration_StdData(0,0X000,0X000);			//CAN滤波器配置
+	CAN_FilterInitConfiguration_StdData(0X01,0X001,0X001);			//CAN滤波器配置
 //	
 //	USART_DMA_Configuration(USART2,9600,1,1,(u32*)PC004V10_Buffer,(u32*)PC004V10_Buffer,PC004V10_BufferSize);	//USART_DMA配置
 
@@ -240,22 +240,35 @@ void PC004V21_Server(void)
 	}
 	if(PB1in)		//无按键
 	{	
-		if(KeyTime>=10)
+		if(KeyTime>=10&&KeyTime<3000)
 		{			
 			if(PB1Flg==0)
 					PB1Flg=1;
 		}
+		else if(KeyTime>=3000)
+		{
+			if(PB1Flg==0)
+					PB1Flg=2;
+		}
 		KeyTime=0;
 	}
 	else
-	{
-		
-		
-		if(KeyTime++>=10)
+	{		
+		if(KeyTime<=5000)
 		{
-			KeyTime=20;
-//			PB1Flg=0;
+			KeyTime++;
 		}
+	}
+	if(PB1Flg==2)	//长按
+	{
+		PC004V10_CANBuffer[0]=0x01;		//命令:0x01查询槽位信息，0x02发药命令
+		
+		PC004V10_TBuffer[0]=0x01;
+		
+		RS485_DMASend(&RS485_Conf,(u32*)PC004V10_TBuffer,1);	//RS485-DMA发送程序
+		CAN_StdTX_DATA(0x01,0x08,PC004V10_CANBuffer);			//CAN使用标准帧发送数据
+		
+		PB1Flg=0;
 	}
 	if(PB1Flg==1)
 	{		
@@ -285,6 +298,25 @@ void PC004V21_Server(void)
 	}
 	if(CAN_RX_DATA(&RxMessage))
 	{
+		if(RxMessage.Data[0]==0x81)
+		{
+			PC004V10_TBuffer[0]=RxMessage.Data[0];	//返回代码类型
+			PC004V10_TBuffer[1]=RxMessage.Data[1];
+			PC004V10_TBuffer[2]=RxMessage.Data[2];
+			PC004V10_TBuffer[3]=RxMessage.Data[3];	
+			PC004V10_TBuffer[4]=RxMessage.Data[4];	
+			PC004V10_TBuffer[5]=RxMessage.Data[5];	//错误类型
+			RS485_DMASend(&RS485_Conf,(u32*)PC004V10_TBuffer,6);	//RS485-DMA发送程序
+			
+		}
+		if(RxMessage.StdId==0x01)
+		{
+			PC004V10_TBuffer[0]=RxMessage.Data[0];	//返回代码类型
+			PC004V10_TBuffer[1]=RxMessage.Data[1];
+			PC004V10_TBuffer[2]=RxMessage.Data[2];
+			PC004V10_TBuffer[3]=RxMessage.Data[3];	//错误类型
+			RS485_DMASend(&RS485_Conf,(u32*)PC004V10_TBuffer,4);	//RS485-DMA发送程序
+		}
 	}
 	//**************检查通讯标志位，查看是否为通讯中断，如果是，则此次时间增量无效
 //	status=PC004V10_485_TR();				//485收发程序//通讯接口
