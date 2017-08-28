@@ -161,7 +161,7 @@ void PC004V21_Configuration(void)
 	IWDG_Configuration(1000);			//独立看门狗配置---参数单位ms	
 	
 	PWM_OUT(TIM2,PWM_OUTChannel1,1,900);						//PWM设定-20161127版本
-	PWM_OUT(TIM3,PWM_OUTChannel3,0.5,10);						//PWM设定-20161127版本
+	PWM_OUT(TIM3,PWM_OUTChannel3,0.5,5);						//PWM设定-20161127版本
 	
 	RS485_DMA_ConfigurationNR	(&RS485_Conf,115200,(u32*)PC004V10_Buffer,PC004V10_BufferSize);	//USART_DMA配置--查询方式，不开中断,配置完默认为接收状态
 	
@@ -287,13 +287,13 @@ void PC004V21_Server(void)
 		{
 			PW1Flg=1;
 			PB1Flg=0;				
-			PWM_OUT(TIM3,PWM_OUTChannel3,0.5,10);						//PWM设定-20161127版本
+//			PWM_OUT(TIM3,PWM_OUTChannel3,0.5,10);						//PWM设定-20161127版本
 		}
 		else
 		{
 			PW1Flg=0;
 			PB1Flg=0;
-			PWM_OUT(TIM3,PWM_OUTChannel3,5,500);						//PWM设定-20161127版本
+//			PWM_OUT(TIM3,PWM_OUTChannel3,5,500);						//PWM设定-20161127版本
 		}
 	}
 	if(CAN_RX_DATA(&RxMessage))

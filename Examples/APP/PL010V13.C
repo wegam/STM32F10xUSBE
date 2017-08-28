@@ -44,8 +44,11 @@ u16 ADC_doty=0;
 u16 ADC_dotx1=0;
 u16 ADC_doty1=0;
 
-u16 SumFed=0;		//总共已发药数量
-u16	SumFQ=0;		//总共发药请求数量
+u16 SumFed[8]={0};		//总共已发药数量
+u16	SumFQ[8]={0};			//总共发药请求数量
+u8	NumFW=0;		//待发药槽位
+u8	Onlinede=0;		//待发药槽位
+
 
 R61509V_Pindef R61509V_Pinfo;
 CS5530_Pindef CS5530_Pinfo;
@@ -81,9 +84,9 @@ void PL010V13_Configuration(void)
 	
 	SysTick_Configuration(1000);	//系统嘀嗒时钟配置72MHz,单位为uS
 	
-	IWDG_Configuration(1000);			//独立看门狗配置---参数单位ms	
+//	IWDG_Configuration(1000);			//独立看门狗配置---参数单位ms	
 	
-//	PWM_OUT(TIM2,PWM_OUTChannel4,60,200);		//PWM设定-20161127版本
+//	PWM_OUT(TIM2,PWM_OUTChannel1,1,200);		//PWM设定-20161127版本
 }
 /*******************************************************************************
 * 函数名		:	
@@ -107,90 +110,67 @@ void PL010V13_Server(void)
 //	else if(LCDTime==1000)
 //	{
 //		PL010V13_PrintfString(0		,134+50+16	,16	,"XXXXXXXXXXXXXXXXXXXXXXXXXX");				//错误状态
-//	}
-	
-	
-			
-	if(LCDTime>=1000)
-	{
-			
-		LCDTime=0;
-		DSPTime++;
-		if(DSPTime>3)
-			DSPTime=0;
-//		PL010V13_PrintfString(0		,200	,16	,"A");				//后边的省略号就是可变参数
-//		PL010V13_PrintfString(32	,200	,16	,"省略号");				//后边的省略号就是可变参数
-//		PL010V13_PrintfString(0		,240	,16	,"%d",DSPTime);				//后边的省略号就是可变参数
-//		PL010V13_PrintfString(0		,0	,32	,"待发药槽位：%2d",RevBuffe[0]);				//后边的省略号就是可变参数
-//		PL010V13_PrintfString(0		,34	,32	,"待发药数量：%2d",RevBuffe[1]);				//后边的省略号就是可变参数
-//		PL010V13_PrintfString(0		,68	,32	,"已发药数量：%2d",RevBuffe[1]);				//后边的省略号就是可变参数
+//	}	
 		
-//		if(DSPTime==0)
-//		{
-//			PL010V13_PrintfString(0		,16	,16	,"待发药槽位：%3d",RevBuffe[0]);				//后边的省略号就是可变参数
-////			R61509V_DrawLine(0,120,400,120,R61509V_YELLOW);						//AB 两个坐标画一条直线
-//		}
-//		else	if(DSPTime==1)
-//		{
-//			PL010V13_PrintfString(0		,34	,16	,"待发药数量：%3d",RevBuffe[1]);				//后边的省略号就是可变参数
-//			R61509V_DrawLine(385,1,385,240,R61509V_BLACK);						//AB 两个坐标画一条直线
-//		}
-//		else	if(DSPTime==2)
-//		{
-//			PL010V13_PrintfString(0		,52	,16	,"已发药数量：%3d",RevBuffe[1]);				//后边的省略号就是可变参数
-//			R61509V_DrawLine(368,1,368,240,R61509V_BLACK);						//AB 两个坐标画一条直线
-//			R61509V_DrawLine(350,1,350,240,R61509V_BLACK);						//AB 两个坐标画一条直线
-//		}
-	}
+	DSPTime++;
+	if(DSPTime>500)
+	{
+		DSPTime=0;
+		LCD_WXS();		//位显示
+		LCD_DDSP();		//显示总共请求数量和已发数量
+	}	
+	LCD_WS();		//位闪烁
 	
-	
-	
+	if(LCDTime>=1000)
+	{			
+		LCDTime=0;		
+	}	
 	
 	RxNum=RS485_ReadBufferIDLE(&RS485_Conf,(u32*)RevBuffe,(u32*)RxdBuffe);	//串口空闲模式读串口接收缓冲区，如果有数据，将数据拷贝到RevBuffer,并返回接收到的数据个数，然后重新将接收缓冲区地址指向RxdBuffer
 	if(RxNum==4&&RevBuffe[0]==0x00&&RevBuffe[1]==0xFF)		//RS485接收到数据
 	{
-		PL010V13_PrintfString(192		,0	,32	,"%2d",RevBuffe[2]);				//待发药槽位，后边的省略号就是可变参数
-		PL010V13_PrintfString(192		,34	,32	,"%2d",RevBuffe[3]);				//待发药数量，后边的省略号就是可变参数
-//		PL010V13_PrintfString(192		,68	,32	,"%2d",RevBuffe[1]);				//已发药数量，后边的省略号就是可变参数
+		NumFW=RevBuffe[2];
+		PL010V13_PrintfString(96		,0	,16	,"%2d",RevBuffe[2]);				//待发药槽位，后边的省略号就是可变参数
+		PL010V13_PrintfString(96		,20	,16	,"%2d",RevBuffe[3]);				//待发药数量，后边的省略号就是可变参数
+//		PL010V13_PrintfString(192		,68	,16	,"%2d",RevBuffe[1]);				//已发药数量，后边的省略号就是可变参数
 	}
 	else if(RxNum==3&&RevBuffe[0]==0x02)		//RS485接收到数据
 	{
-		SumFQ+=RevBuffe[2];
-		PL010V13_PrintfString(192		,0	,32	,"%2d",RevBuffe[1]);				//待发药槽位，后边的省略号就是可变参数
-		PL010V13_PrintfString(192		,34	,32	,"%2d",RevBuffe[2]);				//待发药数量，后边的省略号就是可变参数
-		PL010V13_PrintfString(192		,68	,32	,"%2d",0);									//已发药数量，后边的省略号就是可变参数
+		SumFQ[RevBuffe[1]-1]+=RevBuffe[2];
+		NumFW=RevBuffe[1];
+		PL010V13_PrintfString(96		,0	,16	,"%2d",RevBuffe[1]);				//待发药槽位，后边的省略号就是可变参数
+		PL010V13_PrintfString(96		,20	,16	,"%2d",RevBuffe[2]);				//待发药数量，后边的省略号就是可变参数
+		PL010V13_PrintfString(96		,40	,16	,"%2d",0);									//已发药数量，后边的省略号就是可变参数
 		
-		PL010V13_PrintfString(0		,102+50	,16	,"总共请求数量：%4d",SumFQ);				//总共发药请求数量
-		PL010V13_PrintfString(0		,134+50+16	,16	,"正在发药！！！！！！！！！！");				//错误状态
+//		PL010V13_PrintfString(0		,60	,16	,"总共请求数量：%4d",SumFQ);				//总共发药请求数量
+		PL010V13_PrintfString(0		,120	,16	,"正在发药！！！！！！！！！！");				//错误状态
 	}
 	else if(RxNum==4&&RevBuffe[0]==0x82)		//RS485接收到数据
 	{
-		SumFed+=RevBuffe[2];
-		PL010V13_PrintfString(192		,0	,32	,"%2d",RevBuffe[1]);				//待发药槽位，后边的省略号就是可变参数
-		PL010V13_PrintfString(192		,34	,32	,"%2d",0);									//待发药数量，后边的省略号就是可变参数
-		PL010V13_PrintfString(192		,68	,32	,"%2d",RevBuffe[2]);				//已发药数量，后边的省略号就是可变参数		
+		SumFed[RevBuffe[1]-1]+=RevBuffe[2];
+		PL010V13_PrintfString(96		,0	,16	,"%2d",RevBuffe[1]);				//待发药槽位，后边的省略号就是可变参数
+		PL010V13_PrintfString(96		,20	,16	,"%2d",0);									//待发药数量，后边的省略号就是可变参数
+		PL010V13_PrintfString(96		,40	,16	,"%2d",RevBuffe[2]);				//已发药数量，后边的省略号就是可变参数		
 		
-		PL010V13_PrintfString(112		,118+50	,16	,"%4d",SumFed);					//总共已发药数量
+//		PL010V13_PrintfString(112		,80	,16	,"%4d",SumFed);					//总共已发药数量
 		
 	}
 	else if(RxNum==6&&RevBuffe[0]==0x81)	//槽位信息0x01--获取,0x81--上报
 	{
-		PL010V13_PrintfString(0		,200	,16	,"%d,%d,%d,%d",RevBuffe[1],RevBuffe[2],RevBuffe[3],RevBuffe[4]);				//
-		
-//		SumFed=0;PL010V13_PrintfString(112		,118+50	,16	,"%4d",SumFed);					//总共已发药数量
-//		SumFQ=0;PL010V13_PrintfString(0		,102+50	,16	,"总共请求数量：%4d",SumFQ);				//总共发药请求数量
-//		PL010V13_PrintfString(192		,0	,32	,"%2d",0);				//待发药槽位，后边的省略号就是可变参数
-//		PL010V13_PrintfString(192		,34	,32	,"%2d",0);				//待发药数量，后边的省略号就是可变参数
+		Onlinede=RevBuffe[4];
 	}
 	else if(RxNum==1&&RevBuffe[0]==0x01)	//槽位信息0x01--获取,0x81--上报
 	{
-		PL010V13_PrintfString(0		,134+50+16	,16	,"获取槽位信息！！！");				//错误状态
-		
-		SumFed=0;PL010V13_PrintfString(112		,118+50	,16	,"%4d",SumFed);					//总共已发药数量
-		SumFQ=0;PL010V13_PrintfString(0		,102+50	,16	,"总共请求数量：%4d",SumFQ);				//总共发药请求数量
-		PL010V13_PrintfString(192		,0	,32	,"%2d",0);				//待发药槽位，后边的省略号就是可变参数
-		PL010V13_PrintfString(192		,34	,32	,"%2d",0);				//待发药数量，后边的省略号就是可变参数
+		PL010V13_PrintfString(0		,120	,16		,"获取槽位信息！！！");				//错误状态
+		NumFW=0;
+		Onlinede=0;
+		memset(SumFed,0x00,8);
+		memset(SumFQ,0x00,8);
+
+		PL010V13_PrintfString(96		,0	,16	,"%2d",0);				//待发药槽位，后边的省略号就是可变参数
+		PL010V13_PrintfString(96		,20	,16	,"%2d",0);				//待发药数量，后边的省略号就是可变参数
 	}
+	
 	for(DelayTime=0;DelayTime<1000;DelayTime++)
 	{
 		
@@ -199,17 +179,17 @@ void PL010V13_Server(void)
 	{
 		switch(RevBuffe[3])
 		{
-			case 0x00:	PL010V13_PrintfString(0		,134+50+16	,16	,"！！！！！！！！！！！！！！");				//错误状态
+			case 0x00:	PL010V13_PrintfString(0		,120	,16	,"！！！！！！！！！！！！！！");				//错误状态
 				break;
-			case 0x80:	PL010V13_PrintfString(0		,134+50+16	,16	,"药品被卡住！！！！！！！！！");				//错误状态
+			case 0x80:	PL010V13_PrintfString(0		,120	,16	,"药品被卡住！！！！！！！！！");				//错误状态
 				break;
-			case 0x81:	PL010V13_PrintfString(0		,134+50+16	,16	,"缺药！！！！！！！！！！！！");				//错误状态
+			case 0x81:	PL010V13_PrintfString(0		,120	,16	,"缺药！！！！！！！！！！！！");				//错误状态
 				break;
-			case 0x82:	PL010V13_PrintfString(0		,134+50+16	,16	,"等待命令结果超时！！！！！！");				//错误状态
+			case 0x82:	PL010V13_PrintfString(0		,120	,16	,"等待命令结果超时！！！！！！");				//错误状态
 				break;
-			case 0xC0:	PL010V13_PrintfString(0		,134+50+16	,16	,"单元柜控制器通信异常！！！！");				//错误状态
+			case 0xC0:	PL010V13_PrintfString(0		,120	,16	,"单元柜控制器通信异常！！！！");				//错误状态
 				break;
-			case 0xC1:	PL010V13_PrintfString(0		,134+50+16	,16	,"发药层控制器通信异常！！！！");				//错误状态
+			case 0xC1:	PL010V13_PrintfString(0		,120	,16	,"发药层控制器通信异常！！！！");				//错误状态
 				break;
 		}
 //		RevBuffe[0]=0;
@@ -432,23 +412,23 @@ void PL010V13_PinSet(void)
 	R61509V_PinConf(&R61509V_Pinfo);
 	
 
-//	R61509V_Clean(0X01CF);			//清除屏幕函数--黄色
-//	R61509V_Delay(1000);
+	R61509V_Clean(0X01CF);			//清除屏幕函数--黄色
+	R61509V_Delay(0xFFFFFF);
 	
-//	R61509V_Clean(0X07FF);			//清除屏幕函数--红色
-//	R61509V_Delay(1000);
-//	
-//	R61509V_Clean(0x07E0);			//清除屏幕函数--紫色
-//	R61509V_Delay(1000);
-//	
-//	R61509V_Clean(0XFC07);			//清除屏幕函数--蓝色
-//	R61509V_Delay(1000);
+	R61509V_Clean(0X07FF);			//清除屏幕函数--红色
+	R61509V_Delay(0xFFFFFF);
 	
-//	R61509V_Clean(0xF800);			//清除屏幕函数--蓝白
-//	R61509V_Delay(1000);
+	R61509V_Clean(0x07E0);			//清除屏幕函数--紫色
+	R61509V_Delay(0xFFFFFF);
+	
+	R61509V_Clean(0XFC07);			//清除屏幕函数--蓝色
+	R61509V_Delay(0xFFFFFF);
+	
+	R61509V_Clean(0xF800);			//清除屏幕函数--蓝白
+	R61509V_Delay(0xFFFFFF);
 
 	R61509V_Clean(R61509V_BLACK);			//清除屏幕函数------
-	R61509V_Delay(1000);
+	R61509V_Delay(0xFFFFFF);
 	
 //	R61509V_DrawDot(50,50,0X5458);
 //	R61509V_DrawDot_big(50,50,0X5458);
@@ -516,24 +496,61 @@ void PL010V13_PinSet(void)
 //	PL010V13_PrintfString(0		,100	,32	,"待发药数量：%2d",RevBuffe[1]);				//后边的省略号就是可变参数
 //	
 	#if 1
-	PL010V13_PrintfString(0		,0	,32	,"待发药槽位：%2d",RevBuffe[0]);				//后边的省略号就是可变参数
-	PL010V13_PrintfString(0		,34	,32	,"待发药数量：%2d",RevBuffe[1]);				//后边的省略号就是可变参数
-	PL010V13_PrintfString(0		,68	,32	,"已发药数量：%2d",RevBuffe[1]);				//后边的省略号就是可变参数
+	PL010Delay(0xFFFF);
+	PL010V13_PrintfString(1		,0	,16	,"待发药槽位：%2d",RevBuffe[0]);				//后边的省略号就是可变参数
+	PL010V13_PrintfString(1		,0	,16	,"待发药槽位：%2d",RevBuffe[0]);				//后边的省略号就是可变参数
+	PL010Delay(0xFFFF);
+	PL010V13_PrintfString(1		,20	,16	,"待发药数量：%2d",RevBuffe[1]);				//后边的省略号就是可变参数
+	PL010Delay(0xFFFF);
+	PL010V13_PrintfString(1		,40	,16	,"已发药数量：%2d",RevBuffe[1]);				//后边的省略号就是可变参数
+	PL010Delay(0xFFFF);
 	
-	PL010V13_PrintfString(0		,102+50	,16	,"总共请求数量：%4d",SumFQ);				//总共发药请求数量
-	PL010V13_PrintfString(0		,118+50	,16	,"总共发药数量：%4d",SumFed);				//总共已发药数量
-	PL010V13_PrintfString(0		,134+50	,16	,"错误状态：");				//错误状态
+//	PL010V13_PrintfString(0		,60	,16	,"总共请求数量：%4d",SumFQ);				//总共发药请求数量
+//	PL010V13_PrintfString(0		,80	,16	,"总共发药数量：%4d",SumFed);				//总共已发药数量
+	PL010V13_PrintfString(1		,100	,16	,"错误状态：");				//错误状态
+	PL010Delay(0xFFFF);
+	
+	PL010V13_PrintfString(1		,160	,16	,"提示：长按3秒读取发药头");				//错误状态
+	PL010Delay(0xFFFF);
+	
+
+	//平行线
+	R61509V_DrawLine(221,0,221,400,R61509V_WHITE);						//AB 两个坐标画一条直线
+	R61509V_DrawLine(201,0,201,400,R61509V_WHITE);						//AB 两个坐标画一条直线
+	R61509V_DrawLine(181,0,181,400,R61509V_WHITE);						//AB 两个坐标画一条直线
+	R61509V_DrawLine(161,0,161,400,R61509V_WHITE);						//AB 两个坐标画一条直线
+	//垂直线--中
+	R61509V_DrawLine(161,200,221,200,R61509V_WHITE);					//AB 两个坐标画一条直线
+	//垂直线--右
+	R61509V_DrawLine(161,250-1,221,250-1,R61509V_WHITE);			//AB 两个坐标画一条直线
+	R61509V_DrawLine(161,300-1,221,300-1,R61509V_WHITE);			//AB 两个坐标画一条直线
+	R61509V_DrawLine(161,350-1,221,350-1,R61509V_WHITE);			//AB 两个坐标画一条直线
+	R61509V_DrawLine(161,400-1,221,400-1,R61509V_WHITE);			//AB 两个坐标画一条直线
+	
+	//垂直线--左
+	R61509V_DrawLine(161,1,221,1,					R61509V_WHITE);							//AB 两个坐标画一条直线
+	R61509V_DrawLine(161,51,221,51,				R61509V_WHITE);						//AB 两个坐标画一条直线
+	R61509V_DrawLine(161,101,221,101,			R61509V_WHITE);					//AB 两个坐标画一条直线
+	R61509V_DrawLine(161,151,221,151,			R61509V_WHITE);					//AB 两个坐标画一条直线
+
+	//填充
+	R61509V_Fill(2,180,50,200-2,R61509V_RED);				//在指定区域内填充指定颜色;区域大小:(xend-xsta)*(yend-ysta)
+	
+	
+	
+	
+//	R61509V_DrawLine(10,200,10,280,R61509V_WHITE);						//AB 两个坐标画一条直线
 	
 	#else
 //	R61509V_Clean(R61509V_WHITE);			//清除屏幕函数------
 //	PL010Delay(0x8FFFFF);
-//	R61509V_Clean(R61509V_BLUE);			//清除屏幕函数------
-//	PL010Delay(0x8FFFFF);
+	R61509V_Clean(R61509V_BLUE);			//清除屏幕函数------
+	PL010Delay(0x8FFFFF);
 	R61509V_Clean(R61509V_GRED);			//清除屏幕函数------
 	PL010Delay(0x8FFFFF);
-	R61509V_Clean(R61509V_BLACK);			//清除屏幕函数------
-	PL010Delay(0xFFFF);
-	PL010V13_PrintfString(0	,0,16	,"G");				//错误状态
+//	R61509V_Clean(R61509V_BLACK);			//清除屏幕函数------
+//	PL010Delay(0xFFFF);
+	PL010V13_PrintfString(0	,0,16	,"TEST");				//错误状态
 	#endif
 //	R61509V_Clean(R61509V_BLACK);			//清除屏幕函数------
 	
@@ -595,15 +612,23 @@ unsigned int PL010V13_PrintfString(u16 x,u16 y,u8 font,const char *format,...)		
 			dst=Char_Buffer[i+1];
 			word=word|dst;			
 			//显示超限判断
-			if(x>R61509V_W-16)
+			if(font==16&&x>R61509V_W-16)
+			{
+				x=0;
+				y+=16;
+			}
+			if(font==32&&x>R61509V_W-32)
 			{
 				x=0;
 				y+=32;
 			}
-			if(y>R61509V_H-32)
+			if(font==16&&y>R61509V_H-16)
 			{
 				y=x=0;
-//				R61509V_Clean(R61509V_BLACK);
+			}
+			if(font==32&&y>R61509V_H-32)
+			{
+				y=x=0;
 			}
 			lengh=GT32L32_ReadBuffer(&GT32L32_Info,font,word,GT32L32_Info.GT32L32_Data.GT32L32_Buffer);		//从字库中读数据函数
 			//写入屏幕
@@ -635,10 +660,13 @@ unsigned int PL010V13_PrintfString(u16 x,u16 y,u8 font,const char *format,...)		
 				x=0;
 				y+=32;
 			}
-			if(y>R61509V_H-32)
+			if(font==16&&y>R61509V_H-16)
 			{
 				y=x=0;
-//				R61509V_Clean(R61509V_BLACK);
+			}
+			if(font==32&&y>R61509V_H-32)
+			{
+				y=x=0;
 			}
 			lengh=GT32L32_ReadBuffer(&GT32L32_Info,font,(u16)dst,GT32L32_Info.GT32L32_Data.GT32L32_Buffer);		//从字库中读数据函数
 //			//写入屏幕
@@ -684,5 +712,213 @@ void PL010Delay(u32 time)
 {	
 	while(time--);
 }
-	
+/*******************************************************************************
+* 函数名			:	function
+* 功能描述		:	函数功能说明 
+* 输入			: void
+* 返回值			: void
+*******************************************************************************/
+void LCD_WS(void)		//位闪烁
+{
+	if(NumFW)		//槽位闪烁	DSPTime
+	{
+		if(NumFW==1&&(Onlinede>>0&0x01))
+		{
+			if(DSPTime==500)
+			{
+				R61509V_Fill(2,180,50,200-2,R61509V_GREEN);				//在指定区域内填充指定颜色;区域大小:(xend-xsta)*(yend-ysta)
+			}
+			else if(DSPTime==250)
+			{
+				R61509V_Fill(2,180,50,200-2,R61509V_MAGENTA);				//在指定区域内填充指定颜色;区域大小:(xend-xsta)*(yend-ysta)
+			}
+		}
+		else if(NumFW==2&&(Onlinede>>1&0x01))
+		{
+			if(DSPTime==500)
+			{
+				R61509V_Fill(52,180,100,200-2,R61509V_GBLUE);				//在指定区域内填充指定颜色;区域大小:(xend-xsta)*(yend-ysta)
+			}
+			else if(DSPTime==250)
+			{
+				R61509V_Fill(52,180,100,200-2,R61509V_MAGENTA);				//在指定区域内填充指定颜色;区域大小:(xend-xsta)*(yend-ysta)
+			}			
+		}
+		else if(NumFW==3&&(Onlinede>>2&0x01))
+		{
+			if(DSPTime==500)
+			{
+				R61509V_Fill(102,180,150,200-2,R61509V_GREEN);				//在指定区域内填充指定颜色;区域大小:(xend-xsta)*(yend-ysta)
+			}
+			else if(DSPTime==250)
+			{
+				R61509V_Fill(102,180,150,200-2,R61509V_MAGENTA);				//在指定区域内填充指定颜色;区域大小:(xend-xsta)*(yend-ysta)
+			}			
+		}
+		else if(NumFW==4&&(Onlinede>>3&0x01))
+		{
+			if(DSPTime==500)
+			{
+				R61509V_Fill(152,180,200,200-2,R61509V_GREEN);				//在指定区域内填充指定颜色;区域大小:(xend-xsta)*(yend-ysta)
+			}
+			else if(DSPTime==250)
+			{
+				R61509V_Fill(152,180,200,200-2,R61509V_MAGENTA);				//在指定区域内填充指定颜色;区域大小:(xend-xsta)*(yend-ysta)
+			}			
+		}
+		else if(NumFW==5&&(Onlinede>>4&0x01))
+		{
+			if(DSPTime==500)
+			{
+				R61509V_Fill(202,180,250,200-2,R61509V_GREEN);				//在指定区域内填充指定颜色;区域大小:(xend-xsta)*(yend-ysta)
+			}
+			else if(DSPTime==250)
+			{
+				R61509V_Fill(202,180,250,200-2,R61509V_MAGENTA);				//在指定区域内填充指定颜色;区域大小:(xend-xsta)*(yend-ysta)
+			}			
+		}
+		else if(NumFW==6&&(Onlinede>>5&0x01))
+		{
+			if(DSPTime==500)
+			{
+				R61509V_Fill(252,180,300,200-2,R61509V_GREEN);				//在指定区域内填充指定颜色;区域大小:(xend-xsta)*(yend-ysta)
+			}
+			else if(DSPTime==250)
+			{
+				R61509V_Fill(252,180,300,200-2,R61509V_MAGENTA);				//在指定区域内填充指定颜色;区域大小:(xend-xsta)*(yend-ysta)
+			}			
+		}
+		else if(NumFW==7&&(Onlinede>>6&0x01))
+		{
+			if(DSPTime==500)
+			{
+				R61509V_Fill(302,180,350,200-2,R61509V_GREEN);				//在指定区域内填充指定颜色;区域大小:(xend-xsta)*(yend-ysta)
+			}
+			else if(DSPTime==250)
+			{
+				R61509V_Fill(302,180,350,200-2,R61509V_MAGENTA);				//在指定区域内填充指定颜色;区域大小:(xend-xsta)*(yend-ysta)
+			}			
+		}
+		else if(NumFW==8&&(Onlinede>>7&0x01))
+		{
+			if(DSPTime==500)
+			{
+				R61509V_Fill(352,180,400-2,200-2,R61509V_GREEN);				//在指定区域内填充指定颜色;区域大小:(xend-xsta)*(yend-ysta)
+			}
+			else if(DSPTime==250)
+			{
+				R61509V_Fill(352,180,400-2,200-2,R61509V_MAGENTA);				//在指定区域内填充指定颜色;区域大小:(xend-xsta)*(yend-ysta)
+			}			
+		}
+	}
+}
+/*******************************************************************************
+* 函数名			:	function
+* 功能描述		:	函数功能说明 
+* 输入			: void
+* 返回值			: void
+*******************************************************************************/
+void LCD_WXS(void)		//位显示
+{
+		if((Onlinede>>0&0x01)==0x01)
+		{
+			R61509V_Fill(2,180,50,200-2,R61509V_GREEN);				//在指定区域内填充指定颜色;区域大小:(xend-xsta)*(yend-ysta)
+		}
+		else
+		{
+			R61509V_Fill(2,180,50,200-2,R61509V_RED);				//在指定区域内填充指定颜色;区域大小:(xend-xsta)*(yend-ysta)
+		}
+		if((Onlinede>>1&0x01)==0x01)
+		{
+			R61509V_Fill(52,180,100,200-2,R61509V_GREEN);				//在指定区域内填充指定颜色;区域大小:(xend-xsta)*(yend-ysta)
+		}
+		else
+		{
+			R61509V_Fill(52,180,100,200-2,R61509V_RED);				//在指定区域内填充指定颜色;区域大小:(xend-xsta)*(yend-ysta)
+		}
+		if((Onlinede>>2&0x01)==0x01)
+		{
+			R61509V_Fill(102,180,150,200-2,R61509V_GREEN);				//在指定区域内填充指定颜色;区域大小:(xend-xsta)*(yend-ysta)
+		}
+		else
+		{
+			R61509V_Fill(102,180,150,200-2,R61509V_RED);				//在指定区域内填充指定颜色;区域大小:(xend-xsta)*(yend-ysta)
+		}
+		if((Onlinede>>3&0x01)==0x01)
+		{
+			R61509V_Fill(152,180,200,200-2,R61509V_GREEN);				//在指定区域内填充指定颜色;区域大小:(xend-xsta)*(yend-ysta)
+		}
+		else
+		{
+			R61509V_Fill(152,180,200,200-2,R61509V_RED);				//在指定区域内填充指定颜色;区域大小:(xend-xsta)*(yend-ysta)
+		}
+		if((Onlinede>>4&0x01)==0x01)
+		{
+			R61509V_Fill(202,180,250,200-2,R61509V_GREEN);				//在指定区域内填充指定颜色;区域大小:(xend-xsta)*(yend-ysta)
+		}
+		else
+		{
+			R61509V_Fill(202,180,250,200-2,R61509V_RED);				//在指定区域内填充指定颜色;区域大小:(xend-xsta)*(yend-ysta)
+		}
+		if((Onlinede>>5&0x01)==0x01)
+		{
+			R61509V_Fill(252,180,300,200-2,R61509V_GREEN);				//在指定区域内填充指定颜色;区域大小:(xend-xsta)*(yend-ysta)
+		}
+		else
+		{
+			R61509V_Fill(252,180,300,200-2,R61509V_RED);				//在指定区域内填充指定颜色;区域大小:(xend-xsta)*(yend-ysta)
+		}
+		if((Onlinede>>6&0x01)==0x01)
+		{
+			R61509V_Fill(302,180,350,200-2,R61509V_GREEN);				//在指定区域内填充指定颜色;区域大小:(xend-xsta)*(yend-ysta)
+		}
+		else
+		{
+			R61509V_Fill(302,180,350,200-2,R61509V_RED);				//在指定区域内填充指定颜色;区域大小:(xend-xsta)*(yend-ysta)
+		}
+		if((Onlinede>>7&0x01)==0x01)
+		{
+			R61509V_Fill(352,180,400-2,200-2,R61509V_GREEN);				//在指定区域内填充指定颜色;区域大小:(xend-xsta)*(yend-ysta)
+		}
+		else
+		{
+			R61509V_Fill(352,180,400-2,200-2,R61509V_RED);				//在指定区域内填充指定颜色;区域大小:(xend-xsta)*(yend-ysta)
+		}
+}
+/*******************************************************************************
+* 函数名			:	function
+* 功能描述		:	函数功能说明 
+* 输入			: void
+* 返回值			: void
+*******************************************************************************/
+void LCD_DDSP(void)		//显示总共请求数量和已发数量
+{
+	u8 i=0;
+	u8 w=2;
+	//请求数量显示
+//	for(i=0;i<8;i++)
+//	{
+//		PL010V13_PrintfString(w,200,16	,"%5d",SumFQ[i]);				//待发药数量，后边的省略号就是可变参数
+//		w+=50;
+//	}
+	//请求数量显示
+	PL010V13_PrintfString(2,200,16	,"%5d",SumFQ[0]);				//待发药数量，后边的省略号就是可变参数
+	PL010V13_PrintfString(52,200,16	,"%5d",SumFQ[1]);				//待发药数量，后边的省略号就是可变参数
+	PL010V13_PrintfString(102,200,16	,"%5d",SumFQ[2]);				//待发药数量，后边的省略号就是可变参数
+	PL010V13_PrintfString(152,200,16	,"%5d",SumFQ[3]);				//待发药数量，后边的省略号就是可变参数
+	PL010V13_PrintfString(201,200,16	,"%5d",SumFQ[4]);				//待发药数量，后边的省略号就是可变参数
+	PL010V13_PrintfString(251,200,16	,"%5d",SumFQ[5]);				//待发药数量，后边的省略号就是可变参数
+	PL010V13_PrintfString(301,200,16	,"%5d",SumFQ[6]);				//待发药数量，后边的省略号就是可变参数
+	PL010V13_PrintfString(351,200,16	,"%5d",SumFQ[7]);				//待发药数量，后边的省略号就是可变参数
+
+	//已发数量显示	
+	PL010V13_PrintfString(2,220,16		,"%5d",SumFed[0]);				//待发药数量，后边的省略号就是可变参数
+	PL010V13_PrintfString(52,220,16		,"%5d",SumFed[1]);				//待发药数量，后边的省略号就是可变参数
+	PL010V13_PrintfString(102,220,16	,"%5d",SumFed[2]);				//待发药数量，后边的省略号就是可变参数
+	PL010V13_PrintfString(152,220,16	,"%5d",SumFed[3]);				//待发药数量，后边的省略号就是可变参数
+	PL010V13_PrintfString(201,220,16	,"%5d",SumFed[4]);				//待发药数量，后边的省略号就是可变参数
+	PL010V13_PrintfString(251,220,16	,"%5d",SumFed[5]);				//待发药数量，后边的省略号就是可变参数
+	PL010V13_PrintfString(301,220,16	,"%5d",SumFed[6]);				//待发药数量，后边的省略号就是可变参数
+	PL010V13_PrintfString(351,220,16	,"%5d",SumFed[7]);				//待发药数量，后边的省略号就是可变参数
+}
 #endif

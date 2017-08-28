@@ -17,6 +17,7 @@
 
 #include "PD002V30.H"
 #include "CS5530.H"
+#include "74HC595.H"
 
 #include "STM32F10x_BitBand.H"
 #include "STM32_GPIO.H"
@@ -66,8 +67,12 @@ u32 Value_AD1=0;
 u32 Value_AD2=0;
 
 u8 swid=0;
+u16 RunTime=0;
+HC595_Pindef HC595_Conf;
 
+u8 dnum=0;
 
+void TEMPdelay(u32 time);
 /*******************************************************************************
 * 函数名		:	
 * 功能描述	:	 
@@ -79,9 +84,7 @@ void PD002V30_Configuration(void)
 {
 	SYS_Configuration();					//系统配置---打开系统时钟 STM32_SYS.H
 	
-	GPIO_DeInitAll();							//将所有的GPIO关闭----V20170605
-	
-	
+	GPIO_DeInitAll();							//将所有的GPIO关闭----V20170605	
 	
 	GPIO_Configuration_OPP2	(GPIOC,GPIO_Pin_1);			//BUZZER//将GPIO相应管脚配置为OD(开漏)输出模式，最大速度2MHz----V20170605
 	
@@ -90,13 +93,11 @@ void PD002V30_Configuration(void)
 	GPIO_Configuration_IPU	(GPIOA,GPIO_Pin_6);			//S3//将GPIO相应管脚配置为上拉输入模式----V20170605
 	GPIO_Configuration_IPU	(GPIOA,GPIO_Pin_7);			//S4//将GPIO相应管脚配置为上拉输入模式----V20170605
 	
-	PD002V30_USART_Conf();	
-
-	cs5530init();
+	Seg_Conf();
 	
 	SysTick_Configuration(1000);	//系统嘀嗒时钟配置72MHz,单位为uS
 	
-	IWDG_Configuration(1000);			//独立看门狗配置---参数单位ms	
+//	IWDG_Configuration(1000);			//独立看门狗配置---参数单位ms	
 	
 	PWM_OUT(TIM2,PWM_OUTChannel1,1,900);						//PWM设定-20161127版本
 }
@@ -111,10 +112,22 @@ void PD002V30_Server(void)
 {	
 
 	IWDG_Feed();								//独立看门狗喂狗
-	SwitchID=PD002V30_GetSwitchID();			//获取拔码开关地址
-	PD002V30_USART1_Server();
-	PD002V30_485_Server();
-	cs5530test();
+	
+	RunTime++;
+	if(RunTime>=1000)
+	{
+		dnum++;
+		if(dnum>9)
+			dnum=0;
+		RunTime=0;
+		TEMPdelay(0XFF);
+		HC595_RCK_HIGH(&HC595_Conf);
+		TEMPdelay(0XFF);
+		HC595_WriteNumberN(&HC595_Conf,dnum);		//反向信号写入
+		TEMPdelay(0XFF);
+		HC595_RCK_LOW(&HC595_Conf);
+		
+	}
 
 }
 
@@ -126,17 +139,7 @@ void PD002V30_Server(void)
 *******************************************************************************/
 void PD002V30_USART_Conf(void)
 {
-	//********************BTL（USART1)***********************************
-	USART_DMA_Configuration(USART1,115200,1,1,(u32*)rxBuffer1,(u32*)txBuffer1,BufferSize);	//USART_DMA配置
-	DMA_ITConfig(DMA1_Channel4,DMA_IT_TC, DISABLE);
-	USART_ITConfig(USART1,USART_IT_IDLE, DISABLE);				//使用空闲中断，DMA自动接收，检测到总线空闲表示发送端已经发送完成，数据保存在DMA缓冲器中
-	
-	//*********************内部485（与称重连接--USART2)***********************************
-	USART_DMA_Configuration(USART2,19200,1,1,(u32*)rxBuffer_PD,(u32*)txBuffer_PD,BufferSize);	//USART_DMA配置
-	DMA_ITConfig(DMA1_Channel7,DMA_IT_TC, DISABLE);
-	USART_ITConfig(USART2,USART_IT_IDLE, DISABLE);				//使用空闲中断，DMA自动接收，检测到总线空闲表示发送端已经发送完成，数据保存在DMA缓冲器中
-	
-	GPIO_Configuration_OPP50	(GPIOA,GPIO_Pin_1);						//485(uart2-en)//将GPIO相应管脚配置为OD(开漏)输出模式，最大速度2MHz----V20170605
+
 
 }
 /*******************************************************************************
@@ -147,56 +150,7 @@ void PD002V30_USART_Conf(void)
 *******************************************************************************/
 void PD002V30_USART1_Server(void)
 {
-	u16 num=0;
-	num=USART_RX_FlagClear(USART1);																//清除串口接收中断标志--返回DMA剩余缓冲区大小
-	//*********************BTL（USART1)***********************************
-	if(num!=0xFFFF)
-	{
-		num=BufferSize-num;																	//得到真正接收数据个数
 
-#ifdef	USART_TO_RS485
-		txflg2=1;																						//发送标志
-		tx2_tcont=0;
-		RS485_Bus_TXEN;																			//rs485总线发送使能
-		memcpy(txBuffer_Bus, rxBuffer1,num);
-		USART_DMASend(USART3,(u32*)txBuffer_Bus,num);				//串口DMA发送程序
-#else
-		if((rxBuffer1[0]==Command_ReadData)&&(rxBuffer1[1]==SwitchID))
-		{
-			txflg1=1;	//发送标志
-			tx1_tcont=0;
-			txBuffer1[0]=Command_ReadData;
-//			txBuffer1[1]=SwitchID;			
-			USART_DMASend(USART1,(u32*)txBuffer1,BufferSize);	//串口DMA发送程序						
-		}
-#endif
-		memset(rxBuffer1, 0x00, BufferSize);
-		USART_DMA_RxEN(USART1,(u32*)rxBuffer1,BufferSize);	//重新设定接收缓冲区地址及大小并使能DMA接收		
-	}
-	//*********************清除发送标志***********************************
-	if(txflg1==1)
-	{
-		if(tx1_tcont++>100)		//100ms---超时
-		{
-			txflg1=0;
-			tx1_tcont=0;
-			USART_ClearFlag(USART1,USART_FLAG_TC); 										//清除空闲串口标志位
-			DMA_ClearFlag(DMA1_FLAG_GL4);
-			DMA_Cmd(DMA1_Channel4,DISABLE);  													//关闭DMA发送
-			memset(txBuffer1, 0x00, BufferSize);
-		}
-		else
-		{
-			u8 flg_tx=0;
-			flg_tx=USART_TX_FlagClear(USART1);									//清除串口DMA发送全局中断标志
-			if(flg_tx)
-			{
-					txflg1=0;
-					tx1_tcont=0;
-					memset(txBuffer1, 0x00, BufferSize);
-			}
-		}
-	}	
 }
 /*******************************************************************************
 * 函数名			:	function
@@ -206,72 +160,7 @@ void PD002V30_USART1_Server(void)
 *******************************************************************************/
 void PD002V30_485_Server(void)
 {
-	u16 num=0;	
-	num=USART_RX_FlagClear(USART2);																//清除串口接收中断标志--返回DMA剩余缓冲区大小
-	//*********************DMA接收处理***********************************
-	if(num<=BufferSize)
-	{
-		num=BufferSize-num;																	//得到真正接收数据个数
-		//-----------------------接收称重板上报的数据
-#ifdef	PD002V30TEST
-		RS485_PD_TXEN;
-		txflg3=1;	//发送标志
-		tx3_tcont=0;
-		txBuffer_PD[0]=rxBuffer_PD[0];
-		txBuffer_PD[1]=rxBuffer_PD[1];
-		txBuffer_PD[2]=0xA1+rxBuffer_PD[1];
-		txBuffer_PD[3]=0xA2+rxBuffer_PD[1];
-		txBuffer_PD[4]=0xA3+rxBuffer_PD[1];
-		txBuffer_PD[5]=rxBuffer_PD[1]+1;
-		txBuffer_PD[6]=0xB1+rxBuffer_PD[1];
-		txBuffer_PD[7]=0xB2+rxBuffer_PD[1];
-		txBuffer_PD[8]=0xB3+rxBuffer_PD[1];
-		
-		USART_DMASend(USART2,(u32*)txBuffer_PD,9);	//串口DMA发送程序
-#else
-		if((rxBuffer_PD[0]==(u8)Command_ReadData)&&(rxBuffer_PD[1]==SwitchID))
-		{
-			RS485_PD_TXEN;
-			__nop();
-			__nop();
-			__nop();
-			txflg3=1;	//发送标志
-			tx3_tcont=0;
-			txBuffer_PD[0]=Command_ReadData;
-			txBuffer_PD[1]=SwitchID;			
-			USART_DMASend(USART2,(u32*)txBuffer_PD,9);	//串口DMA发送程序						
-		}
-#endif
-		memset(rxBuffer_PD, 0x00, BufferSize);
-		USART_DMA_RxEN(USART2,(u32*)rxBuffer_PD,BufferSize);	//重新设定接收缓冲区地址及大小并使能DMA接收		
-	}
-	//*********************DMA发送处理***********************************
-	else if(txflg3==1)
-	{
-		if(tx3_tcont++>500)		//50ms
-		{
-			txflg3=0;
-			tx3_tcont=0;
-			USART_ClearFlag(USART2,USART_FLAG_TC); 										//清除空闲串口标志位
-			DMA_ClearFlag(DMA1_FLAG_GL7);
-			DMA_Cmd(DMA1_Channel7,DISABLE);  													//关闭DMA发送
-			memset(txBuffer_PD, 0x00, BufferSize);
-			RS485_PD_RXEN;
-		}	
-		else
-		{
-			u8 flg_tx=0;
-			flg_tx=USART_TX_FlagClear(USART2);									//清除串口DMA发送全局中断标志
-			if(flg_tx)
-			{
-					txflg3=0;
-					tx3_tcont=0;
-					memset(txBuffer_PD, 0x00, BufferSize);
-					RS485_PD_RXEN;
-			}
-		}
-	}
-	
+
 }
 /*******************************************************************************
 * 函数名			:	function
@@ -282,23 +171,14 @@ void PD002V30_485_Server(void)
 u8 PD002V30_GetSwitchID(void)
 {
 	u8 SwitchTemp=0;	
-	
-//	if(PB9in==0)				//S1
-//		SwitchTemp|=1<<0;
-//	if(PB8in==0)				//S2
-//		SwitchTemp|=1<<1;
-//	if(PB7in==0)				//S3
-//		SwitchTemp|=1<<2;
-//	if(PB6in==0)				//S4
-//		SwitchTemp|=1<<3;
 
-		SwitchTemp|=PA4in<<0;		//S1
-		SwitchTemp|=PA5in<<1;		//S2
-		SwitchTemp|=PA6in<<2;		//S3
-		SwitchTemp|=PA7in<<3;		//S4
+	SwitchTemp|=PA4in<<0;		//S1
+	SwitchTemp|=PA5in<<1;		//S2
+	SwitchTemp|=PA6in<<2;		//S3
+	SwitchTemp|=PA7in<<3;		//S4
 		
-		SwitchTemp=~SwitchTemp;
-		SwitchTemp=SwitchTemp&0x0F;
+	SwitchTemp=~SwitchTemp;
+	SwitchTemp=SwitchTemp&0x0F;
 	
 	return SwitchTemp;
 }
@@ -353,93 +233,31 @@ void cs5530init(void)
 	CS5530_PowerUp(&CS5530_2);
 }
 /*******************************************************************************
-* 函数名			:	PC001V21_GetBufferArray
-* 功能描述		: 获取4个抽屉8个通道的AD值，一个一个抽屉获取
+* 函数名			:	function
+* 功能描述		:	函数功能说明 
 * 输入			: void
 * 返回值			: void
 *******************************************************************************/
-void cs5530test(void)
+void Seg_Conf(void)
 {
-	sysledcnt++;
-//	if((sysledcnt>=5)&&(sysledcnt<=50))
-//	{
-//		CS5530_CS_LOW(&CS5530_1);
-//		if(CS5530_SDO_STATE(&CS5530_1) == 0)
-//		{			
-//			Value_AD1=CS5530_GetADData(&CS5530_1)>>8;
-//			txBuffer_PD[4]=(unsigned char)(Value_AD1);
-//			txBuffer_PD[3]=(unsigned char)(Value_AD1>>8);
-//			txBuffer_PD[2]=(unsigned char)(Value_AD1>>16);
-//			txBuffer_PD[1]=(unsigned char)(SwitchID);			
-//		}
-//	}
-//	else if(sysledcnt>=100)
-//	{
-//		sysledcnt=0;
-//	}
-//	else if(sysledcnt>55)
-//	{
-//		CS5530_CS_LOW(&CS5530_2);
-//		if(CS5530_SDO_STATE(&CS5530_2) == 0)
-//		{
-//			Value_AD2=CS5530_GetADData(&CS5530_2)>>8;
-//			txBuffer_PD[8]=(unsigned char)(Value_AD2);
-//			txBuffer_PD[7]=(unsigned char)(Value_AD2>>8);
-//			txBuffer_PD[6]=(unsigned char)(Value_AD2>>16);
-//			txBuffer_PD[5]=(unsigned char)(SwitchID+1);
-//		}
-//	}
-//	else
-//	{
-//		CS5530_CS_HIGH(&CS5530_1);
-//		CS5530_CS_HIGH(&CS5530_2);
-//	}
-
+	HC595_Conf.HC595_SDA_PORT=GPIOB;
+	HC595_Conf.HC595_SDA_Pin=GPIO_Pin_5;
 	
-	if(sysledcnt>=500)
-	{
-		swid=0;
-		sysledcnt=0;
-		CS5530_CS_HIGH(&CS5530_1);
-		CS5530_CS_HIGH(&CS5530_2);
-	}
+	HC595_Conf.HC595_SCK_PORT=GPIOB;
+	HC595_Conf.HC595_SCK_Pin=GPIO_Pin_4;
 	
-	if(swid==0)
-	{
-		CS5530_CS_HIGH(&CS5530_2);
-		CS5530_CS_LOW(&CS5530_1);		
-		if(CS5530_SDO_STATE(&CS5530_1) == 0)
-		{			
-			Value_AD1=CS5530_GetADData(&CS5530_1)>>8;
-			txBuffer_PD[4]=(unsigned char)(Value_AD1);
-			txBuffer_PD[3]=(unsigned char)(Value_AD1>>8);
-			txBuffer_PD[2]=(unsigned char)(Value_AD1>>16);
-			txBuffer_PD[1]=(unsigned char)(SwitchID);
-			swid=1;			
-		}
-	}
-	else if(swid==1)
-	{
-		CS5530_CS_HIGH(&CS5530_1);
-		CS5530_CS_LOW(&CS5530_2);
-		if(CS5530_SDO_STATE(&CS5530_2) == 0)
-		{
-			Value_AD2=CS5530_GetADData(&CS5530_2)>>8;
-			txBuffer_PD[8]=(unsigned char)(Value_AD2);
-			txBuffer_PD[7]=(unsigned char)(Value_AD2>>8);
-			txBuffer_PD[6]=(unsigned char)(Value_AD2>>16);
-			txBuffer_PD[5]=(unsigned char)(SwitchID+1);
-			swid=0;
-			
-			
-
-			memcpy(txBuffer1, txBuffer_PD,9);			
-			txflg1=1;	//发送标志
-			tx1_tcont=0;
-			
-			
-			USART_DMASend(USART1,(u32*)txBuffer1,9);	//串口DMA发送程序
-		}
-	}
+	HC595_Conf.HC595_RCK_PORT=GPIOB;
+	HC595_Conf.HC595_RCK_Pin=GPIO_Pin_3;
+	HC595_PinConf(&HC595_Conf);
+}
+/*******************************************************************************
+* 函数名			:	function
+* 功能描述		:	函数功能说明 
+* 输入			: void
+* 返回值			: void
+*******************************************************************************/
+void TEMPdelay(u32 time)
+{
+	while(time--);
 }
 #endif

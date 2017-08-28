@@ -320,7 +320,7 @@ void R61509V_Init( t_LcdCfg **pLcdpara );
 
 //void R61509V_Fill(u16 xsta,u16 ysta,u16 xend,u16 yend,u16 color);
 
-void R61509V_Delay(u16 xms);
+void R61509V_Delay(u32 xms);
 void R61509V_WriteData16(unsigned int dashuju);				//写16位数据	
 void R61509V_WriteIndex16(unsigned int damingling);		//写16位命令索引编号
 

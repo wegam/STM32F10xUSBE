@@ -4,6 +4,7 @@
 
 
 void PD002V30_Configuration(void);
+void Seg_Conf(void);
 void PD002V30_Server(void);
 void PD002V30_USART_Conf(void);
 void PD002V30_USART1_Server(void);

@@ -29,7 +29,7 @@ u16 R61509V_POINT_COLOR	=	R61509V_BLUE;   	//画笔色
 * 输入			: void
 * 返回值			: void
 *******************************************************************************/
-void R61509V_Delay(u16 xms)
+void R61509V_Delay(u32 xms)
 {
 	while(xms--);
 }
@@ -1223,16 +1223,17 @@ void R61509V_SetWindowAddress(			//设置窗口地址
 //	R61509V_Delay(100);		//准备写
 
 #else
+//	R61509V_W	400
+//	R61509V_H 240
+	R61509V_WriteCommand(0x210,y1);			//Window Horizontal RAM Address Start(R210h)
+	R61509V_WriteCommand(0x211,y2);			//Window Horizontal RAM Address End(R211h)
+	R61509V_WriteCommand(0x212,R61509V_W-x2-1);			//Window Vertical RAM Address Start (R212h)
+	R61509V_WriteCommand(0x213,R61509V_W-x1-1);			//Window Vertical RAM Address End (R213h)
 	
-	R61509V_WriteCommand(0x210,x1);			//Window Horizontal RAM Address Start(R210h)
-	R61509V_WriteCommand(0x211,x2);			//Window Horizontal RAM Address End(R211h)
-	R61509V_WriteCommand(0x212,y1);			//Window Vertical RAM Address Start (R212h)
-	R61509V_WriteCommand(0x213,y2);			//Window Vertical RAM Address End (R213h)
+	R61509V_WriteCommand(0x200,y1);			//RAM Address Set (Horizontal Address) (R200h)
+	R61509V_WriteCommand(0x201,R61509V_W-x2-1);			//RAM Address Set (Vertical Address) (R201h)
 	
-	R61509V_WriteCommand(0x200,x1);			//RAM Address Set (Horizontal Address) (R200h)
-	R61509V_WriteCommand(0x201,y1);			//RAM Address Set (Vertical Address) (R201h)
-	
-	R61509V_WriteCommand(0x003,0X5030);			//RAM Address Set (Vertical Address) (R201h)
+	R61509V_WriteCommand(0x003,0X5018);			//RAM Address Set (Vertical Address) (R201h)
 	
 	R61509V_WriteIndex16(0x0202);				//GRAM(Graphics RAM--图形内存) Data Write (R202h)准备写入
 #endif
@@ -1654,7 +1655,7 @@ void R61509V_Clean(u16 COLOR)	//清除屏幕函数
 	unsigned char i;
 	unsigned int j;
 
-	R61509V_SetWindowAddress(0x00,0x00,R61509V_H-1,R61509V_W-1);
+	R61509V_SetWindowAddress(0x00,0x00,R61509V_W-1,R61509V_H-1);
 	R61509V_CS_LOW; //片选打开
 	R61509V_RS_HIGH; //数据
 	for(j=1;j<=R61509V_W;j++)
@@ -1786,37 +1787,37 @@ void R61509V_Fill(
 	unsigned int j;	
 	u16 x1=0,y1=0,x2=0,y2=0;
 
-	switch(Sreen_Rotate)
-	{
-		case 	SCREEN_ROTATE_0D:		
-					{
-						xend=xend-1;
-						yend=yend-1;
-					}
-			break;
-		case 	SCREEN_ROTATE_90D:	
-					{
-						x1=xsta;x2=xend;y1=ysta;y2=yend;	
-						xsta=R61509V_H-y2;	xend=R61509V_H-y1-1;
-						ysta=x1;	yend=x2-1;
-					}
-			break;
-		case 	SCREEN_ROTATE_180D:	
-					{
-						x1=xsta;x2=xend;y1=ysta;y2=yend;
-						xsta=R61509V_H-x2;	xend=R61509V_H-x1-1;
-						ysta=R61509V_W-y2;	yend=R61509V_W-y1-1;
-					}
-			break;
-		case	SCREEN_ROTATE_270D:	
-					{
-						x1=xsta;x2=xend;y1=ysta;y2=yend;
-						xsta=y1;	xend=y2-1;
-						ysta=R61509V_W-x2;	yend=R61509V_W-x1-1;
-					}
-			break;
-		default: break;			
-	}
+//	switch(Sreen_Rotate)
+//	{
+//		case 	SCREEN_ROTATE_0D:		
+//					{
+//						xend=xend-1;
+//						yend=yend-1;
+//					}
+//			break;
+//		case 	SCREEN_ROTATE_90D:	
+//					{
+//						x1=xsta;x2=xend;y1=ysta;y2=yend;	
+//						xsta=R61509V_H-y2;	xend=R61509V_H-y1-1;
+//						ysta=x1;	yend=x2-1;
+//					}
+//			break;
+//		case 	SCREEN_ROTATE_180D:	
+//					{
+//						x1=xsta;x2=xend;y1=ysta;y2=yend;
+//						xsta=R61509V_H-x2;	xend=R61509V_H-x1-1;
+//						ysta=R61509V_W-y2;	yend=R61509V_W-y1-1;
+//					}
+//			break;
+//		case	SCREEN_ROTATE_270D:	
+//					{
+//						x1=xsta;x2=xend;y1=ysta;y2=yend;
+//						xsta=y1;	xend=y2-1;
+//						ysta=R61509V_W-x2;	yend=R61509V_W-x1-1;
+//					}
+//			break;
+//		default: break;			
+//	}
 	
 //	switch(Sreen_Rotate)
 //	{
@@ -1834,9 +1835,9 @@ void R61509V_Fill(
 	R61509V_SetWindowAddress(xsta,ysta,xend,yend);
 	R61509V_CS_LOW; 					//片选打开
 	R61509V_RS_HIGH; 					//数据
-	for(i=0;i<=xend-xsta;i++)
+	for(i=0;i<xend-xsta;i++)
 	{
-		for(j=0;j<=yend-ysta;j++)
+		for(j=0;j<yend-ysta;j++)
 		{
 			R61509V_WR_LOW;
 			R61509V_DATABUS_PORT->ODR = color;
@@ -2061,7 +2062,6 @@ void R61509V_ShowChar(
 			else
 				R61509V_PEN_COLOR=R61509V_BLACK;
 			
-//			R61509V_DrawDot(j,i,POINT_COLOR);
 			R61509V_WriteData16(R61509V_PEN_COLOR);
 //			SSD1963_WR_Write; 		//0--写开启，1--写关闭
 //			GPIO_Write(SSD1963_sPinfo->SSD1963_sDATABUS_PORT,POINT_COLOR);
