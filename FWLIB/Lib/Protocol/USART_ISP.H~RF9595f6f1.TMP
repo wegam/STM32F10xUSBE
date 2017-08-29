@@ -459,7 +459,6 @@ typedef	struct _BSPM_Public
 	unsigned char BSP_RvBuffer[BSP_BufferSize]	;		//½ÓÊÕ»º³åÇø--±¸·İÇø
 	unsigned char BSP_TxBuffer[BSP_BufferSize]	;		//·¢ËÍ»º³åÇø
 	unsigned char BSP_TvBuffer[BSP_BufferSize]	;		//·¢ËÍ»º³åÇø--±¸·İÇø	
-	unsigned char BSP_FlashBuffer[BSP_BufferSize]	;		//¶ÁÈ¡µÄFLASHÊı¾İ--±¸·İÇø	
 	
 }BSPM_Public_TypeDef;
 
@@ -511,7 +510,7 @@ void USM_BSP_ReadMemory(BSP_Conf_TypeDef *BSP_Conf);			//´ÓÓ¦ÓÃ³ÌĞòÖ¸¶¨µÄµØÖ·¿ªÊ
 void USM_BSP_Go(BSP_Conf_TypeDef *BSP_Conf);							//Ìø×ªµ½ÄÚ²¿ Flash »ò SRAM ÄÚµÄÓ¦ÓÃ³ÌĞò´úÂë
 void USM_BSP_WriteMemory(BSP_Conf_TypeDef *BSP_Conf);			//´ÓÓ¦ÓÃ³ÌĞòÖ¸¶¨µÄµØÖ·¿ªÊ¼½«×î¶à 256 ¸ö×Ö½ÚµÄÊı¾İĞ´Èë RAM »ò Flash
 void USM_BSP_WriteAddr(BSP_Conf_TypeDef *BSP_Conf);				//Ğ´µØÖ·----°üº¬µØÖ·×Ô¶¯Ôö¼Ó¼°Íê³ÉÅĞ¶Ï
-void USM_BSP_WriteData(BSP_Conf_TypeDef *BSP_Conf);				//Ğ´Êı¾İ----Ïò´Ó»úĞ´ÈëFLASHÊı¾İ
+void USM_BSP_WriteData(BSP_Conf_TypeDef *BSP_Conf);				//Êı¾İ----Êı×é´ò°ü(³¤¶È£¬BCCĞ£Ñé£©
 void USM_BSP_EraseMemory(BSP_Conf_TypeDef *BSP_Conf);			//²Á³ıÒ»¸öµ½È«²¿ Flash Ò³Ãæ£¨²Á³ıFLASHºó¿ªÊ¼Ğ´ÈëµØÖ·£©
 void USM_BSP_EEraseMemory(BSP_Conf_TypeDef *BSP_Conf);		//Ê¹ÓÃË«×Ö½ÚÑ°Ö·Ä£Ê½²Á³ıÒ»¸öµ½È«²¿ Flash Ò³Ãæ£¨½öÓÃÓÚv3.0 usart ×Ô¾Ù³ÌĞò°æ±¾¼°ÒÔÉÏ°æ±¾£©
 void USM_BSP_WriteProtect(BSP_Conf_TypeDef *BSP_Conf);		//Ê¹ÄÜÄ³Ğ©ÉÈÇøµÄĞ´±£»¤

@@ -59,7 +59,7 @@ typedef struct
 
 OFFLINE_ISP_TypeDef OFFLINE_Cof;
 
-void OFFLINE_ISP_Conf(void);
+
 /*******************************************************************************
 * 函数名		:	
 * 功能描述	:	 
@@ -324,7 +324,7 @@ void OFFLINE_ISP_Conf(void)
 	OFFLINE_Cof.BSP_Conf.BSP_Port.RESET_CTL_PORT=GPIOA;
 	OFFLINE_Cof.BSP_Conf.BSP_Port.RESET_CTL_Pin=GPIO_Pin_8;
 	
-	BSP_Conf(&(OFFLINE_Cof.BSP_Conf));									//配置函数
+	BSP_Configuration(&(OFFLINE_Cof.BSP_Conf));									//配置函数
 	
 	SPI_FLASH_Conf(&(OFFLINE_Cof.SPI_FLASH));
 //	Usart_ISP_Cof(&(OFFLINE_Cof.ISP_Conf));	
